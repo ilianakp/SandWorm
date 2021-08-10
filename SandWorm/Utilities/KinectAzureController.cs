@@ -113,10 +113,14 @@ namespace SandWorm
                         for (int x = 0; x < depthWidth - 0; x++, i++)
                         {
                             depthPixel.X = (float)x;
+
                             translationVector = calibration.TransformTo3D(depthPixel, 1f, CalibrationDeviceType.Depth, CalibrationDeviceType.Depth);
                             undistortMatrix[i] = translationVector;
 
-                            verticalTiltCorrectionMatrix[i] = translationVector.Value.Y * sin6;
+                            if (translationVector != null)
+                                verticalTiltCorrectionMatrix[i] = translationVector.Value.Y * sin6;
+                            else
+                                verticalTiltCorrectionMatrix[i] = 0; // Mark as invalid
                         }
                     }
 
@@ -125,14 +129,19 @@ namespace SandWorm
                     idealXYCoordinates = new Vector2[depthWidth * depthHeight];
                     for (int i = 0; i < depthWidth * depthHeight; i++)
                     {
-                        syntheticDepthValue = sensorElevation / (1 - verticalTiltCorrectionMatrix[i]);
-                        idealXYCoordinates[i] = new Vector2((float)Math.Round(syntheticDepthValue * undistortMatrix[i].Value.X, 1), (float)Math.Round(syntheticDepthValue * undistortMatrix[i].Value.Y, 1));
+                        if (undistortMatrix[i] != null)
+                        {
+                            syntheticDepthValue = sensorElevation / (1 - verticalTiltCorrectionMatrix[i]);
+                            idealXYCoordinates[i] = new Vector2((float)Math.Round(syntheticDepthValue * undistortMatrix[i].Value.X, 1), (float)Math.Round(syntheticDepthValue * undistortMatrix[i].Value.Y, 1));
+                        }
+                        else
+                            idealXYCoordinates[i] = new Vector2();
                     }
                 }
                 catch (Exception ex)
                 {
                     message = ex.ToString();
-                    sensor?.Dispose();
+                    //sensor?.Dispose();
                 }
             }
         }

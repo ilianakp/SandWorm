@@ -11,16 +11,16 @@ namespace SandWorm
 {
     public static class Core
     {
-        public static Mesh CreateQuadMesh(Mesh mesh, Point3d[] vertices, Color[] colors, int xStride, int yStride)
+        public static Mesh CreateQuadMesh(Mesh mesh, Point3d[] vertices, Color[] colors, Vector3?[] booleanMatrix, int xStride, int yStride)
         {
             int xd = xStride;       // The x-dimension of the data
             int yd = yStride;       // They y-dimension of the data
 
-            if (mesh == null || mesh.Faces.Count != (xStride - 2) * (yStride - 2))
+            if (mesh == null)
             {
                 mesh = new Mesh();
                 mesh.Vertices.Capacity = vertices.Length;      // Don't resize array
-                mesh.Vertices.UseDoublePrecisionVertices = false;
+                mesh.Vertices.UseDoublePrecisionVertices = true;
                 mesh.Vertices.AddVertices(vertices);
 
                 for (int y = 1; y < yd - 1; y++)       // Iterate over y dimension
@@ -30,14 +30,14 @@ namespace SandWorm
                         int i = y * xd + x;
                         int j = (y - 1) * xd + x;
 
-                        mesh.Faces.AddFace(j - 1, j, i, i - 1);
+                        // Only create faces if their corresponding vertices aren't nulls
+                        if (booleanMatrix[i] != null && booleanMatrix[i - 1] != null && booleanMatrix[j] != null && booleanMatrix[j - 1] != null)
+                            mesh.Faces.AddFace(j - 1, j, i, i - 1);
                     }
                 }
             }
             else
             {
-                mesh.Vertices.UseDoublePrecisionVertices = true;
-
                 unsafe
                 {
                     using (var meshAccess = mesh.GetUnsafeLock(true))
@@ -96,11 +96,16 @@ namespace SandWorm
         }
 
        
-        public static void TrimXYLookupTable(Vector2[] sourceXY, Vector2[] destinationXY, double[] verticalTiltCorrectionLookupTable, 
+        public static void TrimXYLookupTable(Vector2[] sourceXY, Vector2[] destinationXY, double[] verticalTiltCorrectionLookupTable,
+            Vector3?[] booleanMatrix, Vector3?[] trimmedBooleanMatrix, 
             double leftColumns, double rightColumns, double topRows, double bottomRows, int height, int width, double unitsMultiplier) //Takes the feed and trims and casts from ushort m to int
         {
             ref Vector2 rv0 = ref sourceXY[0];
             ref Vector2 rd0 = ref destinationXY[0];
+
+            ref Vector3? bv0 = ref booleanMatrix[0];
+            ref Vector3? bd0 = ref trimmedBooleanMatrix[0];
+
             float _units = (float)unitsMultiplier;
 
             for (int rows = (int)topRows, j = 0; rows < height - bottomRows; rows++)
@@ -111,6 +116,8 @@ namespace SandWorm
                     Unsafe.Add(ref rd0, j).X = Unsafe.Add(ref rv0, i).X * -_units;
                     Unsafe.Add(ref rd0, j).Y = Unsafe.Add(ref rv0, i).Y * _units;
                     verticalTiltCorrectionLookupTable[j] = sourceXY[i].Y * KinectAzureController.sin6;
+
+                    Unsafe.Add(ref bd0, j) = Unsafe.Add(ref bv0, i);
                 }
             }
         }

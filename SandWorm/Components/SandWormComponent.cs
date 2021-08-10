@@ -43,6 +43,7 @@ namespace SandWorm
         private int[] runningSum;
         private double[] elevationArray; // Array of elevation values for every pixel scanned during the calibration process
         private Vector2[] trimmedXYLookupTable;
+        private Vector3?[] trimmedBooleanMatrix;
 
         // Outputs
         private List<GeometryBase> _outputGeometry;
@@ -168,7 +169,10 @@ namespace SandWorm
                 active_Width = KinectAzureController.depthWidth;
 
                 trimmedXYLookupTable = new Vector2[trimmedWidth * trimmedHeight];
+                trimmedBooleanMatrix = new Vector3?[trimmedWidth * trimmedHeight];
+
                 Core.TrimXYLookupTable(KinectAzureController.idealXYCoordinates, trimmedXYLookupTable, KinectAzureController.verticalTiltCorrectionMatrix,
+                    KinectAzureController.undistortMatrix, trimmedBooleanMatrix,
                                     _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value,
                                     active_Height, active_Width, unitsMultiplier);
             }
@@ -207,7 +211,7 @@ namespace SandWorm
             {
                 _cloud = null;
                 // Generate the mesh itself
-                _quadMesh = CreateQuadMesh(_quadMesh, allPoints, _vertexColors, trimmedWidth, trimmedHeight);
+                _quadMesh = CreateQuadMesh(_quadMesh, allPoints, _vertexColors, trimmedBooleanMatrix, trimmedWidth, trimmedHeight);
                 _outputMesh.Add(_quadMesh);
 
                 GeneralHelpers.LogTiming(ref output, timer, "Meshing"); // Debug Info
