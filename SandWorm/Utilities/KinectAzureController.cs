@@ -107,10 +107,10 @@ namespace SandWorm
                     undistortMatrix = new Vector3?[depthHeight * depthWidth];
                     verticalTiltCorrectionMatrix = new double[depthHeight * depthWidth];
 
-                    for (int y = 0, i = 0; y < depthHeight; y++)
+                    for (int y = 0, i = 0; y < depthHeight - 0; y++)
                     {
                         depthPixel.Y = (float)y;
-                        for (int x = 0; x < depthWidth; x++, i++)
+                        for (int x = 0; x < depthWidth - 0; x++, i++)
                         {
                             depthPixel.X = (float)x;
                             translationVector = calibration.TransformTo3D(depthPixel, 1f, CalibrationDeviceType.Depth, CalibrationDeviceType.Depth);

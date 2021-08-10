@@ -1,11 +1,12 @@
-﻿using SandWorm;
-using Rhino.UI.Controls.DataSource;
+﻿using System;
 
 namespace SandWorm
 {
     class SandWormComponentUI
     {
         #region Class variables
+
+        public static bool _reset = false;
 
         public static MenuDropDown _sensorType;
         public static MenuDropDown _refreshRate;
@@ -46,6 +47,8 @@ namespace SandWorm
             _sensorType.AddItem("Kinect Azure Narrow", "Kinect Azure Narrow");
             _sensorType.AddItem("Kinect Azure Wide", "Kinect Azure Wide");
             _sensorType.AddItem("Kinect for Windows", "Kinect for Windows");
+
+            _sensorType.ValueChanged += _sensorType__ValueChanged;
 
             MenuStaticText refreshRateHeader = new MenuStaticText("Refresh rate", "Choose the refresh rate of the model.");
             _refreshRate = new MenuDropDown(11111, "Refresh rate", "Choose Refresh Rate");
@@ -176,6 +179,13 @@ namespace SandWorm
 
             #endregion
 
+            #region Callbacks
+            void _sensorType__ValueChanged(object sender, EventArgs e)
+            {
+                _reset = true;
+            }
+            #endregion
         }
+
     }
 }

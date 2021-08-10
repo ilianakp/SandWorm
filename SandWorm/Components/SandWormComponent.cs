@@ -54,7 +54,7 @@ namespace SandWorm
 
         // Boolean controls
         private bool calibrate;
-        private bool reset;
+        public bool reset;
 
         #endregion
 
@@ -135,11 +135,12 @@ namespace SandWorm
         {
             VariableParameterMaintenance();
             DA.GetData(1, ref reset);
-            if (reset)
+            if (reset || _reset)
             {
                 KinectAzureController.sensor.Dispose();
                 KinectAzureController.sensor = null;
                 _quadMesh = null;
+                _reset = false;
             }
 
 
