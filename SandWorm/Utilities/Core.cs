@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Microsoft.Azure.Kinect.Sensor;
 using Rhino.Geometry;
 using SandWorm.Analytics;
 
@@ -123,34 +124,33 @@ namespace SandWorm
         }
 
 
-        public static void SetupRenderBuffer(int[] depthFrameDataInt, Structs.KinectTypes kinectType,
-            double leftColumns, double rightColumns, double topRows, double bottomRows,
+        public static void SetupRenderBuffer(int[] depthFrameDataInt, Structs.KinectTypes kinectType, ref BGRA[] rgbArray,
+            double leftColumns, double rightColumns, double topRows, double bottomRows, double sensorElevation, ref int activeHeight, ref int activeWidth,
             Mesh quadMesh, int trimmedWidth, int trimmedHeight, double averageFrames, int[] runningSum, LinkedList<int[]> renderBuffer)
         {
-            var active_Height = 0;
-            var active_Width = 0;
+
             ushort[] depthFrameData;
-            Vector2[] idealXYCoordinates = null;
 
             if (kinectType == Structs.KinectTypes.KinectForWindows)
             {
+                KinectForWindows.SetupSensor();
                 depthFrameData = KinectForWindows.depthFrameData;
-                active_Height = KinectForWindows.depthHeight;
-                active_Width = KinectForWindows.depthWidth;
+                activeHeight = KinectForWindows.depthHeight;
+                activeWidth = KinectForWindows.depthWidth;
             }
             else
             {
-                KinectAzureController.CaptureFrame();
+                KinectAzureController.SetupSensor(kinectType, sensorElevation);
+                KinectAzureController.CaptureFrame(ref rgbArray);
                 depthFrameData = KinectAzureController.depthFrameData;
-                active_Height = KinectAzureController.depthHeight;
-                active_Width = KinectAzureController.depthWidth;
-                idealXYCoordinates = KinectAzureController.idealXYCoordinates;
+                activeHeight = KinectAzureController.depthHeight;
+                activeWidth = KinectAzureController.depthWidth;
             }
 
             // Trim the depth array and cast ushort values to int 
             CopyAsIntArray(depthFrameData, depthFrameDataInt,
                 leftColumns, rightColumns, topRows, bottomRows,
-                active_Height, active_Width);
+                activeHeight, activeWidth);
 
             // Reset everything when resizing Kinect's field of view or changing the amounts of frame to average across
             if (renderBuffer.Count > averageFrames || (quadMesh != null && quadMesh.Faces.Count != (trimmedWidth - 2) * (trimmedHeight - 2)))
@@ -241,7 +241,7 @@ namespace SandWorm
         }
         
         public static void GenerateMeshColors(ref Color[] vertexColors, int analysisType, double[] averagedDepthFrameData, 
-            Vector2 depthPixelSize, Vector2[]xyLookuptable, double gradientRange,
+            Vector2 depthPixelSize, Vector2[]xyLookuptable, BGRA[] pixelColors, double gradientRange,
             double sensorElevation, int trimmedWidth, int trimmedHeight)
         {
             switch (analysisType)
@@ -250,7 +250,8 @@ namespace SandWorm
                     vertexColors = new None().GetColorCloudForAnalysis();
                     break;
 
-                case 1: // TODO: RGB
+                case 1: // RGB
+                    vertexColors = new RGB().GetColorCloudForAnalysis(pixelColors);
                     break;
 
                 case 2: // Elevation
@@ -272,13 +273,30 @@ namespace SandWorm
             }
         }
 
-        public static void CopyAsIntArray(ushort[] source, int[] destination, double leftColumns, double rightColumns, double topRows, double bottomRows, int height, int width) //Takes the feed and trims and casts from ushort to int
+        public static void CopyAsIntArray(ushort[] source, int[] destination, 
+            double leftColumns, double rightColumns, double topRows, double bottomRows, int height, int width)
         {
             if (source == null)
                 return; // Triggers on initial setup
 
             ref ushort ru0 = ref source[0];
             ref int ri0 = ref destination[0];
+
+            for (int rows = (int)topRows, j = 0; rows < height - bottomRows; rows++)
+            {
+                for (int columns = (int)rightColumns; columns < width - leftColumns; columns++, j++)
+                {
+                    int i = rows * width + columns;
+                    Unsafe.Add(ref ri0, j) = Unsafe.Add(ref ru0, i);
+                }
+            }
+        }
+
+        public static void TrimColorArray(BGRA[] source, BGRA[] destination, 
+            double leftColumns, double rightColumns, double topRows, double bottomRows, int height, int width) 
+        {
+            ref BGRA ru0 = ref source[0];
+            ref BGRA ri0 = ref destination[0];
 
             for (int rows = (int)topRows, j = 0; rows < height - bottomRows; rows++)
             {

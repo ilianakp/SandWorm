@@ -15,11 +15,13 @@ namespace SandWorm
         public static int colorWidth = 0;
         public static ushort[] depthFrameData = null;
         public static byte[] colorFrameData = null;
+        public static Image colorForDepthImage = null;
 
         // Kinect for Azure specific
         public static Device sensor;
         private static DeviceConfiguration deviceConfig;
         private static Calibration calibration;
+        private static Transformation transformation;
 
         public const int depthWidthNear = 640; // Assuming low FPS mode
         public const int depthHeightNear = 576;
@@ -59,8 +61,9 @@ namespace SandWorm
             {
                 CameraFPS = FPS.FPS15,
                 DepthMode = GetDepthMode(fieldOfViewMode),
-                ColorResolution = ColorResolution.Off,
-                SynchronizedImagesOnly = false // Color and depth images can be out of sync
+                ColorFormat = ImageFormat.ColorBGRA32,
+                ColorResolution = ColorResolution.R1536p,
+                SynchronizedImagesOnly = true // Color and depth images can be out of sync
             };
 
             if (fieldOfViewMode == Structs.KinectTypes.KinectAzureNear) // We can have 30 FPS in the narrow field of view
@@ -68,12 +71,19 @@ namespace SandWorm
         }
 
         // Capture a single frame
-        public static void CaptureFrame()
+        public static void CaptureFrame(ref BGRA[] colorArray)
         {
-            using (var capture = sensor.GetCapture())
+            Image rgb = new Image(ImageFormat.ColorBGRA32, depthWidthNear, depthHeightNear, 2560);
+            using (Capture capture = sensor.GetCapture())
             {
                 if (capture.Depth != null)
                     depthFrameData = capture.Depth.GetPixels<ushort>().ToArray();
+
+                if (capture.Color != null)
+                {
+                    transformation.ColorImageToDepthCamera(capture, rgb);
+                    colorArray = rgb.GetPixels<BGRA>().ToArray();
+                }
             }
         }
 
@@ -99,6 +109,7 @@ namespace SandWorm
                 {
                     sensor.StartCameras(deviceConfig);
                     calibration = sensor.GetCalibration(deviceConfig.DepthMode, deviceConfig.ColorResolution);
+                    transformation = calibration.CreateTransformation();
 
                     Vector2 depthPixel = new Vector2();
                     Vector3? translationVector;
@@ -113,7 +124,7 @@ namespace SandWorm
                         for (int x = 0; x < depthWidth - 0; x++, i++)
                         {
                             depthPixel.X = (float)x;
-
+                            
                             translationVector = calibration.TransformTo3D(depthPixel, 1f, CalibrationDeviceType.Depth, CalibrationDeviceType.Depth);
                             undistortMatrix[i] = translationVector;
 

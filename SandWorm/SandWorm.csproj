@@ -146,6 +146,7 @@
     <Compile Include="Analytics\Contours.cs" />
     <Compile Include="Analytics\Elevation.cs" />
     <Compile Include="Analytics\None.cs" />
+    <Compile Include="Analytics\RGB.cs" />
     <Compile Include="Analytics\Slope.cs" />
     <Compile Include="Analytics\WaterLevel.cs" />
     <Compile Include="Components\SandWormComponent.cs" />

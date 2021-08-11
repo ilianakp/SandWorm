@@ -15,5 +15,15 @@ namespace SandWorm
             Mesh,
             PointCloud
         }
+
+        public enum AnalysisTypes
+        {
+            None,
+            RGB,
+            Elevation,
+            Slope,
+            Aspect,
+            CutFill
+        }
     }
 }
