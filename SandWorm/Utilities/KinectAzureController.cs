@@ -71,16 +71,21 @@ namespace SandWorm
         }
 
         // Capture a single frame
-        public static void CaptureFrame(ref BGRA[] colorArray)
+        public static void CaptureFrame(ref BGRA[] colorArray, int analysisType)
         {
-            Image rgb = new Image(ImageFormat.ColorBGRA32, depthWidthNear, depthHeightNear, 2560);
             using (Capture capture = sensor.GetCapture())
             {
                 if (capture.Depth != null)
                     depthFrameData = capture.Depth.GetPixels<ushort>().ToArray();
 
-                if (capture.Color != null)
+                if ((Structs.AnalysisTypes) analysisType == Structs.AnalysisTypes.RGB && capture.Color != null)
                 {
+                    Image rgb = null;
+                    if (deviceConfig.DepthMode == DepthMode.NFOV_Unbinned)
+                        rgb = new Image(ImageFormat.ColorBGRA32, depthWidthNear, depthHeightNear, 2560);
+                    else
+                        rgb = new Image(ImageFormat.ColorBGRA32, depthWidthWide, depthHeightWide, 4096);
+
                     transformation.ColorImageToDepthCamera(capture, rgb);
                     colorArray = rgb.GetPixels<BGRA>().ToArray();
                 }

@@ -131,7 +131,7 @@ namespace SandWorm
             if (runningSum == null || runningSum.Length < elevationArray.Length)
                 runningSum = Enumerable.Range(1, elevationArray.Length).Select(i => new int()).ToArray();
 
-            SetupRenderBuffer(depthFrameDataInt, (KinectTypes)_sensorType.Value, ref rgbArray,
+            SetupRenderBuffer(depthFrameDataInt, (KinectTypes)_sensorType.Value, ref rgbArray, _analysisType.Value,
                 _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, _sensorElevation.Value, ref activeHeight, ref activeWidth,
                 _quadMesh, trimmedWidth, trimmedHeight, _averagedFrames.Value,
                 runningSum, renderBuffer);

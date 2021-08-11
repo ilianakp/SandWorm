@@ -124,7 +124,7 @@ namespace SandWorm
         }
 
 
-        public static void SetupRenderBuffer(int[] depthFrameDataInt, Structs.KinectTypes kinectType, ref BGRA[] rgbArray,
+        public static void SetupRenderBuffer(int[] depthFrameDataInt, Structs.KinectTypes kinectType, ref BGRA[] rgbArray, int analysisType,
             double leftColumns, double rightColumns, double topRows, double bottomRows, double sensorElevation, ref int activeHeight, ref int activeWidth,
             Mesh quadMesh, int trimmedWidth, int trimmedHeight, double averageFrames, int[] runningSum, LinkedList<int[]> renderBuffer)
         {
@@ -141,7 +141,7 @@ namespace SandWorm
             else
             {
                 KinectAzureController.SetupSensor(kinectType, sensorElevation);
-                KinectAzureController.CaptureFrame(ref rgbArray);
+                KinectAzureController.CaptureFrame(ref rgbArray, analysisType);
                 depthFrameData = KinectAzureController.depthFrameData;
                 activeHeight = KinectAzureController.depthHeight;
                 activeWidth = KinectAzureController.depthWidth;
