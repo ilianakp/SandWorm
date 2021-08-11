@@ -9,5 +9,11 @@ namespace SandWorm
             KinectAzureWide,
             KinectForWindows
         }
+
+        public enum OutputTypes
+        {
+            Mesh,
+            PointCloud
+        }
     }
 }

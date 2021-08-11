@@ -119,8 +119,6 @@ namespace SandWorm
 
                             if (translationVector != null)
                                 verticalTiltCorrectionMatrix[i] = translationVector.Value.Y * sin6;
-                            else
-                                verticalTiltCorrectionMatrix[i] = 0; // Mark as invalid
                         }
                     }
 

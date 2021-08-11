@@ -15,12 +15,11 @@ using static SandWorm.Core;
 using static SandWorm.Kinect2Helpers;
 using static SandWorm.Structs;
 using static SandWorm.SandWormComponentUI;
-using Grasshopper.Kernel.Types;
-using Grasshopper.Kernel.Parameters;
+
 
 namespace SandWorm
 {
-    public class SandWormComponent : GH_ExtendableComponent, IGH_VariableParameterComponent
+    public class SandWormComponent : GH_ExtendableComponent
     {
         #region Class Variables
 
@@ -50,53 +49,13 @@ namespace SandWorm
         private List<Mesh> _outputMesh;
 
         // Debugging
-        public static List<string> output;
+        public static List<string> stats;
         protected Stopwatch timer;
 
         // Boolean controls
         private bool calibrate;
         public bool reset;
 
-        #endregion
-
-        #region Variable Parameter
-        public bool CanInsertParameter(GH_ParameterSide side, int index) { return false; }
-        public bool CanRemoveParameter(GH_ParameterSide side, int index) { return false; }
-        public bool DestroyParameter(GH_ParameterSide side, int index) { return true; }
-        public IGH_Param CreateParameter(GH_ParameterSide side, int index)
-        {
-            return new Param_GenericObject
-            {
-                Name = "water surface",
-                NickName = "water surface",
-                Description = "Geometry output.",
-                Access = GH_ParamAccess.list,
-                Optional = true
-            };
-        }
-
-        public void VariableParameterMaintenance()
-        {
-            if (_waterLevel.Value > 0)
-            {
-                foreach (var p in this.Params.Output)
-                    if (p.Name == "water surface") return;
-                Params.RegisterOutputParam(CreateParameter(GH_ParameterSide.Output, 2));
-                Params.OnParametersChanged();
-                ExpireSolution(true);
-            }
-            else
-            {
-                for (int p = 0; p < this.Params.Output.Count; p++)
-                    if (this.Params.Output[p].Name == "water surface")
-                    {
-                        this.Params.Output[p].Recipients.Clear();
-                        this.Params.UnregisterOutputParameter(this.Params.Output[p]);
-                        Params.OnParametersChanged();
-                        ExpireSolution(true);
-                    }
-            }
-        }
         #endregion
 
         public SandWormComponent()
@@ -118,8 +77,10 @@ namespace SandWorm
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGeometryParameter("Geometry", "geometry", "", GH_ParamAccess.tree);
-            pManager.AddGenericParameter("Options", "options", "", GH_ParamAccess.item);
+            pManager.AddGeometryParameter("Terrain", "terrain", "", GH_ParamAccess.list);
+            pManager.AddGeometryParameter("Water surface", "water surface", "", GH_ParamAccess.list);
+            pManager.AddCurveParameter("Contours", "contours", "", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Stats", "stats", "", GH_ParamAccess.item);
         }
 
         protected override void Setup(GH_ExtendableComponentAttributes attr) // Initialize the UI
@@ -134,7 +95,6 @@ namespace SandWorm
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            VariableParameterMaintenance();
             DA.GetData(1, ref reset);
             if (reset || _reset)
             {
@@ -146,7 +106,7 @@ namespace SandWorm
 
 
 
-            GeneralHelpers.SetupLogging(ref timer, ref output);
+            GeneralHelpers.SetupLogging(ref timer, ref stats);
             unitsMultiplier = GeneralHelpers.ConvertDrawingUnits(RhinoDoc.ActiveDoc.ModelUnitSystem);
 
             // Trim 
@@ -187,12 +147,11 @@ namespace SandWorm
             if (runningSum == null || runningSum.Length < elevationArray.Length)
                 runningSum = Enumerable.Range(1, elevationArray.Length).Select(i => new int()).ToArray();
            
-
             SetupRenderBuffer(depthFrameDataInt, (KinectTypes)_sensorType.Value,
                 _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, _quadMesh, trimmedWidth, trimmedHeight, _averagedFrames.Value,
                 runningSum, renderBuffer);
 
-            GeneralHelpers.LogTiming(ref output, timer, "Initial setup"); // Debug Info
+            GeneralHelpers.LogTiming(ref stats, timer, "Initial setup"); // Debug Info
 
             AverageAndBlurPixels(depthFrameDataInt, ref averagedDepthFrameData, runningSum, renderBuffer,
                 _sensorElevation.Value, elevationArray, _averagedFrames.Value, _blurRadius.Value, trimmedWidth, trimmedHeight);
@@ -205,25 +164,25 @@ namespace SandWorm
             GenerateMeshColors(ref _vertexColors, _analysisType.Value, averagedDepthFrameData, depthPixelSize, _colorGradientRange.Value,
                 _sensorElevation.Value, trimmedWidth, trimmedHeight);
 
-            GeneralHelpers.LogTiming(ref output, timer, "Point cloud analysis"); // Debug Info
+            GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
 
-            if (_outputType.Value == 0) // Mesh
+            if ((OutputTypes) _outputType.Value == OutputTypes.Mesh)
             {
                 _cloud = null;
-                // Generate the mesh itself
+                // Generate the mesh
                 _quadMesh = CreateQuadMesh(_quadMesh, allPoints, _vertexColors, trimmedBooleanMatrix, trimmedWidth, trimmedHeight);
                 _outputMesh.Add(_quadMesh);
 
-                GeneralHelpers.LogTiming(ref output, timer, "Meshing"); // Debug Info
+                GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
 
                 // Produce 2nd type of analysis that acts on the mesh and creates new geometry
                 if (_contourIntervalRange.Value > 0)
                     new Contours().GetGeometryForAnalysis(ref _outputGeometry, _contourIntervalRange.Value, _quadMesh);
 
-                GeneralHelpers.LogTiming(ref output, timer, "Mesh analysis"); // Debug Info
+                GeneralHelpers.LogTiming(ref stats, timer, "Mesh analysis"); // Debug Info
                 DA.SetDataList(0, _outputMesh);
             }
-            else if (_outputType.Value == 1) // Point cloud
+            else if ((OutputTypes) _outputType.Value == OutputTypes.PointCloud)
             {
                 _cloud = new PointCloud();
 
@@ -232,19 +191,16 @@ namespace SandWorm
                 else
                     _cloud.AddRange(allPoints);
 
-                GeneralHelpers.LogTiming(ref output, timer, "Point cloud display"); // Debug Info
+                GeneralHelpers.LogTiming(ref stats, timer, "Point cloud display"); // Debug Info
             }
 
             if (_waterLevel.Value > 0)
             {
                 WaterLevel.GetGeometryForAnalysis(ref _outputGeometry, _waterLevel.Value, allPoints, trimmedWidth);
-                if (Params.Output.Count > 2)
-                    DA.SetDataList(2, _outputGeometry);
+                DA.SetDataList(1, _outputGeometry);
             } 
             
-
-
-            DA.SetDataList(1, output);
+            DA.SetDataList(3, stats);
             ScheduleSolve();
         }
         public override void DrawViewportWires(IGH_PreviewArgs args)
