@@ -83,7 +83,7 @@ namespace SandWorm
                     _y = KinectAzureController.depthHeightWide;
                     break;
                 default:
-                    throw new System.ArgumentException("Invalid Kinect Type", "original"); ;
+                    throw new ArgumentException("Invalid Kinect Type", "original");
             }
 
             runningSum = Enumerable.Range(1, _x * _y).Select(i => new int()).ToArray();

@@ -45,8 +45,9 @@ namespace SandWorm
         private Vector3?[] trimmedBooleanMatrix;
 
         // Outputs
-        private List<GeometryBase> _outputGeometry;
         private List<Mesh> _outputMesh;
+        private List<GeometryBase> _outputWaterSurface;
+        private List<GeometryBase> _outputContours;
 
         // Debugging
         public static List<string> stats;
@@ -101,6 +102,7 @@ namespace SandWorm
                 KinectAzureController.sensor.Dispose();
                 KinectAzureController.sensor = null;
                 _quadMesh = null;
+                trimmedXYLookupTable = null; // Force trimming of lookup tables
                 _reset = false;
             }
 
@@ -123,25 +125,30 @@ namespace SandWorm
             else
             {
                 KinectAzureController.SetupSensor((KinectTypes)_sensorType.Value, _sensorElevation.Value);
-                KinectAzureController.CaptureFrame(); // Get a frame so the variables below have some values.
+                KinectAzureController.CaptureFrame();
                 active_Height = KinectAzureController.depthHeight;
                 active_Width = KinectAzureController.depthWidth;
 
-                trimmedXYLookupTable = new Vector2[trimmedWidth * trimmedHeight];
-                trimmedBooleanMatrix = new Vector3?[trimmedWidth * trimmedHeight];
+                if (trimmedXYLookupTable == null) // Only recalculate on reset
+                {
+                    trimmedXYLookupTable = new Vector2[trimmedWidth * trimmedHeight];
+                    trimmedBooleanMatrix = new Vector3?[trimmedWidth * trimmedHeight];
 
-                Core.TrimXYLookupTable(KinectAzureController.idealXYCoordinates, trimmedXYLookupTable, KinectAzureController.verticalTiltCorrectionMatrix,
-                    KinectAzureController.undistortMatrix, trimmedBooleanMatrix,
-                                    _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value,
-                                    active_Height, active_Width, unitsMultiplier);
+                    Core.TrimXYLookupTable(KinectAzureController.idealXYCoordinates, trimmedXYLookupTable, KinectAzureController.verticalTiltCorrectionMatrix,
+                        KinectAzureController.undistortMatrix, trimmedBooleanMatrix,
+                                        _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value,
+                                        active_Height, active_Width, unitsMultiplier);
+                }
             }
 
 
             // Initialize
             int[] depthFrameDataInt = new int[trimmedWidth * trimmedHeight];
             double[] averagedDepthFrameData = new double[trimmedWidth * trimmedHeight];
+            allPoints = new Point3d[trimmedWidth * trimmedHeight];
             _outputMesh = new List<Mesh>();
-            _outputGeometry = new List<GeometryBase>();
+            _outputWaterSurface = new List<GeometryBase>();
+            _outputContours = new List<GeometryBase>();
 
             if (runningSum == null || runningSum.Length < elevationArray.Length)
                 runningSum = Enumerable.Range(1, elevationArray.Length).Select(i => new int()).ToArray();
@@ -155,7 +162,6 @@ namespace SandWorm
             AverageAndBlurPixels(depthFrameDataInt, ref averagedDepthFrameData, runningSum, renderBuffer,
                 _sensorElevation.Value, elevationArray, _averagedFrames.Value, _blurRadius.Value, trimmedWidth, trimmedHeight);
 
-            allPoints = new Point3d[trimmedWidth * trimmedHeight];
             GeneratePointCloud(averagedDepthFrameData, trimmedXYLookupTable, KinectAzureController.verticalTiltCorrectionMatrix, allPoints,
                 renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value, unitsMultiplier, _averagedFrames.Value);
             
@@ -176,7 +182,10 @@ namespace SandWorm
 
                 // Produce 2nd type of analysis that acts on the mesh and creates new geometry
                 if (_contourIntervalRange.Value > 0)
-                    new Contours().GetGeometryForAnalysis(ref _outputGeometry, _contourIntervalRange.Value, _quadMesh);
+                {
+                    new Contours().GetGeometryForAnalysis(ref _outputContours, _contourIntervalRange.Value, _quadMesh);
+                    DA.SetDataList(2, _outputContours);
+                }
 
                 GeneralHelpers.LogTiming(ref stats, timer, "Mesh analysis"); // Debug Info
                 DA.SetDataList(0, _outputMesh);
@@ -195,8 +204,8 @@ namespace SandWorm
 
             if (_waterLevel.Value > 0)
             {
-                WaterLevel.GetGeometryForAnalysis(ref _outputGeometry, _waterLevel.Value, allPoints, trimmedWidth);
-                DA.SetDataList(1, _outputGeometry);
+                WaterLevel.GetGeometryForAnalysis(ref _outputWaterSurface, _waterLevel.Value, allPoints, trimmedWidth);
+                DA.SetDataList(1, _outputWaterSurface);
             } 
             
             DA.SetDataList(3, stats);
