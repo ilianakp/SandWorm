@@ -241,7 +241,7 @@ namespace SandWorm
         }
         
         public static void GenerateMeshColors(ref Color[] vertexColors, int analysisType, double[] averagedDepthFrameData, 
-            Vector2 depthPixelSize, double gradientRange,
+            Vector2 depthPixelSize, Vector2[]xyLookuptable, double gradientRange,
             double sensorElevation, int trimmedWidth, int trimmedHeight)
         {
             switch (analysisType)
@@ -259,7 +259,7 @@ namespace SandWorm
 
                 case 3: // Slope
                     vertexColors = new Slope().GetColorCloudForAnalysis(averagedDepthFrameData,
-                        trimmedWidth, trimmedHeight, depthPixelSize.X, depthPixelSize.Y, gradientRange);
+                        trimmedWidth, trimmedHeight, depthPixelSize.X, depthPixelSize.Y, gradientRange, xyLookuptable);
                     break;
 
                 case 4: // Aspect

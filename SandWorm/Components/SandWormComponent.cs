@@ -166,8 +166,9 @@ namespace SandWorm
                 renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value, unitsMultiplier, _averagedFrames.Value);
             
             // Produce 1st type of analysis that acts on the pixel array and assigns vertex colors
-            GenerateMeshColors(ref _vertexColors, _analysisType.Value, averagedDepthFrameData, depthPixelSize, _colorGradientRange.Value,
-                _sensorElevation.Value, trimmedWidth, trimmedHeight);
+            GenerateMeshColors(ref _vertexColors, _analysisType.Value, averagedDepthFrameData, 
+                depthPixelSize, trimmedXYLookupTable,
+                _colorGradientRange.Value, _sensorElevation.Value, trimmedWidth, trimmedHeight);
 
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
 
