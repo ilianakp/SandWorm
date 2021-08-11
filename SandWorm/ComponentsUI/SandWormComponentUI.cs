@@ -63,15 +63,19 @@ namespace SandWorm
 
             MenuStaticText leftColumnsHeader = new MenuStaticText("Left columns", "Number of pixels to trim from the left.");
             _leftColumns = new MenuSlider(leftColumnsHeader, 2, 0, 200, 50, 0);
+            _leftColumns.ValueChanged += _slider__ValueChanged;
 
             MenuStaticText rightColumnsHeader = new MenuStaticText("Right columns", "Number of pixels to trim from the right.");
             _rightColumns = new MenuSlider(rightColumnsHeader, 3, 0, 200, 50, 0);
+            _rightColumns.ValueChanged += _slider__ValueChanged;
 
             MenuStaticText topRowsHeader = new MenuStaticText("Top rows", "Number of pixels to trim from the top.");
             _topRows = new MenuSlider(topRowsHeader, 4, 0, 200, 50, 0);
+            _topRows.ValueChanged += _slider__ValueChanged;
 
             MenuStaticText bottomRowsHeader = new MenuStaticText("Bottom rows", "Number of pixels to trim from the bottom.");
             _bottomRows = new MenuSlider(bottomRowsHeader, 5, 0, 200, 50, 0);
+            _bottomRows.ValueChanged += _slider__ValueChanged;
 
             optionsMenu.AddControl(optionsMenuPanel);
             attr.AddMenu(optionsMenu);
@@ -181,6 +185,11 @@ namespace SandWorm
 
             #region Callbacks
             void _sensorType__ValueChanged(object sender, EventArgs e)
+            {
+                _reset = true;
+            }
+
+            void _slider__ValueChanged(object sender, EventArgs e)
             {
                 _reset = true;
             }

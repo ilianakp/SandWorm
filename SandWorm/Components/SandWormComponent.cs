@@ -105,7 +105,6 @@ namespace SandWorm
             }
 
 
-
             GeneralHelpers.SetupLogging(ref timer, ref stats);
             unitsMultiplier = GeneralHelpers.ConvertDrawingUnits(RhinoDoc.ActiveDoc.ModelUnitSystem);
 
