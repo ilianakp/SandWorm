@@ -9,35 +9,45 @@ namespace SandWorm.Analytics
 {
     public static class ContoursFromPoints
     {
-        public static void GetGeometryForAnalysis(ref List<Line> contourLines, Point3d[] points, int threshold, int trimmedWidth, int trimmedHeight)
+        public static void GetGeometryForAnalysis(ref List<Line> contourLines, Point3d[] points, int threshold, int trimmedWidth, int trimmedHeight, int multiplier)
         {
+
             int xd = trimmedWidth;
             int yd = trimmedHeight;
 
-            ConcurrentBag<Point4d> test = new ConcurrentBag<Point4d>();
+            var ydd = (int)(yd / multiplier);
+            var xdd = (int)(xd / multiplier);
+
             ConcurrentBag<Line> _contourLines = new ConcurrentBag<Line>();
 
-            Parallel.For(1, yd - 1, y =>       // Iterate over y dimension
+            Parallel.For(1, ydd, y =>       // Iterate over y dimension
             {
-                for (int x = 1; x < xd - 1; x++)       // Iterate over x dimension
+                for (int x = 1; x < xdd; x++)       // Iterate over x dimension
                 {
                     List<Point4d> intersectionPoints = new List<Point4d>();
 
-                    int i = y * xd + x;
-                    int j = (y - 1) * xd + x;
+                    int i = y * multiplier * xd + (x * multiplier);
+                    int j = y * multiplier * xd - (multiplier * xd) + (x * multiplier);
+
+                    //int i = y * xd + x;
+                    //int j = (y - 1) * xd + x;
 
                     // lower left corner -> j - 1
                     // lower right corner -> j
                     // upper right corner-> i
                     // upper left corner -> i - 1
 
+                    /*
                     intersectionPoints.AddRange(FindIntersections(points[j - 1], points[j], threshold));
                     intersectionPoints.AddRange(FindIntersections(points[j], points[i], threshold));
                     intersectionPoints.AddRange(FindIntersections(points[i], points[i - 1], threshold));
                     intersectionPoints.AddRange(FindIntersections(points[i - 1], points[j - 1], threshold));
+                    */
 
-                    foreach (var p in intersectionPoints)
-                        test.Add(p);
+                    intersectionPoints.AddRange(FindIntersections(points[j - multiplier], points[j], threshold));
+                    intersectionPoints.AddRange(FindIntersections(points[j], points[i], threshold));
+                    intersectionPoints.AddRange(FindIntersections(points[i], points[i - multiplier], threshold));
+                    intersectionPoints.AddRange(FindIntersections(points[i - multiplier], points[j - multiplier], threshold));
 
                     if (intersectionPoints.Count > 0)
                     {
@@ -51,8 +61,7 @@ namespace SandWorm.Analytics
                             {
                                 Point4d _start = vertexStack.Pop();
                                 Point4d _end = intersectionPoints[a];
-                                if (Math.Abs(_start.X - _end.X) < 30 && Math.Abs(_start.Y - _end.Y) < 30)
-                                    _contourLines.Add(new Line(_start.X, _start.Y, _start.Z, _end.X, _end.Y, _end.Z));
+                                _contourLines.Add(new Line(_start.X, _start.Y, _start.Z, _end.X, _end.Y, _end.Z));
                             }
                         }
                     }
@@ -67,7 +76,7 @@ namespace SandWorm.Analytics
         {
             List<Point4d> intersections = new List<Point4d>();
             Point4d _p = new Point4d();
-            double deltaZ = Math.Abs(endVertex.Z - startVertex.Z);
+            double deltaZ = Math.Abs(Math.Round(endVertex.Z - startVertex.Z));
 
             for (int a = 0; a < deltaZ; a++)
             {
@@ -81,8 +90,8 @@ namespace SandWorm.Analytics
 
                 if (Math.Round(_p.Z) % threshold == 0) // Only create intersection points if they fall within the user-defined threshold
                 {
-                    _p.X = startVertex.X + ((a + 1) * (endVertex.X - startVertex.X) / deltaZ);
-                    _p.Y = startVertex.Y + ((a + 1) * (endVertex.Y - startVertex.Y) / deltaZ);
+                    _p.X = startVertex.X + ((a + 1) * ((endVertex.X - startVertex.X) / deltaZ));
+                    _p.Y = startVertex.Y + ((a + 1) * ((endVertex.Y - startVertex.Y) / deltaZ));
 
                     intersections.Add(_p);
                 }

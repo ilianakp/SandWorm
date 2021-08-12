@@ -182,7 +182,7 @@ namespace SandWorm
                 // Produce 2nd type of analysis that acts on the mesh and creates new geometry
                 if (_contourIntervalRange.Value > 0)
                 {
-                    ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints, (int)_contourIntervalRange.Value, trimmedWidth, trimmedHeight);
+                    ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints, (int)_contourIntervalRange.Value, trimmedWidth, trimmedHeight, (int)_rainDensity.Value);
                     //new Contours().GetGeometryForAnalysis(ref _outputContours, _contourIntervalRange.Value, _quadMesh);
                     DA.SetDataList(2, _outputContours);
                 }
