@@ -144,6 +144,7 @@
     <Compile Include="Analysis.cs" />
     <Compile Include="Analytics\Aspect.cs" />
     <Compile Include="Analytics\Contours.cs" />
+    <Compile Include="Analytics\ContoursFromPoints.cs" />
     <Compile Include="Analytics\Elevation.cs" />
     <Compile Include="Analytics\None.cs" />
     <Compile Include="Analytics\RGB.cs" />

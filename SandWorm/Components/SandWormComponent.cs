@@ -49,7 +49,7 @@ namespace SandWorm
         // Outputs
         private List<Mesh> _outputMesh;
         private List<GeometryBase> _outputWaterSurface;
-        private List<GeometryBase> _outputContours;
+        private List<Line> _outputContours;
 
         // Debugging
         public static List<string> stats;
@@ -126,7 +126,7 @@ namespace SandWorm
             allPoints = new Point3d[trimmedWidth * trimmedHeight];
             _outputMesh = new List<Mesh>();
             _outputWaterSurface = new List<GeometryBase>();
-            _outputContours = new List<GeometryBase>();
+            _outputContours = new List<Line>();
 
             if (runningSum == null || runningSum.Length < elevationArray.Length)
                 runningSum = Enumerable.Range(1, elevationArray.Length).Select(i => new int()).ToArray();
@@ -182,7 +182,8 @@ namespace SandWorm
                 // Produce 2nd type of analysis that acts on the mesh and creates new geometry
                 if (_contourIntervalRange.Value > 0)
                 {
-                    new Contours().GetGeometryForAnalysis(ref _outputContours, _contourIntervalRange.Value, _quadMesh);
+                    ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints, (int)_contourIntervalRange.Value, trimmedWidth, trimmedHeight);
+                    //new Contours().GetGeometryForAnalysis(ref _outputContours, _contourIntervalRange.Value, _quadMesh);
                     DA.SetDataList(2, _outputContours);
                 }
 
