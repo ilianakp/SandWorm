@@ -29,20 +29,10 @@ namespace SandWorm.Analytics
                     int i = y * multiplier * xd + (x * multiplier);
                     int j = y * multiplier * xd - (multiplier * xd) + (x * multiplier);
 
-                    //int i = y * xd + x;
-                    //int j = (y - 1) * xd + x;
-
-                    // lower left corner -> j - 1
+                    // lower left corner -> j - multiplier
                     // lower right corner -> j
                     // upper right corner-> i
-                    // upper left corner -> i - 1
-
-                    /*
-                    intersectionPoints.AddRange(FindIntersections(points[j - 1], points[j], threshold));
-                    intersectionPoints.AddRange(FindIntersections(points[j], points[i], threshold));
-                    intersectionPoints.AddRange(FindIntersections(points[i], points[i - 1], threshold));
-                    intersectionPoints.AddRange(FindIntersections(points[i - 1], points[j - 1], threshold));
-                    */
+                    // upper left corner -> i - multiplier
 
                     intersectionPoints.AddRange(FindIntersections(points[j - multiplier], points[j], threshold));
                     intersectionPoints.AddRange(FindIntersections(points[j], points[i], threshold));
@@ -55,7 +45,7 @@ namespace SandWorm.Analytics
 
                         for (int a = 0; a < intersectionPoints.Count; a++)
                         {
-                            if (vertexStack.Count == 0 || vertexStack.Peek().W == intersectionPoints[a].W)
+                            if (vertexStack.Count == 0 || vertexStack.Peek().W == intersectionPoints[a].W) // Add points to the stack if they have the same direction
                                 vertexStack.Push(intersectionPoints[a]);
                             else
                             {
@@ -63,10 +53,18 @@ namespace SandWorm.Analytics
                                 Point4d _end = intersectionPoints[a];
 
                                 if (_start.Z != _end.Z)
-                                    if (vertexStack.Count > 0)
-                                        _start = vertexStack.Pop();
-                                    else
+                                {
+                                    if (a >= intersectionPoints.Count - 1)
                                         continue;
+
+                                    Point4d _next = intersectionPoints[a + 1];
+
+                                    if (_start.Z == _next.Z && _start.W == _next.W)
+                                        _end = _next;
+
+                                    else if (vertexStack.Count > 0)
+                                        _start = vertexStack.Pop();
+                                }
 
                                 _contourLines.Add(new Line(_start.X, _start.Y, _start.Z, _end.X, _end.Y, _end.Z));
                             }
