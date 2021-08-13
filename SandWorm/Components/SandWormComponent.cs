@@ -213,10 +213,11 @@ namespace SandWorm
         }
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {
-            if (_cloud == null)
-                return;
+            if (_cloud != null)
+                args.Display.DrawPointCloud(_cloud, 3);
 
-            args.Display.DrawPointCloud(_cloud, 3);
+            if (_outputContours.Count != 0)
+                args.Display.DrawLines(_outputContours, Color.White, 1);
         }
 
         public override BoundingBox ClippingBox // TODO Add smarter logic to define the bounding box
