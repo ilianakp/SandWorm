@@ -106,6 +106,9 @@ namespace SandWorm
                 _quadMesh = null;
                 trimmedXYLookupTable = null; // Force trimming of lookup tables
                 _reset = false;
+                renderBuffer.Clear();
+                runningSum = null;
+
 
                 // Only calculate once
                 unitsMultiplier = GeneralHelpers.ConvertDrawingUnits(RhinoDoc.ActiveDoc.ModelUnitSystem);
