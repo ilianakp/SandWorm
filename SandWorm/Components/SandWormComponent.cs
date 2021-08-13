@@ -223,11 +223,11 @@ namespace SandWorm
                 args.Display.DrawLines(_outputContours, Color.White, 1);
         }
 
-        public override BoundingBox ClippingBox // TODO Add smarter logic to define the bounding box
+        public override BoundingBox ClippingBox 
         {
             get
             {
-                return new BoundingBox(-1500, -1500, -1500, 1500, 1500, 1500);
+                return _quadMesh.GetBoundingBox(false);
             }
         }
 
