@@ -20,6 +20,9 @@ namespace SandWorm.Analytics
 
             Polyline waterBoundary = new Polyline(waterCorners);
             Mesh waterPlane = Mesh.CreateFromClosedPolyline(waterBoundary);
+
+            //Setting mesh transparency doesn't work. It's a known bug https://mcneel.myjetbrains.com/youtrack/issue/RH-49604
+            //waterPlane.VertexColors.CreateMonotoneMesh(System.Drawing.Color.FromArgb(100, 100, 100, 255));
             outputGeometry.Add(waterPlane);
         }
     }
