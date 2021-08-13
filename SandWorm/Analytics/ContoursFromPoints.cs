@@ -61,6 +61,13 @@ namespace SandWorm.Analytics
                             {
                                 Point4d _start = vertexStack.Pop();
                                 Point4d _end = intersectionPoints[a];
+
+                                if (_start.Z != _end.Z)
+                                    if (vertexStack.Count > 0)
+                                        _start = vertexStack.Pop();
+                                    else
+                                        continue;
+
                                 _contourLines.Add(new Line(_start.X, _start.Y, _start.Z, _end.X, _end.Y, _end.Z));
                             }
                         }
@@ -76,28 +83,36 @@ namespace SandWorm.Analytics
         {
             List<Point4d> intersections = new List<Point4d>();
             Point4d _p = new Point4d();
-            double deltaZ = Math.Abs(Math.Round(endVertex.Z - startVertex.Z));
+            double deltaZ = Math.Abs(endVertex.Z - startVertex.Z);
 
-            for (int a = 0; a < deltaZ; a++)
+            for (int a = 1; a <= deltaZ; a++)
             {
                 if (startVertex.Z < endVertex.Z)
-                    _p.Z = startVertex.Z + a + 1;
+                    _p.Z = Math.Floor(startVertex.Z) + a;
                 else
                 {
-                    _p.Z = startVertex.Z - a - 1;
+                    _p.Z = Math.Ceiling(startVertex.Z) - a;
                     _p.W = 1; // Use point weight, to mark that this is an inwards facing point
                 }
 
-                if (Math.Round(_p.Z) % threshold == 0) // Only create intersection points if they fall within the user-defined threshold
+                if (_p.Z % threshold == 0) // Only create intersection points if they fall within the user-defined threshold
                 {
-                    _p.X = startVertex.X + ((a + 1) * ((endVertex.X - startVertex.X) / deltaZ));
-                    _p.Y = startVertex.Y + ((a + 1) * ((endVertex.Y - startVertex.Y) / deltaZ));
+                    _p.X = InterpolateCoordinates(startVertex.X, endVertex.X, deltaZ, a);
+                    _p.Y = InterpolateCoordinates(startVertex.Y, endVertex.Y, deltaZ, a);
 
                     intersections.Add(_p);
                 }
             }
 
             return intersections;
+        }
+
+        private static double InterpolateCoordinates(double start, double end, double deltaZ, int iterator)
+        {
+            if (start < end)
+                return start + (iterator * ((end - start) / deltaZ));
+            else
+                return end + ((Math.Ceiling(deltaZ) - iterator) * ((start - end) / deltaZ));
         }
     }
 }
