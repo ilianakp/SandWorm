@@ -82,7 +82,7 @@ namespace SandWorm
         {
             pManager.AddGeometryParameter("Terrain", "terrain", "", GH_ParamAccess.list);
             pManager.AddGeometryParameter("Water surface", "water surface", "", GH_ParamAccess.list);
-            pManager.AddCurveParameter("Contours", "contours", "", GH_ParamAccess.list);
+            //pManager.AddCurveParameter("Contours", "contours", "", GH_ParamAccess.list);
             pManager.AddGenericParameter("Stats", "stats", "", GH_ParamAccess.item);
         }
 
@@ -187,7 +187,7 @@ namespace SandWorm
                 {
                     ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints, (int)_contourIntervalRange.Value, trimmedWidth, trimmedHeight, (int)_rainDensity.Value);
                     //new Contours().GetGeometryForAnalysis(ref _outputContours, _contourIntervalRange.Value, _quadMesh);
-                    DA.SetDataList(2, _outputContours);
+                    //DA.SetDataList(2, _outputContours);
                 }
 
                 GeneralHelpers.LogTiming(ref stats, timer, "Mesh analysis"); // Debug Info
@@ -211,7 +211,7 @@ namespace SandWorm
                 DA.SetDataList(1, _outputWaterSurface);
             }
 
-            DA.SetDataList(3, stats);
+            DA.SetDataList(2, stats);
             ScheduleSolve();
         }
         public override void DrawViewportWires(IGH_PreviewArgs args)

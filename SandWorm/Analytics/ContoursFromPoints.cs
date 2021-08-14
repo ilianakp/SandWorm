@@ -87,9 +87,13 @@ namespace SandWorm.Analytics
             List<Point4d> intersections = new List<Point4d>();
             Point4d _p = new Point4d();
             double deltaZ = Math.Abs(endVertex.Z - startVertex.Z);
+
+            if ((int)startVertex.Z == (int)endVertex.Z || deltaZ == 0) // Discard points with the same integer (e.g. 40.1 & 40.9) as they don't cross an isocurve
+                return intersections;
+
             double ratio = 0.0;
 
-            for (int a = 1; a <= Math.Round(deltaZ); a++)
+            for (int a = 1; a <= Math.Ceiling(deltaZ); a++)
             {
                 if (startVertex.Z < endVertex.Z)
                 {
