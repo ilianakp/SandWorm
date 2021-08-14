@@ -21,7 +21,7 @@ namespace SandWorm
         public static MenuSlider _colorGradientRange;
         public static MenuSlider _contourIntervalRange;
         public static MenuSlider _waterLevel;
-        public static MenuSlider _rainDensity;
+        public static MenuSlider _contourRoughness;
 
         public static MenuSlider _averagedFrames;
         public static MenuSlider _blurRadius;
@@ -130,11 +130,12 @@ namespace SandWorm
             MenuStaticText contourIntervalHeader = new MenuStaticText("Contour interval", "Define spacing between contours. \nInput should be in millimeters.");
             _contourIntervalRange = new MenuSlider(contourIntervalHeader, 25, 0, 30, 0, 0);
 
-            MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
-            _waterLevel = new MenuSlider(contourIntervalHeader, 26, 0, 300, 0, 0);
+            MenuStaticText contourRoughnessHeader = new MenuStaticText("Contour roughness", "Specify how rough contour sampling should be.");
+            _contourRoughness = new MenuSlider(contourRoughnessHeader, 27, 1, 20, 2, 0);
 
-            MenuStaticText rainDensityHeader = new MenuStaticText("Contour density", "Define spacing between simulated rain drops. \nInput should be in millimeters.");
-            _rainDensity = new MenuSlider(contourIntervalHeader, 27, 1, 300, 50, 0);
+            MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
+            _waterLevel = new MenuSlider(waterLevelHeader, 26, 0, 300, 0, 0);
+
 
             analysisMenu.AddControl(analysisPanel);
             attr.AddMenu(analysisMenu);
@@ -147,10 +148,10 @@ namespace SandWorm
             analysisPanel.AddControl(_colorGradientRange);
             analysisPanel.AddControl(contourIntervalHeader);
             analysisPanel.AddControl(_contourIntervalRange);
+            analysisPanel.AddControl(contourRoughnessHeader);
+            analysisPanel.AddControl(_contourRoughness);
             analysisPanel.AddControl(waterLevelHeader);
             analysisPanel.AddControl(_waterLevel);
-            analysisPanel.AddControl(rainDensityHeader);
-            analysisPanel.AddControl(_rainDensity);
 
             #endregion
 
