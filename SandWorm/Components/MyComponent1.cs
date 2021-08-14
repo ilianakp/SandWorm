@@ -47,7 +47,7 @@ namespace SandWorm
             for (int i = 0; i < pts.Count; i++)
                 points[i] = pts[i];
 
-            SandWorm.Analytics.ContoursFromPoints.GetGeometryForAnalysis(ref lines, points, threshhold, 51, 51, interval);
+            SandWorm.Analytics.ContoursFromPoints.GetGeometryForAnalysis(ref lines, points, threshhold, 4, 4, interval);
 
             //DA.SetDataList(0, outpoints);
             DA.SetDataList(1, lines);

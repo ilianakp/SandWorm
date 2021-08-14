@@ -54,19 +54,24 @@ namespace SandWorm.Analytics
 
                                 if (_start.Z != _end.Z)
                                 {
-                                    if (a >= intersectionPoints.Count - 1)
-                                        continue;
+                                    if (a < intersectionPoints.Count - 1)
+                                    {
+                                        Point4d _next = intersectionPoints[a + 1];
 
-                                    Point4d _next = intersectionPoints[a + 1];
-
-                                    if (_start.Z == _next.Z && _start.W == _next.W)
-                                        _end = _next;
-
-                                    else if (vertexStack.Count > 0)
-                                        _start = vertexStack.Pop();
+                                        if (_start.Z == _next.Z && _start.W != _next.W)
+                                            _end = _next;
+                                        else if (vertexStack.Count > 0)
+                                            _start = vertexStack.Pop();
+                                        else
+                                        {
+                                            vertexStack.Push(_start);
+                                            vertexStack.Push(intersectionPoints[a]);
+                                            continue;
+                                        }
+                                    }
                                 }
-
-                                _contourLines.Add(new Line(_start.X, _start.Y, _start.Z, _end.X, _end.Y, _end.Z));
+                                if( _start.Z == _end.Z)
+                                    _contourLines.Add(new Line(_start.X, _start.Y, _start.Z, _end.X, _end.Y, _end.Z));
                             }
                         }
                     }
@@ -82,35 +87,38 @@ namespace SandWorm.Analytics
             List<Point4d> intersections = new List<Point4d>();
             Point4d _p = new Point4d();
             double deltaZ = Math.Abs(endVertex.Z - startVertex.Z);
+            double ratio = 0.0;
 
-            for (int a = 1; a <= deltaZ; a++)
+            for (int a = 1; a <= Math.Round(deltaZ); a++)
             {
                 if (startVertex.Z < endVertex.Z)
+                {
                     _p.Z = Math.Floor(startVertex.Z) + a;
+                    ratio = (_p.Z - startVertex.Z) / deltaZ;
+                }
                 else
                 {
                     _p.Z = Math.Ceiling(startVertex.Z) - a;
+                    ratio = 1 - ((_p.Z - endVertex.Z) / deltaZ);
                     _p.W = 1; // Use point weight, to mark that this is an inwards facing point
                 }
 
                 if (_p.Z % threshold == 0) // Only create intersection points if they fall within the user-defined threshold
                 {
-                    _p.X = InterpolateCoordinates(startVertex.X, endVertex.X, deltaZ, a);
-                    _p.Y = InterpolateCoordinates(startVertex.Y, endVertex.Y, deltaZ, a);
+                    _p.X = InterpolateCoordinates(startVertex.X, endVertex.X, ratio);
+                    _p.Y = InterpolateCoordinates(startVertex.Y, endVertex.Y, ratio);
 
                     intersections.Add(_p);
                 }
             }
-
             return intersections;
         }
 
-        private static double InterpolateCoordinates(double start, double end, double deltaZ, int iterator)
+  
+        private static double InterpolateCoordinates(double start, double end, double ratio)
         {
-            if (start < end)
-                return start + (iterator * ((end - start) / deltaZ));
-            else
-                return end + ((Math.Ceiling(deltaZ) - iterator) * ((start - end) / deltaZ));
+            return start + ratio * (end - start);
         }
+        
     }
 }
