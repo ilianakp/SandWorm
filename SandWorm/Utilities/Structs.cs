@@ -25,5 +25,17 @@ namespace SandWorm
             Aspect,
             CutFill
         }
+
+        public enum ColorPalettes
+        {
+            Custom,
+            Chile,
+            Desert,
+            Europe,
+            Greyscale,
+            Mars,
+            Ocean,
+            Rainbow
+        }
     }
 }

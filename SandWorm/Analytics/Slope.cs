@@ -236,7 +236,7 @@ namespace SandWorm
             var moderateSlopeRange = new Analysis.VisualisationRangeWithColor
             {
                 ValueSpan = (int)gradientRange,
-                ColorStart = new ColorHSL(0.15, 1.0, 0.5), // Green
+                ColorStart = new ColorHSL(0.15, 1.0, 0.5), // Yellow
                 ColorEnd = new ColorHSL(0.0, 1.0, 0.5) // Red
             };
             var extremeSlopeRange = new Analysis.VisualisationRangeWithColor

@@ -38,6 +38,7 @@ namespace SandWorm
         private Color[] _vertexColors;
         private Mesh _quadMesh;
         private PointCloud _cloud;
+        private List<Color> colorPalettes;
 
         private readonly LinkedList<int[]> renderBuffer = new LinkedList<int[]>();
         private int[] runningSum;
@@ -70,12 +71,12 @@ namespace SandWorm
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddBooleanParameter("Calibrate", "calibrate", "", GH_ParamAccess.item, calibrate);
-            pManager.AddBooleanParameter("Reset", "reset", "", GH_ParamAccess.item, reset);
-            pManager.AddColourParameter("Color Gradient", "color gradient", "", GH_ParamAccess.list);
-            pManager.AddGenericParameter("Mesh", "mesh", "", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Reset", "reset", "Hitting this button will reset everything to defaults.", GH_ParamAccess.item, reset);
+            pManager.AddColourParameter("Color list", "color list", "Provide 5 custom colors to define a gradient for the elevation analysis.", GH_ParamAccess.list);
+            //pManager.AddGenericParameter("Mesh", "mesh", "", GH_ParamAccess.item);
 
             pManager[2].Optional = true;
-            pManager[3].Optional = true;
+            //pManager[3].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -175,9 +176,13 @@ namespace SandWorm
                     _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
             }
 
+            colorPalettes = new List<Color>();
+            DA.GetDataList(2, colorPalettes);
+
             GenerateMeshColors(ref _vertexColors, _analysisType.Value, averagedDepthFrameData,
                 depthPixelSize, trimmedXYLookupTable, trimmedRGBArray,
-                _colorGradientRange.Value, _sensorElevation.Value, trimmedWidth, trimmedHeight);
+                _colorGradientRange.Value, (Structs.ColorPalettes)_colorPalette.Value, colorPalettes,
+                _sensorElevation.Value, trimmedWidth, trimmedHeight);
 
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
 

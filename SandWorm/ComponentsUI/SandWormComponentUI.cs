@@ -19,6 +19,7 @@ namespace SandWorm
 
         public static MenuDropDown _outputType;
         public static MenuDropDown _analysisType;
+        public static MenuDropDown _colorPalette;
         public static MenuSlider _colorGradientRange;
         public static MenuSlider _contourIntervalRange;
         public static MenuSlider _waterLevel;
@@ -117,14 +118,14 @@ namespace SandWorm
 
             MenuStaticText analysisTypeHeader = new MenuStaticText("Analysis type", "Choose which type of analysis to perform on scanned geometry.");
             _analysisType = new MenuDropDown(23, "Ouput type", "Choose type of geometry to output.");
-            _analysisType.AddItem("None", "None");
-            _analysisType.AddItem("RGB", "RGB");
-            _analysisType.AddItem("Elevation", "Elevation");
-            _analysisType.AddItem("Slope", "Slope");
-            _analysisType.AddItem("Aspect", "Aspect");
-            _analysisType.AddItem("Cut Fill", "Cut & Fill");
-            _analysisType.Value = 2; // Set elevation as default
+            _analysisType.AddEnum(typeof(Structs.AnalysisTypes));
+            _analysisType.Value = (int)Structs.AnalysisTypes.Elevation;
 
+            MenuStaticText colorPaletteHeader = new MenuStaticText("Color palette", "Choose color palette for elevation analysis.");
+            _colorPalette = new MenuDropDown(231, "Color palette", "Choose color palette for elevation analysis.");
+            _colorPalette.AddEnum(typeof(Structs.ColorPalettes));
+            _colorPalette.Value = (int)Structs.ColorPalettes.Europe;
+            
             MenuStaticText colorGradientHeader = new MenuStaticText("Color gradient range", "Maximum value for elevation analysis. \nInput should be in millimeters.");
             _colorGradientRange = new MenuSlider(colorGradientHeader, 24, 4, 500, 240, 0);
 
@@ -145,6 +146,8 @@ namespace SandWorm
             analysisPanel.AddControl(_outputType);
             analysisPanel.AddControl(analysisTypeHeader);
             analysisPanel.AddControl(_analysisType);
+            analysisPanel.AddControl(colorPaletteHeader);
+            analysisPanel.AddControl(_colorPalette);
             analysisPanel.AddControl(colorGradientHeader);
             analysisPanel.AddControl(_colorGradientRange);
             analysisPanel.AddControl(contourIntervalHeader);

@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Collections.Generic;
 using Rhino.Display;
 
 namespace SandWorm.Analytics
@@ -7,16 +8,21 @@ namespace SandWorm.Analytics
     {
         private int _lastSensorElevation; // Keep track of prior values to recalculate only as needed
         private double _lastGradientRange;
+        private Structs.ColorPalettes _colorPalette = Structs.ColorPalettes.Europe;
+        Color[] colorPalettes;
 
         public Elevation() : base("Visualise Elevation")
         {
         }
 
-        public Color[] GetColorCloudForAnalysis(double[] pixelArray, double sensorElevation, double gradientRange)
+        public Color[] GetColorCloudForAnalysis(double[] pixelArray, double sensorElevation, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors)
         {
+            _colorPalette = colorPalette;
             var sensorElevationRounded = (int)sensorElevation; // Convert once as it is done often
             if (lookupTable == null || sensorElevationRounded != _lastSensorElevation || gradientRange != _lastGradientRange)
             {
+                colorPalettes = ColorPalettes.GenerateColorPalettes(_colorPalette, customColors);
+                
                 ComputeLookupTableForAnalysis(sensorElevation, gradientRange);
             }
 
@@ -39,28 +45,29 @@ namespace SandWorm.Analytics
         {
             var sElevationRange = new Analysis.VisualisationRangeWithColor
             {
-                ValueSpan = (int) (gradientRange / 4),
-                ColorStart = new ColorHSL(0.40, 0.35, 0.3), // Dark Green
-                ColorEnd = new ColorHSL(0.30, 0.85, 0.4) // Green
+                ValueSpan = (int)(gradientRange / 4),
+                ColorStart = new ColorHSL(colorPalettes[0]),
+                ColorEnd = new ColorHSL(colorPalettes[1])
             };
             var mElevationRange = new Analysis.VisualisationRangeWithColor
             {
                 ValueSpan = (int)(gradientRange / 4),
-                ColorStart = new ColorHSL(0.30, 0.85, 0.4), // Green
-                ColorEnd = new ColorHSL(0.20, 0.85, 0.5) // Yellow
+                ColorStart = new ColorHSL(colorPalettes[1]),
+                ColorEnd = new ColorHSL(colorPalettes[2])
             };
             var lElevationRange = new Analysis.VisualisationRangeWithColor
             {
                 ValueSpan = (int)(gradientRange / 4),
-                ColorStart = new ColorHSL(0.20, 0.85, 0.5), // Yellow
-                ColorEnd = new ColorHSL(0.10, 0.85, 0.6) // Orange
+                ColorStart = new ColorHSL(colorPalettes[2]),
+                ColorEnd = new ColorHSL(colorPalettes[3])
             };
             var xlElevationRange = new Analysis.VisualisationRangeWithColor
             {
                 ValueSpan = (int)(gradientRange / 4),
-                ColorStart = new ColorHSL(0.10, 1, 0.6), // Orange
-                ColorEnd = new ColorHSL(0.00, 1, 0.7) // Red
+                ColorStart = new ColorHSL(colorPalettes[3]),
+                ColorEnd = new ColorHSL(colorPalettes[4])
             };
+
             ComputeLinearRanges(sElevationRange, mElevationRange, lElevationRange, xlElevationRange);
             _lastSensorElevation = (int)sensorElevation;
             _lastGradientRange = gradientRange;

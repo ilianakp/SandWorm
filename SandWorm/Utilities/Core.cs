@@ -243,7 +243,7 @@ namespace SandWorm
         }
         
         public static void GenerateMeshColors(ref Color[] vertexColors, int analysisType, double[] averagedDepthFrameData, 
-            Vector2 depthPixelSize, Vector2[]xyLookuptable, BGRA[] pixelColors, double gradientRange,
+            Vector2 depthPixelSize, Vector2[]xyLookuptable, BGRA[] pixelColors, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors,
             double sensorElevation, int trimmedWidth, int trimmedHeight)
         {
             switch (analysisType)
@@ -257,7 +257,7 @@ namespace SandWorm
                     break;
 
                 case 2: // Elevation
-                    vertexColors = new Elevation().GetColorCloudForAnalysis(averagedDepthFrameData, sensorElevation, gradientRange);
+                    vertexColors = new Elevation().GetColorCloudForAnalysis(averagedDepthFrameData, sensorElevation, gradientRange, colorPalette, customColors);
                     break;
 
                 case 3: // Slope
