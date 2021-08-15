@@ -218,7 +218,7 @@ namespace SandWorm
 
             if (_waterLevel.Value > 0)
             {
-                WaterLevel.GetGeometryForAnalysis(ref _outputWaterSurface, _waterLevel.Value, allPoints, trimmedWidth);
+                WaterLevel.GetGeometryForAnalysis(ref _outputWaterSurface, _waterLevel.Value, _quadMesh);
                 DA.SetDataList(1, _outputWaterSurface);
                 GeneralHelpers.HideParameterGeometry(Params.Output[1]);
             }
