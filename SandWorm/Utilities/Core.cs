@@ -66,7 +66,7 @@ namespace SandWorm
         }
 
 
-        public static void GetTrimmedDimensions(Structs.KinectTypes kinectType, ref int trimmedWidth, ref int trimmedHeight, ref double[] elevationArray, int[] runningSum,
+        public static void GetTrimmedDimensions(Structs.KinectTypes kinectType, ref int trimmedWidth, ref int trimmedHeight, int[] runningSum,
                                                 double topRows, double bottomRows, double leftColumns, double rightColumns)
         {
             int _x;
@@ -93,9 +93,6 @@ namespace SandWorm
 
             trimmedWidth = (int)(_x - leftColumns - rightColumns);
             trimmedHeight = (int)(_y - topRows - bottomRows);
-            // Only create a new elevation array when user resizes the mesh
-            if (elevationArray == null || elevationArray.Length != trimmedWidth * trimmedHeight)
-                elevationArray = new double[trimmedWidth * trimmedHeight];
         }
 
        
@@ -154,8 +151,8 @@ namespace SandWorm
                 leftColumns, rightColumns, topRows, bottomRows,
                 activeHeight, activeWidth);
 
-            // Reset everything when resizing Kinect's field of view or changing the amounts of frame to average across
-            if (renderBuffer.Count > averageFrames || (quadMesh != null && quadMesh.Faces.Count != (trimmedWidth - 2) * (trimmedHeight - 2)))
+            // Reset everything when resizing Kinect's field of view or changing the amount of frames to average across
+            if (renderBuffer.Count > averageFrames)
             {
                 renderBuffer.Clear();
                 Array.Clear(runningSum, 0, runningSum.Length);
@@ -169,7 +166,7 @@ namespace SandWorm
         }
 
         public static void AverageAndBlurPixels(int[] depthFrameDataInt, ref double[] averagedDepthFrameData, int[] runningSum, LinkedList<int[]> renderBuffer,
-            double sensorElevation, double[] elevationArray, double averageFrames,
+            double sensorElevation, double averageFrames,
             double blurRadius, int trimmedWidth, int trimmedHeight)
         {
             // Average across multiple frames
@@ -198,9 +195,6 @@ namespace SandWorm
 
                 averagedDepthFrameData[pixel] = runningSum[pixel] / renderBuffer.Count; // Calculate average values
                 
-                if (elevationArray.Length > 0) 
-                    averagedDepthFrameData[pixel] -= elevationArray[pixel]; // Correct for Kinect's inacurracies using input from the calibration component
-
                 if (renderBuffer.Count >= averageFrames)
                     runningSum[pixel] -= renderBuffer.First.Value[pixel]; // Subtract the oldest value from the sum 
             }

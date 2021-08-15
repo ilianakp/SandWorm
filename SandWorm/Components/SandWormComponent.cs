@@ -42,7 +42,6 @@ namespace SandWorm
 
         private readonly LinkedList<int[]> renderBuffer = new LinkedList<int[]>();
         private int[] runningSum;
-        private double[] elevationArray; // Array of elevation values for every pixel scanned during the calibration process
         private Vector2[] trimmedXYLookupTable = null;
         private Vector3?[] trimmedBooleanMatrix;
         private BGRA[] trimmedRGBArray;
@@ -124,11 +123,10 @@ namespace SandWorm
                 _resize = false;
             }
 
-
             GeneralHelpers.SetupLogging(ref timer, ref stats);
 
             // Trim 
-            GetTrimmedDimensions((KinectTypes)_sensorType.Value, ref trimmedWidth, ref trimmedHeight, ref elevationArray, runningSum,
+            GetTrimmedDimensions((KinectTypes)_sensorType.Value, ref trimmedWidth, ref trimmedHeight, runningSum,
                                   _bottomRows.Value, _topRows.Value, _leftColumns.Value, _rightColumns.Value);
 
 
@@ -140,8 +138,8 @@ namespace SandWorm
             _outputWaterSurface = new List<GeometryBase>();
             _outputContours = new List<Line>();
 
-            if (runningSum == null || runningSum.Length < elevationArray.Length)
-                runningSum = Enumerable.Range(1, elevationArray.Length).Select(i => new int()).ToArray();
+            if (runningSum == null)
+                runningSum = Enumerable.Range(1, depthFrameDataInt.Length).Select(i => new int()).ToArray();
 
             SetupRenderBuffer(depthFrameDataInt, (KinectTypes)_sensorType.Value, ref rgbArray, _analysisType.Value,
                 _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, _sensorElevation.Value, ref activeHeight, ref activeWidth,
@@ -163,7 +161,7 @@ namespace SandWorm
             GeneralHelpers.LogTiming(ref stats, timer, "Initial setup"); // Debug Info
 
             AverageAndBlurPixels(depthFrameDataInt, ref averagedDepthFrameData, runningSum, renderBuffer,
-                _sensorElevation.Value, elevationArray, _averagedFrames.Value, _blurRadius.Value, trimmedWidth, trimmedHeight);
+                _sensorElevation.Value, _averagedFrames.Value, _blurRadius.Value, trimmedWidth, trimmedHeight);
 
             GeneratePointCloud(averagedDepthFrameData, trimmedXYLookupTable, KinectAzureController.verticalTiltCorrectionMatrix, allPoints,
                 renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value, unitsMultiplier, _averagedFrames.Value);
