@@ -82,7 +82,7 @@ namespace SandWorm
         {
             pManager.AddGeometryParameter("Terrain", "terrain", "", GH_ParamAccess.list);
             pManager.AddGeometryParameter("Water surface", "water surface", "", GH_ParamAccess.list);
-            //pManager.AddCurveParameter("Contours", "contours", "", GH_ParamAccess.list);
+            pManager.AddCurveParameter("Contours", "contours", "", GH_ParamAccess.list);
             pManager.AddGenericParameter("Stats", "stats", "", GH_ParamAccess.item);
         }
 
@@ -109,10 +109,18 @@ namespace SandWorm
                 renderBuffer.Clear();
                 runningSum = null;
 
-
                 // Only calculate once
                 unitsMultiplier = GeneralHelpers.ConvertDrawingUnits(RhinoDoc.ActiveDoc.ModelUnitSystem);
                 depthPixelSize = Kinect2Helpers.GetDepthPixelSpacing(_sensorElevation.Value);
+            }
+
+            if (_resize)
+            {
+                trimmedXYLookupTable = null;
+                _quadMesh = null;
+                renderBuffer.Clear();
+                runningSum = null;
+                _resize = false;
             }
 
 
@@ -186,8 +194,8 @@ namespace SandWorm
                 if (_contourIntervalRange.Value > 0)
                 {
                     ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints, (int)_contourIntervalRange.Value, trimmedWidth, trimmedHeight, (int)_contourRoughness.Value);
-                    //new Contours().GetGeometryForAnalysis(ref _outputContours, _contourIntervalRange.Value, _quadMesh);
-                    //DA.SetDataList(2, _outputContours);
+                    if (Params.Output[2].Recipients.Count > 0)
+                        DA.SetDataList(2, _outputContours);
                 }
 
                 GeneralHelpers.LogTiming(ref stats, timer, "Mesh analysis"); // Debug Info
@@ -209,9 +217,10 @@ namespace SandWorm
             {
                 WaterLevel.GetGeometryForAnalysis(ref _outputWaterSurface, _waterLevel.Value, allPoints, trimmedWidth);
                 DA.SetDataList(1, _outputWaterSurface);
+                GeneralHelpers.HideParameterGeometry(Params.Output[1]);
             }
 
-            DA.SetDataList(2, stats);
+            DA.SetDataList(3, stats);
             ScheduleSolve();
         }
         public override void DrawViewportWires(IGH_PreviewArgs args)
@@ -219,7 +228,7 @@ namespace SandWorm
             if (_cloud != null)
                 args.Display.DrawPointCloud(_cloud, 3);
 
-            if (_outputContours.Count != 0)
+            if (_outputContours.Count != 0 && Params.Output[2].Recipients.Count == 0)
                 args.Display.DrawLines(_outputContours, Color.White, 1);
         }
 

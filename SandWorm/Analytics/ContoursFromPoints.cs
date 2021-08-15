@@ -88,7 +88,16 @@ namespace SandWorm.Analytics
             Point4d _p = new Point4d();
             double deltaZ = Math.Abs(endVertex.Z - startVertex.Z);
 
-            if ((int)startVertex.Z == (int)endVertex.Z || deltaZ == 0) // Discard points with the same integer (e.g. 40.1 & 40.9) as they don't cross an isocurve
+            // Discard points if they have (0,0) coordinates (coming from the WFOV)
+            if (startVertex.X == 0 && startVertex.Y == 0)
+                return intersections;
+
+            // Discard points if they have (0,0) coordinates (coming from the WFOV)
+            if (endVertex.X == 0 && endVertex.Y == 0)
+                return intersections;
+
+            // Discard points if they don't cross an isocurve 
+            if ((int)startVertex.Z == (int)endVertex.Z || deltaZ == 0) 
                 return intersections;
 
             double ratio = 0.0;

@@ -8,6 +8,14 @@ namespace SandWorm
 {
     public static class GeneralHelpers
     {
+        public static void HideParameterGeometry(Grasshopper.Kernel.IGH_Param parameter)
+        {
+            // Casting to IGH_PreviewObject allows access the 'Hidden' property
+            if (parameter.Recipients.Count > 0)
+                ((Grasshopper.Kernel.IGH_PreviewObject)parameter).Hidden = true; 
+            else
+                ((Grasshopper.Kernel.IGH_PreviewObject)parameter).Hidden = false;
+        }
         public static void SetupLogging(ref Stopwatch timer, ref List<string> output)
         {
             timer = Stopwatch.StartNew(); // Setup timer used for debugging

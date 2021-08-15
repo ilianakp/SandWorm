@@ -7,6 +7,7 @@ namespace SandWorm
         #region Class variables
 
         public static bool _reset = false;
+        public static bool _resize = false;
 
         public static MenuDropDown _sensorType;
         public static MenuDropDown _refreshRate;
@@ -169,10 +170,11 @@ namespace SandWorm
             };
 
             MenuStaticText averagedFramesHeader = new MenuStaticText("Averaged frames", "Number of frames to average across.");
-            _averagedFrames = new MenuSlider(averagedFramesHeader, 42, 1, 30, 1, 0);
+            _averagedFrames = new MenuSlider(averagedFramesHeader, 42, 1, 30, 5, 0);
+            _averagedFrames.ValueChanged += _slider__ValueChanged;
 
             MenuStaticText blurRadiusHeader = new MenuStaticText("Blur Radius", "Define the extent of gaussian blurring.");
-            _blurRadius = new MenuSlider(blurRadiusHeader, 43, 0, 15, 1, 0);
+            _blurRadius = new MenuSlider(blurRadiusHeader, 43, 0, 15, 4, 0);
 
             postProcessingMenu.AddControl(postProcessingPanel);
             attr.AddMenu(postProcessingMenu);
@@ -192,8 +194,9 @@ namespace SandWorm
 
             void _slider__ValueChanged(object sender, EventArgs e)
             {
-                _reset = true;
+                _resize = true;
             }
+
             #endregion
         }
 

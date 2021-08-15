@@ -32,6 +32,7 @@ namespace SandWorm
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+
             List<Point3d> outpoints = new List<Point3d>();
             List<Point3d> pts = new List<Point3d>();
             Point3d[] points = new Point3d[51 * 51];
@@ -49,7 +50,7 @@ namespace SandWorm
 
             SandWorm.Analytics.ContoursFromPoints.GetGeometryForAnalysis(ref lines, points, threshhold, 4, 2, interval);
 
-            //DA.SetDataList(0, outpoints);
+            DA.SetDataList(0, outpoints);
             DA.SetDataList(1, lines);
         }
 
