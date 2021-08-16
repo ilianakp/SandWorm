@@ -12,7 +12,6 @@ using Grasshopper.Kernel;
 
 using SandWorm.Analytics;
 using static SandWorm.Core;
-using static SandWorm.Kinect2Helpers;
 using static SandWorm.Structs;
 using static SandWorm.SandWormComponentUI;
 using Microsoft.Azure.Kinect.Sensor;
@@ -107,7 +106,7 @@ namespace SandWorm
                 }
                 else
                 {
-                    KinectForWindows.sensor.Close();
+                    KinectForWindows.RemoveRef();
                     KinectForWindows.sensor = null;
                 }
                     
