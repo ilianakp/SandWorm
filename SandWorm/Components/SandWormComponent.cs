@@ -142,6 +142,10 @@ namespace SandWorm
                 {
                     _left = _rightColumns.Value;
                     _right = _leftColumns.Value;
+                } else
+                {
+                    _left = _leftColumns.Value;
+                    _right = _rightColumns.Value;
                 }
             }
 
