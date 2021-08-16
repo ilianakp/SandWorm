@@ -30,6 +30,9 @@ namespace SandWorm
         private int trimmedHeight;
         private int trimmedWidth;
 
+        private double _left = _leftColumns.Value;
+        private double _right = _rightColumns.Value;
+
         // Data arrays
         private BGRA[] rgbArray;
         private Point3d[] allPoints;
@@ -108,6 +111,10 @@ namespace SandWorm
                 {
                     KinectForWindows.RemoveRef();
                     KinectForWindows.sensor = null;
+
+                    // Flip left and right columns for Kinect for Windows
+                    _left = _rightColumns.Value;
+                    _right = _leftColumns.Value;
                 }
                     
                 _quadMesh = null;
@@ -127,13 +134,20 @@ namespace SandWorm
                 renderBuffer.Clear();
                 runningSum = null;
                 _resize = false;
+
+                // Flip left and right columns for Kinect for Windows
+                if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
+                {
+                    _left = _rightColumns.Value;
+                    _right = _leftColumns.Value;
+                }
             }
 
             GeneralHelpers.SetupLogging(ref timer, ref stats);
 
             // Trim 
             GetTrimmedDimensions((KinectTypes)_sensorType.Value, ref trimmedWidth, ref trimmedHeight, runningSum,
-                                  _bottomRows.Value, _topRows.Value, _leftColumns.Value, _rightColumns.Value);
+                                  _bottomRows.Value, _topRows.Value, _left, _right);
 
 
             // Initialize
@@ -148,7 +162,7 @@ namespace SandWorm
                 runningSum = Enumerable.Range(1, depthFrameDataInt.Length).Select(i => new int()).ToArray();
 
             SetupRenderBuffer(depthFrameDataInt, (KinectTypes)_sensorType.Value, ref rgbArray, _analysisType.Value,
-                _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, _sensorElevation.Value, ref activeHeight, ref activeWidth,
+                _left, _right, _bottomRows.Value, _topRows.Value, _sensorElevation.Value, ref activeHeight, ref activeWidth,
                 _averagedFrames.Value, runningSum, renderBuffer);
 
 
@@ -171,7 +185,7 @@ namespace SandWorm
 
                     case KinectTypes.KinectForWindows:
                         Core.TrimXYLookupTable(KinectForWindows.idealXYCoordinates, trimmedXYLookupTable,
-                            _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth, unitsMultiplier);
+                            _left, _right, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth, unitsMultiplier);
                         break;
                 }
             }
@@ -189,7 +203,7 @@ namespace SandWorm
             {
                 trimmedRGBArray = new Color[trimmedHeight * trimmedWidth];
                 TrimColorArray(rgbArray, ref trimmedRGBArray, (KinectTypes)_sensorType.Value,
-                    _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
+                    _left, _right, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
             }
 
             colorPalettes = new List<Color>();
