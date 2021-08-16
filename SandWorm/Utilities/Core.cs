@@ -359,7 +359,8 @@ namespace SandWorm
                     break;
 
                 case Structs.KinectTypes.KinectForWindows:
-
+                    if (KinectForWindows.rgbColorData == null)
+                        break;
                     for (int rows = (int)topRows, j = 0; rows < _yStride; rows++)
                     {
                         for (int columns = (int)rightColumns; columns < _xStride; columns++, j++)

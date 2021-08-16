@@ -30,8 +30,8 @@ namespace SandWorm
         private int trimmedHeight;
         private int trimmedWidth;
 
-        private double _left = _leftColumns.Value;
-        private double _right = _rightColumns.Value;
+        private double _left;
+        private double _right;
 
         // Data arrays
         private BGRA[] rgbArray;
@@ -94,6 +94,8 @@ namespace SandWorm
 
         protected override void OnComponentLoaded()
         {
+            _left = _leftColumns.Value;
+            _right = _rightColumns.Value;
             base.OnComponentLoaded();
         }
 

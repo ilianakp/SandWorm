@@ -46,7 +46,6 @@ namespace SandWorm
             if (sensor == null)
             {
                 AddRef();
-                //sensor = KinectForWindows.sensor;
             }
         }
 
@@ -63,13 +62,12 @@ namespace SandWorm
 
         public static void Initialize()
         {
-            
             sensor = KinectSensor.GetDefault();
             multiFrameReader = sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color);
             multiFrameReader.MultiSourceFrameArrived += new EventHandler<MultiSourceFrameArrivedEventArgs>(Reader_FrameArrived);
-            ComputeXYCoordinates();
-
             sensor.Open();
+
+            ComputeXYCoordinates();
         }
 
         private static void ComputeXYCoordinates()
@@ -114,7 +112,7 @@ namespace SandWorm
                     catch (Exception) { return; }
                 }
 
-                if (multiFrame.ColorFrameReference != null)
+                if ((Structs.AnalysisTypes)SandWormComponentUI._analysisType.Value == Structs.AnalysisTypes.Camera && multiFrame.ColorFrameReference != null)
                 {
                     try
                     {
