@@ -9,7 +9,7 @@ namespace SandWorm.Analytics
         public RGB() : base("RGB")
         {
         }
-        public Color[] GetColorCloudForAnalysis(BGRA[] pixelColors)
+        public Color[] GetColorCloudForAnalysis(Color[] pixelColors)
         {
             Color[] vertexColors = new Color[pixelColors.Length];
             for (int i = 0; i < pixelColors.Length; i++)

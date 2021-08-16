@@ -50,7 +50,7 @@ namespace SandWorm
                     colorPalettes[4] = Color.FromArgb(200, 200, 200);
                     break;
 
-                case Structs.ColorPalettes.Mars:
+                case Structs.ColorPalettes.Dune:
                     colorPalettes[0] = Color.FromArgb(80, 80, 80);
                     colorPalettes[1] = Color.FromArgb(122, 91, 76);
                     colorPalettes[2] = Color.FromArgb(191, 118, 40);

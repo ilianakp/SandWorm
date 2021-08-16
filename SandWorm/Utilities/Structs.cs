@@ -19,7 +19,7 @@ namespace SandWorm
         public enum AnalysisTypes
         {
             None,
-            RGB,
+            Camera,
             Elevation,
             Slope,
             Aspect,
@@ -31,9 +31,9 @@ namespace SandWorm
             Custom,
             Chile,
             Desert,
+            Dune,
             Europe,
             Greyscale,
-            Mars,
             Ocean,
             Rainbow
         }

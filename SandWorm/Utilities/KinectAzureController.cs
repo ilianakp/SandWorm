@@ -16,6 +16,7 @@ namespace SandWorm
         public static ushort[] depthFrameData = null;
         public static byte[] colorFrameData = null;
         public static Image colorForDepthImage = null;
+        public static Vector2[] idealXYCoordinates;
 
         // Kinect for Azure specific
         public static Device sensor;
@@ -30,7 +31,6 @@ namespace SandWorm
         public const int depthHeightWide = 1024;
 
         public static Vector3?[] undistortMatrix;
-        public static Vector2[] idealXYCoordinates;
         public static double[] verticalTiltCorrectionMatrix;
 
         public const double sin6 = 0.10452846326;
@@ -78,7 +78,7 @@ namespace SandWorm
                 if (capture.Depth != null)
                     depthFrameData = capture.Depth.GetPixels<ushort>().ToArray();
 
-                if ((Structs.AnalysisTypes) analysisType == Structs.AnalysisTypes.RGB && capture.Color != null)
+                if ((Structs.AnalysisTypes) analysisType == Structs.AnalysisTypes.Camera && capture.Color != null)
                 {
                     Image rgb = null;
                     if (deviceConfig.DepthMode == DepthMode.NFOV_Unbinned)
@@ -107,7 +107,6 @@ namespace SandWorm
                 }
                 catch (Exception ex)
                 {
-                    message = ex.ToString();
                 }
 
                 try

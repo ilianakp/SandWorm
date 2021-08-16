@@ -24,7 +24,6 @@ namespace SandWorm
         #region Class Variables
 
         // Units & dimensions
-        private Vector2 depthPixelSize;
         private double unitsMultiplier = 1;
 
         private int activeHeight = 0;
@@ -44,7 +43,7 @@ namespace SandWorm
         private int[] runningSum;
         private Vector2[] trimmedXYLookupTable = null;
         private Vector3?[] trimmedBooleanMatrix;
-        private BGRA[] trimmedRGBArray;
+        private Color[] trimmedRGBArray;
 
         // Outputs
         private List<Mesh> _outputMesh;
@@ -101,8 +100,17 @@ namespace SandWorm
             DA.GetData(1, ref reset);
             if (reset || _reset)
             {
-                KinectAzureController.sensor.Dispose();
-                KinectAzureController.sensor = null;
+                if ((KinectTypes)_sensorType.Value != KinectTypes.KinectForWindows)
+                {
+                    KinectAzureController.sensor.Dispose();
+                    KinectAzureController.sensor = null;
+                }
+                else
+                {
+                    KinectForWindows.sensor.Close();
+                    KinectForWindows.sensor = null;
+                }
+                    
                 _quadMesh = null;
                 trimmedXYLookupTable = null; // Force trimming of lookup tables
                 _reset = false;
@@ -111,7 +119,6 @@ namespace SandWorm
 
                 // Only calculate once
                 unitsMultiplier = GeneralHelpers.ConvertDrawingUnits(RhinoDoc.ActiveDoc.ModelUnitSystem);
-                depthPixelSize = Kinect2Helpers.GetDepthPixelSpacing(_sensorElevation.Value);
             }
 
             if (_resize)
@@ -143,19 +150,31 @@ namespace SandWorm
 
             SetupRenderBuffer(depthFrameDataInt, (KinectTypes)_sensorType.Value, ref rgbArray, _analysisType.Value,
                 _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, _sensorElevation.Value, ref activeHeight, ref activeWidth,
-                _quadMesh, trimmedWidth, trimmedHeight, _averagedFrames.Value,
-                runningSum, renderBuffer);
+                _averagedFrames.Value, runningSum, renderBuffer);
 
 
-            if ((KinectTypes)_sensorType.Value != KinectTypes.KinectForWindows && trimmedXYLookupTable == null) // Only recalculate on reset
+            if (trimmedXYLookupTable == null) // Only recalculate on reset
             {
                 trimmedXYLookupTable = new Vector2[trimmedWidth * trimmedHeight];
                 trimmedBooleanMatrix = new Vector3?[trimmedWidth * trimmedHeight];
 
-                Core.TrimXYLookupTable(KinectAzureController.idealXYCoordinates, trimmedXYLookupTable, KinectAzureController.verticalTiltCorrectionMatrix,
-                    KinectAzureController.undistortMatrix, trimmedBooleanMatrix,
-                                    _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value,
-                                    activeHeight, activeWidth, unitsMultiplier);
+                switch ((KinectTypes)_sensorType.Value)
+                {
+                    case KinectTypes.KinectAzureNear:
+                    case KinectTypes.KinectAzureWide:
+                        Core.TrimXYLookupTable(KinectAzureController.idealXYCoordinates, trimmedXYLookupTable,
+                            _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth, unitsMultiplier);
+
+                        Core.SetupCorrectiveLookupTables(KinectAzureController.idealXYCoordinates, KinectAzureController.verticalTiltCorrectionMatrix,
+                            KinectAzureController.undistortMatrix, trimmedBooleanMatrix,
+                            _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
+                        break;
+
+                    case KinectTypes.KinectForWindows:
+                        Core.TrimXYLookupTable(KinectForWindows.idealXYCoordinates, trimmedXYLookupTable,
+                            _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth, unitsMultiplier);
+                        break;
+                }
             }
 
             GeneralHelpers.LogTiming(ref stats, timer, "Initial setup"); // Debug Info
@@ -163,22 +182,22 @@ namespace SandWorm
             AverageAndBlurPixels(depthFrameDataInt, ref averagedDepthFrameData, runningSum, renderBuffer,
                 _sensorElevation.Value, _averagedFrames.Value, _blurRadius.Value, trimmedWidth, trimmedHeight);
 
-            GeneratePointCloud(averagedDepthFrameData, trimmedXYLookupTable, KinectAzureController.verticalTiltCorrectionMatrix, allPoints,
-                renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value, unitsMultiplier, _averagedFrames.Value);
+            GeneratePointCloud(averagedDepthFrameData, trimmedXYLookupTable, KinectAzureController.verticalTiltCorrectionMatrix, (KinectTypes)_sensorType.Value, 
+                allPoints, renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value, unitsMultiplier, _averagedFrames.Value);
 
             // Produce 1st type of analysis that acts on the pixel array and assigns vertex colors
-            if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.RGB)
+            if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.Camera)
             {
-                trimmedRGBArray = new BGRA[trimmedHeight * trimmedWidth];
-                TrimColorArray(rgbArray, trimmedRGBArray,
+                trimmedRGBArray = new Color[trimmedHeight * trimmedWidth];
+                TrimColorArray(rgbArray, ref trimmedRGBArray, (KinectTypes)_sensorType.Value,
                     _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
             }
 
             colorPalettes = new List<Color>();
             DA.GetDataList(2, colorPalettes);
 
-            GenerateMeshColors(ref _vertexColors, _analysisType.Value, averagedDepthFrameData,
-                depthPixelSize, trimmedXYLookupTable, trimmedRGBArray,
+            GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
+                trimmedXYLookupTable, trimmedRGBArray,
                 _colorGradientRange.Value, (Structs.ColorPalettes)_colorPalette.Value, colorPalettes,
                 _sensorElevation.Value, trimmedWidth, trimmedHeight);
 
@@ -188,7 +207,7 @@ namespace SandWorm
             {
                 _cloud = null;
                 // Generate the mesh
-                _quadMesh = CreateQuadMesh(_quadMesh, allPoints, _vertexColors, trimmedBooleanMatrix, trimmedWidth, trimmedHeight);
+                _quadMesh = CreateQuadMesh(_quadMesh, allPoints, _vertexColors, trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
                 _outputMesh.Add(_quadMesh);
 
                 GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
@@ -231,7 +250,7 @@ namespace SandWorm
             if (_cloud != null)
                 args.Display.DrawPointCloud(_cloud, 3);
 
-            if (_outputContours.Count != 0 && Params.Output[2].Recipients.Count == 0)
+            if (_outputContours != null && _outputContours.Count != 0 && Params.Output[2].Recipients.Count == 0)
                 args.Display.DrawLines(_outputContours, Color.White, 1);
         }
 
@@ -239,7 +258,10 @@ namespace SandWorm
         {
             get
             {
-                return _quadMesh.GetBoundingBox(false);
+                if (_quadMesh != null)
+                    return _quadMesh.GetBoundingBox(false);
+                else
+                    return new BoundingBox();
             }
         }
 

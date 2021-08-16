@@ -187,7 +187,6 @@
     <Compile Include="CustomComponent\WidgetRenderArgs.cs" />
     <Compile Include="CustomComponent\WidgetServer.cs" />
     <Compile Include="Utilities\GeneralHelpers.cs" />
-    <Compile Include="Utilities\Kinect2Helpers.cs" />
     <Compile Include="Utilities\KinectAzureController.cs" />
     <Compile Include="Utilities\Core.cs" />
     <Compile Include="GaussianBlurProcessor.cs" />

@@ -14,7 +14,8 @@ namespace SandWorm
 {
     public static class Core
     {
-        public static Mesh CreateQuadMesh(Mesh mesh, Point3d[] vertices, Color[] colors, Vector3?[] booleanMatrix, int xStride, int yStride)
+        public static Mesh CreateQuadMesh(Mesh mesh, Point3d[] vertices, Color[] colors, Vector3?[] booleanMatrix, 
+            Structs.KinectTypes kinectType, int xStride, int yStride)
         {
             int xd = xStride;       // The x-dimension of the data
             int yd = yStride;       // They y-dimension of the data
@@ -26,18 +27,34 @@ namespace SandWorm
                 mesh.Vertices.UseDoublePrecisionVertices = true;
                 mesh.Vertices.AddVertices(vertices);
 
-                for (int y = 1; y < yd - 1; y++)       // Iterate over y dimension
+                switch (kinectType)
                 {
-                    for (int x = 1; x < xd - 1; x++)       // Iterate over x dimension
-                    {
-                        int i = y * xd + x;
-                        int j = (y - 1) * xd + x;
+                    case Structs.KinectTypes.KinectAzureNear:
+                    case Structs.KinectTypes.KinectAzureWide:
+                        for (int y = 1; y < yd - 1; y++)       // Iterate over y dimension
+                            for (int x = 1; x < xd - 1; x++)       // Iterate over x dimension
+                            {
+                                int i = y * xd + x;
+                                int j = (y - 1) * xd + x;
 
-                        // Only create faces if their corresponding vertices aren't nulls
-                        if (booleanMatrix[i] != null && booleanMatrix[i - 1] != null && booleanMatrix[j] != null && booleanMatrix[j - 1] != null)
-                            mesh.Faces.AddFace(j - 1, j, i, i - 1);
-                    }
+                                // This check is necessary for Kinect Azure WFOV
+                                if (booleanMatrix[i] != null && booleanMatrix[i - 1] != null && booleanMatrix[j] != null && booleanMatrix[j - 1] != null)
+                                    mesh.Faces.AddFace(j - 1, j, i, i - 1);
+                            }
+                        break;
+
+                    case Structs.KinectTypes.KinectForWindows:
+                        for (int y = 1; y < yd - 1; y++)       // Iterate over y dimension
+                            for (int x = 1; x < xd - 1; x++)       // Iterate over x dimension
+                            {
+                                int i = y * xd + x;
+                                int j = (y - 1) * xd + x;
+                                mesh.Faces.AddFace(j - 1, j, i, i - 1);
+                            }
+                        break;
                 }
+
+
             }
             else
             {
@@ -95,29 +112,45 @@ namespace SandWorm
             trimmedHeight = (int)(_y - topRows - bottomRows);
         }
 
-       
-        public static void TrimXYLookupTable(Vector2[] sourceXY, Vector2[] destinationXY, double[] verticalTiltCorrectionLookupTable,
-            Vector3?[] booleanMatrix, Vector3?[] trimmedBooleanMatrix, 
-            double leftColumns, double rightColumns, double topRows, double bottomRows, int height, int width, double unitsMultiplier) //Takes the feed and trims and casts from ushort m to int
+        public static void SetupCorrectiveLookupTables(Vector2[] idealXYCoordinates, double[] verticalTiltCorrectionLookupTable,
+            Vector3?[] booleanMatrix, Vector3?[] trimmedBooleanMatrix,
+            double leftColumns, double rightColumns, double topRows, double bottomRows, int height, int width) 
+        {
+            ref Vector3? bv0 = ref booleanMatrix[0];
+            ref Vector3? bd0 = ref trimmedBooleanMatrix[0];
+
+            int _yStride = height - (int)bottomRows;
+            int _xStride = width - (int)leftColumns;
+
+            for (int rows = (int)topRows, j = 0; rows < _yStride; rows++)
+            {
+                for (int columns = (int)rightColumns; columns < _xStride; columns++, j++)
+                {
+                    int i = rows * width + columns;
+                    verticalTiltCorrectionLookupTable[j] = idealXYCoordinates[i].Y * KinectAzureController.sin6;
+
+                    Unsafe.Add(ref bd0, j) = Unsafe.Add(ref bv0, i);
+                }
+            }
+        }
+
+        public static void TrimXYLookupTable(Vector2[] sourceXY, Vector2[] destinationXY,
+            double leftColumns, double rightColumns, double topRows, double bottomRows, int height, int width, double unitsMultiplier) 
         {
             ref Vector2 rv0 = ref sourceXY[0];
             ref Vector2 rd0 = ref destinationXY[0];
 
-            ref Vector3? bv0 = ref booleanMatrix[0];
-            ref Vector3? bd0 = ref trimmedBooleanMatrix[0];
-
+            int _yStride = height - (int)bottomRows;
+            int _xStride = width - (int)leftColumns;
             float _units = (float)unitsMultiplier;
 
-            for (int rows = (int)topRows, j = 0; rows < height - bottomRows; rows++)
+            for (int rows = (int)topRows, j = 0; rows < _yStride; rows++)
             {
-                for (int columns = (int)rightColumns; columns < width - leftColumns; columns++, j++)
+                for (int columns = (int)rightColumns; columns < _xStride; columns++, j++)
                 {
                     int i = rows * width + columns;
-                    Unsafe.Add(ref rd0, j).X = Unsafe.Add(ref rv0, i).X * -_units;
+                    Unsafe.Add(ref rd0, j).X = Unsafe.Add(ref rv0, i).X * _units;
                     Unsafe.Add(ref rd0, j).Y = Unsafe.Add(ref rv0, i).Y * _units;
-                    verticalTiltCorrectionLookupTable[j] = sourceXY[i].Y * KinectAzureController.sin6;
-
-                    Unsafe.Add(ref bd0, j) = Unsafe.Add(ref bv0, i);
                 }
             }
         }
@@ -125,7 +158,7 @@ namespace SandWorm
 
         public static void SetupRenderBuffer(int[] depthFrameDataInt, Structs.KinectTypes kinectType, ref BGRA[] rgbArray, int analysisType,
             double leftColumns, double rightColumns, double topRows, double bottomRows, double sensorElevation, ref int activeHeight, ref int activeWidth,
-            Mesh quadMesh, int trimmedWidth, int trimmedHeight, double averageFrames, int[] runningSum, LinkedList<int[]> renderBuffer)
+            double averageFrames, int[] runningSum, LinkedList<int[]> renderBuffer)
         {
 
             ushort[] depthFrameData;
@@ -151,7 +184,7 @@ namespace SandWorm
                 leftColumns, rightColumns, topRows, bottomRows,
                 activeHeight, activeWidth);
 
-            // Reset everything when resizing Kinect's field of view or changing the amount of frames to average across
+            // Reset everything when changing the amount of frames to average across
             if (renderBuffer.Count > averageFrames)
             {
                 renderBuffer.Clear();
@@ -207,64 +240,80 @@ namespace SandWorm
             }
         }
 
-        public static void GeneratePointCloud(double[] averagedDepthFrameData, Vector2[] trimmedXYLookupTable, double[] verticalTiltCorrectionLookupTable, 
+        public static void GeneratePointCloud(double[] averagedDepthFrameData, Vector2[] trimmedXYLookupTable, double[] verticalTiltCorrectionLookupTable, Structs.KinectTypes kinectType,
             Point3d[] allPoints, LinkedList<int[]> renderBuffer, int trimmedWidth, int trimmedHeight, double sensorElevation, double unitsMultiplier, double averageFrames)
         {
-
-            // Setup variables for per-pixel loop
-            
             Point3d tempPoint = new Point3d();
-            double correctedElevation = 0.0;
-            for (int rows = 0, i = 0; rows < trimmedHeight; rows++)
-                for (int columns = 0; columns < trimmedWidth; columns++, i++)
-                {
-                    //TODO add lookup table for Kinect for Windows as well
-                    //tempPoint.X = (float)(columns * -unitsMultiplier * depthPixelSize.X); // Flip direction of the X axis
-                    //tempPoint.Y = (float)(rows * unitsMultiplier * depthPixelSize.Y);
 
-                    tempPoint.X = trimmedXYLookupTable[i].X;
-                    tempPoint.Y = trimmedXYLookupTable[i].Y;
+            switch (kinectType)
+            {
+                case Structs.KinectTypes.KinectAzureNear:
+                case Structs.KinectTypes.KinectAzureWide:
 
-                    correctedElevation = averagedDepthFrameData[i] - verticalTiltCorrectionLookupTable[i];
-                    tempPoint.Z = (correctedElevation - sensorElevation) * -unitsMultiplier;
-                    averagedDepthFrameData[i] = correctedElevation;
+                    double correctedElevation = 0.0;
+                    for (int rows = 0, i = 0; rows < trimmedHeight; rows++)
+                        for (int columns = 0; columns < trimmedWidth; columns++, i++)
+                        {
+                            tempPoint.X = trimmedXYLookupTable[i].X * -1;
+                            tempPoint.Y = trimmedXYLookupTable[i].Y;
 
-                    allPoints[i] = tempPoint; // Add new point to point cloud
-                }
+                            // Correct for Kinect Azure's tilt of the depth camera
+                            correctedElevation = averagedDepthFrameData[i] - verticalTiltCorrectionLookupTable[i];
+                            tempPoint.Z = (correctedElevation - sensorElevation) * -unitsMultiplier;
+                            averagedDepthFrameData[i] = correctedElevation;
+
+                            allPoints[i] = tempPoint;
+                        }
+                    break;
+
+                case Structs.KinectTypes.KinectForWindows:
+                    for (int rows = 0, i = 0; rows < trimmedHeight; rows++)
+                        for (int columns = 0; columns < trimmedWidth; columns++, i++)
+                        {
+                            tempPoint.X = trimmedXYLookupTable[i].X;
+                            tempPoint.Y = trimmedXYLookupTable[i].Y * -1;
+                            tempPoint.Z = (averagedDepthFrameData[i] - sensorElevation) * -unitsMultiplier;
+                            allPoints[i] = tempPoint;
+                        }
+                    break;
+
+            }
+
+
 
             // Keep only the desired amount of frames in the buffer
             while (renderBuffer.Count >= averageFrames) renderBuffer.RemoveFirst();
         }
         
-        public static void GenerateMeshColors(ref Color[] vertexColors, int analysisType, double[] averagedDepthFrameData, 
-            Vector2 depthPixelSize, Vector2[]xyLookuptable, BGRA[] pixelColors, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors,
+        public static void GenerateMeshColors(ref Color[] vertexColors, Structs.AnalysisTypes analysisType, double[] averagedDepthFrameData, 
+            Vector2[]xyLookuptable, Color[] pixelColors, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors,
             double sensorElevation, int trimmedWidth, int trimmedHeight)
         {
             switch (analysisType)
             {
-                case 0: // None
+                case Structs.AnalysisTypes.None: 
                     vertexColors = new None().GetColorCloudForAnalysis();
                     break;
 
-                case 1: // RGB
-                    vertexColors = new RGB().GetColorCloudForAnalysis(pixelColors);
+                case Structs.AnalysisTypes.Camera:
+                    vertexColors = pixelColors;
                     break;
 
-                case 2: // Elevation
+                case Structs.AnalysisTypes.Elevation:
                     vertexColors = new Elevation().GetColorCloudForAnalysis(averagedDepthFrameData, sensorElevation, gradientRange, colorPalette, customColors);
                     break;
 
-                case 3: // Slope
+                case Structs.AnalysisTypes.Slope:
                     vertexColors = new Slope().GetColorCloudForAnalysis(averagedDepthFrameData,
-                        trimmedWidth, trimmedHeight, depthPixelSize.X, depthPixelSize.Y, gradientRange, xyLookuptable);
+                        trimmedWidth, trimmedHeight, gradientRange, xyLookuptable);
                     break;
 
-                case 4: // Aspect
+                case Structs.AnalysisTypes.Aspect:
                     vertexColors = new Aspect().GetColorCloudForAnalysis(averagedDepthFrameData,
                         trimmedWidth, trimmedHeight, gradientRange);
                     break;
 
-                case 5: // TODO: Cut & Fill
+                case Structs.AnalysisTypes.CutFill: // TODO
                     break;
             }
         }
@@ -288,19 +337,38 @@ namespace SandWorm
             }
         }
 
-        public static void TrimColorArray(BGRA[] source, BGRA[] destination, 
+        public static void TrimColorArray(BGRA[] source, ref Color[] destination, Structs.KinectTypes kinectType,
             double leftColumns, double rightColumns, double topRows, double bottomRows, int height, int width) 
         {
-            ref BGRA ru0 = ref source[0];
-            ref BGRA ri0 = ref destination[0];
+            int _yStride = height - (int)bottomRows;
+            int _xStride = width - (int)leftColumns;
 
-            for (int rows = (int)topRows, j = 0; rows < height - bottomRows; rows++)
+            switch (kinectType)
             {
-                for (int columns = (int)rightColumns; columns < width - leftColumns; columns++, j++)
-                {
-                    int i = rows * width + columns;
-                    Unsafe.Add(ref ri0, j) = Unsafe.Add(ref ru0, i);
-                }
+                case Structs.KinectTypes.KinectAzureNear:
+                case Structs.KinectTypes.KinectAzureWide:
+
+                    for (int rows = (int)topRows, j = 0; rows < _yStride; rows++)
+                    {
+                        for (int columns = (int)rightColumns; columns < _xStride; columns++, j++)
+                        {
+                            int i = rows * width + columns;
+                            destination[j] = Color.FromArgb(source[i].R, source[i].G, source[i].B);
+                        }
+                    }
+                    break;
+
+                case Structs.KinectTypes.KinectForWindows:
+
+                    for (int rows = (int)topRows, j = 0; rows < _yStride; rows++)
+                    {
+                        for (int columns = (int)rightColumns; columns < _xStride; columns++, j++)
+                        {
+                            int i = rows * width + columns;
+                            destination[j] = KinectForWindows.rgbColorData[i];
+                        }
+                    }
+                    break;
             }
         }
     }

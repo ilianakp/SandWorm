@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Windows.Media;
 using Microsoft.Kinect;
 
@@ -13,7 +14,9 @@ namespace SandWorm
         public static int colorHeight = 0;
         public static int colorWidth = 0;
         public static ushort[] depthFrameData = null;
-        public static byte[] colorFrameData = null;
+        private static byte[] colorFrameData = null;
+        public static System.Drawing.Color[] rgbColorData = null;
+        public static Vector2[] idealXYCoordinates;
 
         // Kinect for Windows specific
         public static KinectSensor sensor = null;
@@ -42,8 +45,8 @@ namespace SandWorm
         {
             if (sensor == null)
             {
-                KinectForWindows.AddRef();
-                sensor = KinectForWindows.sensor;
+                AddRef();
+                //sensor = KinectForWindows.sensor;
             }
         }
 
@@ -60,12 +63,27 @@ namespace SandWorm
 
         public static void Initialize()
         {
+            
             sensor = KinectSensor.GetDefault();
-            // TODO: switch based on component type?
             multiFrameReader = sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Depth | FrameSourceTypes.Color);
-            multiFrameReader.MultiSourceFrameArrived += new EventHandler<MultiSourceFrameArrivedEventArgs>(KinectForWindows.Reader_FrameArrived);
+            multiFrameReader.MultiSourceFrameArrived += new EventHandler<MultiSourceFrameArrivedEventArgs>(Reader_FrameArrived);
+            ComputeXYCoordinates();
 
             sensor.Open();
+        }
+
+        private static void ComputeXYCoordinates()
+        {
+            PointF[] intrinsicCoordinates = sensor.CoordinateMapper.GetDepthFrameToCameraSpaceTable();
+            idealXYCoordinates = new Vector2[depthWidth * depthHeight];
+            Vector2 _point = new Vector2();
+
+            for (int i = 0; i < intrinsicCoordinates.Length; i++)
+            {
+                _point.X = intrinsicCoordinates[i].X * (float)SandWormComponentUI._sensorElevation.Value;
+                _point.Y = intrinsicCoordinates[i].Y * (float)SandWormComponentUI._sensorElevation.Value;
+                idealXYCoordinates[i] = _point;
+            }
         }
 
         private static void Reader_FrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
@@ -102,22 +120,48 @@ namespace SandWorm
                     {
                         using (ColorFrame colorFrame = multiFrame.ColorFrameReference.AcquireFrame())
                         {
-                            if (colorFrame != null)
-                            {
-                                colorFrameDescription = colorFrame.FrameDescription;
-                                colorWidth = colorFrameDescription.Width;
-                                colorHeight = colorFrameDescription.Height;
-                                colorFrameData = new byte[colorWidth * colorHeight * bytesForPixelColor]; // 4 == bytes per color
+                            if (colorFrame == null)
+                                return;
 
-                                using (KinectBuffer buffer = colorFrame.LockRawImageBuffer())
+                            colorFrameDescription = colorFrame.FrameDescription;
+                            colorWidth = colorFrameDescription.Width;
+                            colorHeight = colorFrameDescription.Height;
+                            colorFrameData = new byte[colorWidth * colorHeight * bytesForPixelColor]; // 4 == bytes per color
+
+                            using (KinectBuffer buffer = colorFrame.LockRawImageBuffer())
+                            {
+                                if (colorFrame.RawColorImageFormat == ColorImageFormat.Bgra)
                                 {
-                                    if (colorFrame.RawColorImageFormat == ColorImageFormat.Bgra)
+                                    colorFrame.CopyRawFrameDataToArray(colorFrameData);
+                                }
+                                else
+                                {
+                                    colorFrame.CopyConvertedFrameDataToArray(colorFrameData, ColorImageFormat.Bgra);
+                                }
+                            }
+                            ColorSpacePoint[] _colorPoints = new ColorSpacePoint[depthWidth * depthHeight];
+                            sensor.CoordinateMapper.MapDepthFrameToColorSpace(depthFrameData, _colorPoints);
+
+                            rgbColorData = new System.Drawing.Color[depthWidth * depthHeight];
+
+                            for (int y = 0, j = 0; y < depthHeight; y++)
+                            {
+                                for (int x = 0; x < depthWidth; x++, j++)
+                                {
+                                    int depthIndex = (y * depthWidth) + x;
+                                    ColorSpacePoint colorPoint = _colorPoints[depthIndex];
+
+                                    int colorX = (int)Math.Floor(colorPoint.X + 0.5);
+                                    int colorY = (int)Math.Floor(colorPoint.Y + 0.5);
+
+                                    if ((colorX >= 0) && (colorX < colorWidth) && (colorY >= 0) && (colorY < colorHeight))
                                     {
-                                        colorFrame.CopyRawFrameDataToArray(colorFrameData);
+                                        int colorIndex = ((colorY * colorWidth) + colorX) * 4;
+                                        rgbColorData[j] = System.Drawing.Color.FromArgb(colorFrameData[colorIndex - 2], colorFrameData[colorIndex + 1], colorFrameData[colorIndex]);
                                     }
                                     else
                                     {
-                                        colorFrame.CopyConvertedFrameDataToArray(colorFrameData, ColorImageFormat.Bgra);
+                                        rgbColorData[j] = new System.Drawing.Color();
                                     }
                                 }
                             }
