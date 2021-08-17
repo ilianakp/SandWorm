@@ -234,7 +234,8 @@ namespace SandWorm
                 // Produce 2nd type of analysis that acts on the mesh and creates new geometry
                 if (_contourIntervalRange.Value > 0)
                 {
-                    ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints, (int)_contourIntervalRange.Value, trimmedWidth, trimmedHeight, (int)_contourRoughness.Value);
+                    ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints, (int)_contourIntervalRange.Value, 
+                        trimmedWidth, trimmedHeight, (int)_contourRoughness.Value, unitsMultiplier);
                     if (Params.Output[2].Recipients.Count > 0)
                         DA.SetDataList(2, _outputContours);
                 }
