@@ -70,13 +70,12 @@ namespace SandWorm
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddBooleanParameter("Calibrate", "calibrate", "", GH_ParamAccess.item, calibrate);
             pManager.AddBooleanParameter("Reset", "reset", "Hitting this button will reset everything to defaults.", GH_ParamAccess.item, reset);
             pManager.AddColourParameter("Color list", "color list", "Provide 5 custom colors to define a gradient for the elevation analysis.", GH_ParamAccess.list);
             //pManager.AddGenericParameter("Mesh", "mesh", "", GH_ParamAccess.item);
 
-            pManager[2].Optional = true;
-            //pManager[3].Optional = true;
+            pManager[1].Optional = true;
+            //pManager[2].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -101,7 +100,7 @@ namespace SandWorm
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            DA.GetData(1, ref reset);
+            DA.GetData(0, ref reset);
             if (reset || _reset)
             {
                 if ((KinectTypes)_sensorType.Value != KinectTypes.KinectForWindows)
@@ -124,6 +123,7 @@ namespace SandWorm
                 _reset = false;
                 renderBuffer.Clear();
                 runningSum = null;
+                _calibrate.Active = false;
 
                 // Only calculate once
                 unitsMultiplier = GeneralHelpers.ConvertDrawingUnits(RhinoDoc.ActiveDoc.ModelUnitSystem);
@@ -295,25 +295,15 @@ namespace SandWorm
                 PointF pivot;
                 pivot = Attributes.Pivot;
 
-                var calibrate = new Grasshopper.Kernel.Special.GH_ButtonObject();
-                calibrate.CreateAttributes();
-                calibrate.NickName = "calibrate";
-                calibrate.Attributes.Pivot = new PointF(pivot.X - 250, pivot.Y - 46);
-                calibrate.Attributes.ExpireLayout();
-                calibrate.Attributes.PerformLayout();
-                componentList.Add(calibrate);
-
-                Params.Input[0].AddSource(calibrate);
-
                 var reset = new Grasshopper.Kernel.Special.GH_ButtonObject();
                 reset.CreateAttributes();
                 reset.NickName = "reset";
-                reset.Attributes.Pivot = new PointF(pivot.X - 250, pivot.Y - 21);
+                reset.Attributes.Pivot = new PointF(pivot.X - 200, pivot.Y - 31);
                 reset.Attributes.ExpireLayout();
                 reset.Attributes.PerformLayout();
                 componentList.Add(reset);
 
-                Params.Input[1].AddSource(reset);
+                Params.Input[0].AddSource(reset);
 
 
                 foreach (var component in componentList)
