@@ -73,6 +73,24 @@ namespace SandWorm
                     colorPalettes[3] = Color.FromArgb(255, 145, 0);
                     colorPalettes[4] = Color.FromArgb(255, 0, 0);
                     break;
+
+                case Structs.ColorPalettes.Turbo:
+                    colorPalettes[0] = Color.FromArgb(48, 18, 59);
+                    colorPalettes[1] = Color.FromArgb(65, 69, 171);
+                    colorPalettes[2] = Color.FromArgb(70,117,237);
+                    colorPalettes[3] = Color.FromArgb(57, 162, 252);
+                    colorPalettes[4] = Color.FromArgb(27, 207, 212);
+                    colorPalettes[5] = Color.FromArgb(36, 236, 166);
+                    colorPalettes[6] = Color.FromArgb(97, 252, 108);
+                    colorPalettes[7] = Color.FromArgb(164, 252, 59);
+                    colorPalettes[8] = Color.FromArgb(209, 232, 52);
+                    colorPalettes[9] = Color.FromArgb(243, 198, 58);
+                    colorPalettes[10] = Color.FromArgb(254, 155, 45);
+                    colorPalettes[11] = Color.FromArgb(243, 99, 21);
+                    colorPalettes[12] = Color.FromArgb(217, 56, 6);
+                    colorPalettes[13] = Color.FromArgb(177, 25, 1);
+                    colorPalettes[14] = Color.FromArgb(122, 4, 2);
+                    break;
             }
 
             return colorPalettes;
