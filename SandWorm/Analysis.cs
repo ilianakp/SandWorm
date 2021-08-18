@@ -64,8 +64,10 @@ namespace SandWorm
             public MeshColorAnalysis(string menuName) : base(menuName, true)
             {
             } // Note: is mutually exclusive
-            
-            public abstract void ComputeLookupTableForAnalysis(double sensorElevation, double gradientRange);
+
+            // Provide two methods for overloading; one for custom-gradient-using options and one for the others
+            public virtual void ComputeLookupTableForAnalysis(double sensorElevation, double gradientRange) { return; }
+            public virtual void ComputeLookupTableForAnalysis(double sensorElevation, double gradientRange, int paletteOptions = 0) { return; } 
 
             public void ComputeLinearRanges(params VisualisationRangeWithColor[] lookUpRanges)
             {

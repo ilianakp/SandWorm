@@ -9,21 +9,21 @@ namespace SandWorm.Analytics
         private int _lastSensorElevation; // Keep track of prior values to recalculate only as needed
         private double _lastGradientRange;
         private Structs.ColorPalettes _colorPalette = Structs.ColorPalettes.Europe;
-        Color[] colorPalettes;
+        Color[] paletteSwatches; // Color values for the given palette
 
         public Elevation() : base("Visualise Elevation")
         {
         }
 
-        public Color[] GetColorCloudForAnalysis(double[] pixelArray, double sensorElevation, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors)
+        public Color[] GetColorCloudForAnalysis(double[] pixelArray, double sensorElevation, double gradientRange,
+                                                Structs.ColorPalettes colorPalette, List<Color> customColors)
         {
             _colorPalette = colorPalette;
             var sensorElevationRounded = (int)sensorElevation; // Convert once as it is done often
             if (lookupTable == null || sensorElevationRounded != _lastSensorElevation || gradientRange != _lastGradientRange)
             {
-                colorPalettes = ColorPalettes.GenerateColorPalettes(_colorPalette, customColors);
-                
-                ComputeLookupTableForAnalysis(sensorElevation, gradientRange);
+                paletteSwatches = ColorPalettes.GenerateColorPalettes(_colorPalette, customColors);
+                ComputeLookupTableForAnalysis(sensorElevation, gradientRange, paletteSwatches.Length);
             }
 
             // Lookup elevation value in color table
@@ -41,34 +41,22 @@ namespace SandWorm.Analytics
             return vertexColors;
         }
 
-        public override void ComputeLookupTableForAnalysis(double sensorElevation, double gradientRange)
+        // Given the sensor's height from the table, map between vertical distance intervals and color palette values
+        public override void ComputeLookupTableForAnalysis(double sensorElevation, double gradientRange, int swatchCount)
         {
-            var sElevationRange = new Analysis.VisualisationRangeWithColor
+            var elevationRanges = new Analysis.VisualisationRangeWithColor[swatchCount];
+            for (int i = 0; i < swatchCount; i++)
             {
-                ValueSpan = (int)(gradientRange / 4),
-                ColorStart = new ColorHSL(colorPalettes[0]),
-                ColorEnd = new ColorHSL(colorPalettes[1])
-            };
-            var mElevationRange = new Analysis.VisualisationRangeWithColor
-            {
-                ValueSpan = (int)(gradientRange / 4),
-                ColorStart = new ColorHSL(colorPalettes[1]),
-                ColorEnd = new ColorHSL(colorPalettes[2])
-            };
-            var lElevationRange = new Analysis.VisualisationRangeWithColor
-            {
-                ValueSpan = (int)(gradientRange / 4),
-                ColorStart = new ColorHSL(colorPalettes[2]),
-                ColorEnd = new ColorHSL(colorPalettes[3])
-            };
-            var xlElevationRange = new Analysis.VisualisationRangeWithColor
-            {
-                ValueSpan = (int)(gradientRange / 4),
-                ColorStart = new ColorHSL(colorPalettes[3]),
-                ColorEnd = new ColorHSL(colorPalettes[4])
-            };
+                var elevationRange = new Analysis.VisualisationRangeWithColor
+                {
+                    ValueSpan = (int)(gradientRange / swatchCount),
+                    ColorStart = new ColorHSL(paletteSwatches[i]),
+                    ColorEnd = new ColorHSL(paletteSwatches[i+1])
+                };
+                elevationRanges[i] = elevationRange;
+            }
 
-            ComputeLinearRanges(sElevationRange, mElevationRange, lElevationRange, xlElevationRange);
+            ComputeLinearRanges(elevationRanges);
             _lastSensorElevation = (int)sensorElevation;
             _lastGradientRange = gradientRange;
         }
