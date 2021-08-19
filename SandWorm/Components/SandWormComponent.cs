@@ -132,19 +132,8 @@ namespace SandWorm
                 _resize = false;
             }
 
-
             // Flip left and right columns for Kinect for Windows
-            if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
-            {
-                _left = _rightColumns.Value;
-                _right = _leftColumns.Value;
-            }
-            else
-            {
-                _left = _leftColumns.Value;
-                _right = _rightColumns.Value;
-            }
-
+            GeneralHelpers.SwapLeftRight((KinectTypes)_sensorType.Value, _leftColumns.Value, _rightColumns.Value, ref _left, ref _right);
             GeneralHelpers.SetupLogging(ref timer, ref stats);
 
             // Trim 

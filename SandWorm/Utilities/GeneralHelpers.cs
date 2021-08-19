@@ -10,7 +10,7 @@ namespace SandWorm
     {
         public static void HideParameterGeometry(Grasshopper.Kernel.IGH_Param parameter)
         {
-            // Casting to IGH_PreviewObject allows access the 'Hidden' property
+            // Casting to IGH_PreviewObject allows access to the 'Hidden' property
             if (parameter.Recipients.Count > 0)
                 ((Grasshopper.Kernel.IGH_PreviewObject)parameter).Hidden = true; 
             else
@@ -85,6 +85,23 @@ namespace SandWorm
 
                 case 4: // 0.2 FPS
                     return 5000;
+            }
+        }
+
+        public static void SwapLeftRight(Structs.KinectTypes sensorType, double leftColumns, double rightColumns, ref double _left, ref double _right)
+        {
+            switch (sensorType)
+            {
+                case Structs.KinectTypes.KinectForWindows:
+                    _left = rightColumns;
+                    _right = leftColumns;
+                    break;
+
+                case Structs.KinectTypes.KinectAzureNear:
+                case Structs.KinectTypes.KinectAzureWide:
+                    _left = leftColumns;
+                    _right = rightColumns;
+                    break;
             }
         }
 
