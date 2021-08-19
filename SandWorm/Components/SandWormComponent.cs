@@ -93,8 +93,6 @@ namespace SandWorm
 
         protected override void OnComponentLoaded()
         {
-            _left = _leftColumns.Value;
-            _right = _rightColumns.Value;
             base.OnComponentLoaded();
         }
 
@@ -112,10 +110,6 @@ namespace SandWorm
                 {
                     KinectForWindows.RemoveRef();
                     KinectForWindows.sensor = null;
-
-                    // Flip left and right columns for Kinect for Windows
-                    _left = _rightColumns.Value;
-                    _right = _leftColumns.Value;
                 }
                     
                 _quadMesh = null;
@@ -136,17 +130,19 @@ namespace SandWorm
                 renderBuffer.Clear();
                 runningSum = null;
                 _resize = false;
+            }
 
-                // Flip left and right columns for Kinect for Windows
-                if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
-                {
-                    _left = _rightColumns.Value;
-                    _right = _leftColumns.Value;
-                } else
-                {
-                    _left = _leftColumns.Value;
-                    _right = _rightColumns.Value;
-                }
+
+            // Flip left and right columns for Kinect for Windows
+            if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
+            {
+                _left = _rightColumns.Value;
+                _right = _leftColumns.Value;
+            }
+            else
+            {
+                _left = _leftColumns.Value;
+                _right = _rightColumns.Value;
             }
 
             GeneralHelpers.SetupLogging(ref timer, ref stats);
@@ -213,7 +209,7 @@ namespace SandWorm
             }
 
             colorPalettes = new List<Color>();
-            DA.GetDataList(2, colorPalettes);
+            DA.GetDataList(1, colorPalettes);
 
             GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
                 trimmedXYLookupTable, trimmedRGBArray,
