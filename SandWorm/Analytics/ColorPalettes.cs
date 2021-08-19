@@ -5,91 +5,93 @@ namespace SandWorm
 {
     public static class ColorPalettes
     {
-        public static Color[] GenerateColorPalettes(Structs.ColorPalettes palette, List<Color> customColors)
+        public static List<Color> GenerateColorPalettes(Structs.ColorPalettes palette, List<Color> customColors)
         {
-            Color[] paletteSwatches = new Color[20]; // Arbitrary upper limit
+            List<Color> paletteSwatches = new List<Color>();
 
             switch (palette)
             {
                 case Structs.ColorPalettes.Custom:
-                    if (customColors.Count == 0)
-                        break;
-                    for (int i = 0; i < paletteSwatches.Length; i++)
-                        paletteSwatches[i] = customColors[i];
+                    if (customColors.Count == 0) // No inputs provided; use placeholder
+                        paletteSwatches.Add(Color.FromArgb(122, 122, 122));
+                        paletteSwatches.Add(Color.FromArgb(122, 122, 122));
+
+                    for (int i = 0; i < customColors.Count; i++)
+                        paletteSwatches.Add(customColors[i]);
                     break;
 
                 case Structs.ColorPalettes.Chile:
-                    paletteSwatches[0] = Color.FromArgb(38, 115, 0);
-                    paletteSwatches[1] = Color.FromArgb(124, 191, 48);
-                    paletteSwatches[2] = Color.FromArgb(255, 247, 52);
-                    paletteSwatches[3] = Color.FromArgb(196, 65, 0);
-                    paletteSwatches[4] = Color.FromArgb(230, 188, 167);
+                    paletteSwatches.Add(Color.FromArgb(38, 115, 0));
+                    paletteSwatches.Add(Color.FromArgb(124, 191, 48));
+                    paletteSwatches.Add(Color.FromArgb(255, 247, 52));
+                    paletteSwatches.Add(Color.FromArgb(196, 65, 0));
+                    paletteSwatches.Add(Color.FromArgb(230, 188, 167));
                     break;
 
                 case Structs.ColorPalettes.Desert:
-                    paletteSwatches[0] = Color.FromArgb(55, 101, 84);
-                    paletteSwatches[1] = Color.FromArgb(73, 117, 100);
-                    paletteSwatches[2] = Color.FromArgb(172, 196, 160);
-                    paletteSwatches[3] = Color.FromArgb(148, 131, 85);
-                    paletteSwatches[4] = Color.FromArgb(217, 209, 190);
+                    paletteSwatches.Add(Color.FromArgb(55, 101, 84));
+                    paletteSwatches.Add(Color.FromArgb(73, 117, 100));
+                    paletteSwatches.Add(Color.FromArgb(172, 196, 160));
+                    paletteSwatches.Add(Color.FromArgb(148, 131, 85));
+                    paletteSwatches.Add(Color.FromArgb(217, 209, 190));
                     break;
 
                 case Structs.ColorPalettes.Europe:
-                    paletteSwatches[0] = Color.FromArgb(36, 121, 36);
-                    paletteSwatches[1] = Color.FromArgb(89, 148, 54);
-                    paletteSwatches[2] = Color.FromArgb(181, 195, 80);
-                    paletteSwatches[3] = Color.FromArgb(208, 191, 94);
-                    paletteSwatches[4] = Color.FromArgb(115, 24, 19);
+                    paletteSwatches.Add(Color.FromArgb(36, 121, 36));
+                    paletteSwatches.Add(Color.FromArgb(89, 148, 54));
+                    paletteSwatches.Add(Color.FromArgb(181, 195, 80));
+                    paletteSwatches.Add(Color.FromArgb(208, 191, 94));
+                    paletteSwatches.Add(Color.FromArgb(115, 24, 19));
                     break;
 
                 case Structs.ColorPalettes.Greyscale:
-                    paletteSwatches[0] = Color.FromArgb(40, 40, 40);
-                    paletteSwatches[1] = Color.FromArgb(80, 80, 80);
-                    paletteSwatches[2] = Color.FromArgb(120, 120, 120);
-                    paletteSwatches[3] = Color.FromArgb(160, 160, 160);
-                    paletteSwatches[4] = Color.FromArgb(200, 200, 200);
+                    paletteSwatches.Add(Color.FromArgb(40, 40, 40));
+                    paletteSwatches.Add(Color.FromArgb(80, 80, 80));
+                    paletteSwatches.Add(Color.FromArgb(120, 120, 120));
+                    paletteSwatches.Add(Color.FromArgb(160, 160, 160));
+                    paletteSwatches.Add(Color.FromArgb(200, 200, 200));
                     break;
 
                 case Structs.ColorPalettes.Dune:
-                    paletteSwatches[0] = Color.FromArgb(80, 80, 80);
-                    paletteSwatches[1] = Color.FromArgb(122, 91, 76);
-                    paletteSwatches[2] = Color.FromArgb(191, 118, 40);
-                    paletteSwatches[3] = Color.FromArgb(240, 173, 50);
-                    paletteSwatches[4] = Color.FromArgb(255, 210, 128);
+                    paletteSwatches.Add(Color.FromArgb(80, 80, 80));
+                    paletteSwatches.Add(Color.FromArgb(122, 91, 76));
+                    paletteSwatches.Add(Color.FromArgb(191, 118, 40));
+                    paletteSwatches.Add(Color.FromArgb(240, 173, 50));
+                    paletteSwatches.Add(Color.FromArgb(255, 210, 128));
                     break;
 
                 case Structs.ColorPalettes.Ocean:
-                    paletteSwatches[0] = Color.FromArgb(47, 34, 58);
-                    paletteSwatches[1] = Color.FromArgb(62, 90, 146);
-                    paletteSwatches[2] = Color.FromArgb(80, 162, 162);
-                    paletteSwatches[3] = Color.FromArgb(152, 218, 164);
-                    paletteSwatches[4] = Color.FromArgb(250, 250, 200);
+                    paletteSwatches.Add(Color.FromArgb(47, 34, 58));
+                    paletteSwatches.Add(Color.FromArgb(62, 90, 146));
+                    paletteSwatches.Add(Color.FromArgb(80, 162, 162));
+                    paletteSwatches.Add(Color.FromArgb(152, 218, 164));
+                    paletteSwatches.Add(Color.FromArgb(250, 250, 200));
                     break;
 
                 case Structs.ColorPalettes.Rainbow:
-                    paletteSwatches[0] = Color.FromArgb(0, 0, 255);
-                    paletteSwatches[1] = Color.FromArgb(0, 220, 255);
-                    paletteSwatches[2] = Color.FromArgb(140, 255, 110);
-                    paletteSwatches[3] = Color.FromArgb(255, 145, 0);
-                    paletteSwatches[4] = Color.FromArgb(255, 0, 0);
+                    paletteSwatches.Add(Color.FromArgb(0, 0, 255));
+                    paletteSwatches.Add(Color.FromArgb(0, 220, 255));
+                    paletteSwatches.Add(Color.FromArgb(140, 255, 110));
+                    paletteSwatches.Add(Color.FromArgb(255, 145, 0));
+                    paletteSwatches.Add(Color.FromArgb(255, 0, 0));
                     break;
 
                 case Structs.ColorPalettes.Turbo:
-                    paletteSwatches[0] = Color.FromArgb(48, 18, 59);
-                    paletteSwatches[1] = Color.FromArgb(65, 69, 171);
-                    paletteSwatches[2] = Color.FromArgb(70,117,237);
-                    paletteSwatches[3] = Color.FromArgb(57, 162, 252);
-                    paletteSwatches[4] = Color.FromArgb(27, 207, 212);
-                    paletteSwatches[5] = Color.FromArgb(36, 236, 166);
-                    paletteSwatches[6] = Color.FromArgb(97, 252, 108);
-                    paletteSwatches[7] = Color.FromArgb(164, 252, 59);
-                    paletteSwatches[8] = Color.FromArgb(209, 232, 52);
-                    paletteSwatches[9] = Color.FromArgb(243, 198, 58);
-                    paletteSwatches[10] = Color.FromArgb(254, 155, 45);
-                    paletteSwatches[11] = Color.FromArgb(243, 99, 21);
-                    paletteSwatches[12] = Color.FromArgb(217, 56, 6);
-                    paletteSwatches[13] = Color.FromArgb(177, 25, 1);
-                    paletteSwatches[14] = Color.FromArgb(122, 4, 2);
+                    paletteSwatches.Add(Color.FromArgb(48, 18, 59));
+                    paletteSwatches.Add(Color.FromArgb(65, 69, 171));
+                    paletteSwatches.Add(Color.FromArgb(70,117,237));
+                    paletteSwatches.Add(Color.FromArgb(57, 162, 252));
+                    paletteSwatches.Add(Color.FromArgb(27, 207, 212));
+                    paletteSwatches.Add(Color.FromArgb(36, 236, 166));
+                    paletteSwatches.Add(Color.FromArgb(97, 252, 108));
+                    paletteSwatches.Add(Color.FromArgb(164, 252, 59));
+                    paletteSwatches.Add(Color.FromArgb(209, 232, 52));
+                    paletteSwatches.Add(Color.FromArgb(243, 198, 58));
+                    paletteSwatches.Add(Color.FromArgb(254, 155, 45));
+                    paletteSwatches.Add(Color.FromArgb(243, 99, 21));
+                    paletteSwatches.Add(Color.FromArgb(217, 56, 6));
+                    paletteSwatches.Add(Color.FromArgb(177, 25, 1));
+                    paletteSwatches.Add(Color.FromArgb(122, 4, 2));
                     break;
             }
 

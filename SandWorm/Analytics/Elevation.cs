@@ -9,7 +9,7 @@ namespace SandWorm.Analytics
         private int _lastSensorElevation; // Keep track of prior values to recalculate only as needed
         private double _lastGradientRange;
         private Structs.ColorPalettes _colorPalette = Structs.ColorPalettes.Europe;
-        Color[] paletteSwatches; // Color values for the given palette
+        List<Color> paletteSwatches; // Color values for the given palette
 
         public Elevation() : base("Visualise Elevation")
         {
@@ -23,7 +23,7 @@ namespace SandWorm.Analytics
             if (lookupTable == null || sensorElevationRounded != _lastSensorElevation || gradientRange != _lastGradientRange)
             {
                 paletteSwatches = ColorPalettes.GenerateColorPalettes(_colorPalette, customColors);
-                ComputeLookupTableForAnalysis(sensorElevation, gradientRange, paletteSwatches.Length);
+                ComputeLookupTableForAnalysis(sensorElevation, gradientRange, paletteSwatches.Count);
             }
 
             // Lookup elevation value in color table
@@ -44,8 +44,8 @@ namespace SandWorm.Analytics
         // Given the sensor's height from the table, map between vertical distance intervals and color palette values
         public override void ComputeLookupTableForAnalysis(double sensorElevation, double gradientRange, int swatchCount)
         {
-            var elevationRanges = new Analysis.VisualisationRangeWithColor[swatchCount];
-            for (int i = 0; i < swatchCount; i++)
+            var elevationRanges = new Analysis.VisualisationRangeWithColor[swatchCount - 1];
+            for (int i = 0; i < swatchCount - 1; i++)
             {
                 var elevationRange = new Analysis.VisualisationRangeWithColor
                 {
