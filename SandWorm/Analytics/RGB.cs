@@ -19,10 +19,5 @@ namespace SandWorm.Analytics
             
             return vertexColors; 
         }
-
-        public override void ComputeLookupTableForAnalysis(double sensorElevation, double gradientRange)
-        {
-            return; // No lookup table necessary
-        }
     }
 }
