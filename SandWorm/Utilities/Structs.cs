@@ -35,8 +35,8 @@ namespace SandWorm
             Europe,
             Greyscale,
             Ocean,
-            Rainbow,
-            Turbo
+            Turbo,
+            Viridis
         }
     }
 }
