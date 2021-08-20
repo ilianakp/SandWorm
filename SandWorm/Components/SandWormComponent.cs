@@ -57,7 +57,6 @@ namespace SandWorm
         protected Stopwatch timer;
 
         // Boolean controls
-        private bool calibrate;
         public bool reset;
 
         #endregion
@@ -101,35 +100,18 @@ namespace SandWorm
             DA.GetData(0, ref reset);
             if (reset || _reset)
             {
-                if ((KinectTypes)_sensorType.Value != KinectTypes.KinectForWindows)
-                {
-                    KinectAzureController.sensor.Dispose();
-                    KinectAzureController.sensor = null;
-                }
-                else
-                {
+                if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
                     KinectForWindows.RemoveRef();
-                    KinectForWindows.sensor = null;
-                }
-                    
-                _quadMesh = null;
-                trimmedXYLookupTable = null; // Force trimming of lookup tables
-                _reset = false;
-                renderBuffer.Clear();
-                runningSum = null;
-                _calibrate.Active = false;
+                else 
+                    KinectAzureController.RemoveRef();
 
-                // Only calculate once
+                Reset();
                 unitsMultiplier = GeneralHelpers.ConvertDrawingUnits(RhinoDoc.ActiveDoc.ModelUnitSystem);
             }
 
             if (_resize)
             {
-                trimmedXYLookupTable = null;
-                _quadMesh = null;
-                renderBuffer.Clear();
-                runningSum = null;
-                _resize = false;
+                Reset();
             }
 
             // Flip left and right columns for Kinect for Windows
@@ -306,6 +288,18 @@ namespace SandWorm
         protected void ScheduleDelegate(GH_Document doc)
         {
             ExpireSolution(false);
+        }
+
+        private void Reset()
+        {
+            _quadMesh = null;
+            trimmedXYLookupTable = null;
+            runningSum = null;
+            renderBuffer.Clear();
+
+            _calibrate.Active = false;
+            _resize = false;
+            _reset = false;
         }
     }
 }

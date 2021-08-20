@@ -55,6 +55,12 @@ namespace SandWorm
             }
         }
 
+        public static void RemoveRef()
+        {
+            sensor.Dispose();
+            sensor = null;
+        }
+
         private static void CreateCameraConfig(Structs.KinectTypes fieldOfViewMode)
         {
             deviceConfig = new DeviceConfiguration
