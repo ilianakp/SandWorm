@@ -129,7 +129,7 @@ namespace SandWorm
             _colorPalette.AddEnum(typeof(Structs.ColorPalettes));
             _colorPalette.Value = (int)Structs.ColorPalettes.Europe;
             
-            MenuStaticText colorGradientHeader = new MenuStaticText("Color gradient range", "Maximum value for elevation analysis. \nInput should be in millimeters.");
+            MenuStaticText colorGradientHeader = new MenuStaticText("Color gradient range", "Define maximum elevation for color gradient. \nInput should be in millimeters.");
             _colorGradientRange = new MenuSlider(colorGradientHeader, 24, 4, 100, 40, 0);
 
             MenuStaticText contourIntervalHeader = new MenuStaticText("Contour interval", "Define spacing between contours. \nInput should be in millimeters.");
