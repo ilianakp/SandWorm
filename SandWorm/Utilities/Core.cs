@@ -16,7 +16,7 @@ namespace SandWorm
     {
         public static Mesh CreateQuadMesh(Mesh mesh, Point3d[] vertices, Color[] colors, Vector3?[] booleanMatrix, 
             Structs.KinectTypes kinectType, int xStride, int yStride)
-        {
+        {        
             int xd = xStride;       // The x-dimension of the data
             int yd = yStride;       // They y-dimension of the data
 
@@ -284,14 +284,18 @@ namespace SandWorm
             // Keep only the desired amount of frames in the buffer
             while (renderBuffer.Count >= averageFrames) renderBuffer.RemoveFirst();
         }
-        
+
+        public static class Singleton
+        {
+            public static RainDensity myRainDensity { get; set; } = new RainDensity();
+        }
         public static void GenerateMeshColors(ref Color[] vertexColors, Structs.AnalysisTypes analysisType, double[] averagedDepthFrameData, 
             Vector2[]xyLookuptable, Color[] pixelColors, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors,
             double sensorElevation, int trimmedWidth, int trimmedHeight)
         {
             switch (analysisType)
             {
-                case Structs.AnalysisTypes.None: 
+                case Structs.AnalysisTypes.None:
                     vertexColors = new None().GetColorCloudForAnalysis();
                     break;
 
@@ -306,6 +310,16 @@ namespace SandWorm
                 case Structs.AnalysisTypes.Slope:
                     vertexColors = new Slope().GetColorCloudForAnalysis(averagedDepthFrameData,
                         trimmedWidth, trimmedHeight, gradientRange, xyLookuptable);
+                    break;
+
+                case Structs.AnalysisTypes.RainDensity:
+                    if (Singleton.myRainDensity == null)
+                        {
+                            Singleton.myRainDensity = new RainDensity();
+                        }
+                    vertexColors = Singleton.myRainDensity.GetColorCloudForAnalysis(averagedDepthFrameData,
+                    trimmedWidth, trimmedHeight, 1, 1, gradientRange, 50);
+
                     break;
 
                 case Structs.AnalysisTypes.Aspect:

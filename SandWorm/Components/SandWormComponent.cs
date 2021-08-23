@@ -182,6 +182,8 @@ namespace SandWorm
             colorPalettes = new List<Color>();
             DA.GetDataList(1, colorPalettes);
 
+            
+
             GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
                 trimmedXYLookupTable, trimmedRGBArray,
                 _colorGradientRange.Value, (Structs.ColorPalettes)_colorPalette.Value, colorPalettes,
@@ -228,6 +230,13 @@ namespace SandWorm
                 DA.SetDataList(1, _outputWaterSurface);
                 GeneralHelpers.HideParameterGeometry(Params.Output[1]);
             }
+
+            //if (_rainDensity.Value > 0)
+            //{
+            //    RainDensity.GetGeometryForAnalysis(ref _outputGeometry, _rainDensity.Value, allPoints, trimmedWidth);
+            //    if (Params.Output.Count > 2)
+            //        DA.SetDataList(2, _outputGeometry);
+            //}
 
             DA.SetDataList(3, stats);
             ScheduleSolve();

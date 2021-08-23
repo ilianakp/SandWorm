@@ -22,6 +22,7 @@ namespace SandWorm
             Camera,
             Elevation,
             Slope,
+            RainDensity,
             Aspect,
             CutFill
         }
