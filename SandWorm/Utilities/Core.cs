@@ -329,7 +329,7 @@ namespace SandWorm
                     break;
 
                 case Structs.AnalysisTypes.CutFill:
-                    vertexColors = new CutFill().GetColorCloudForAnalysis(allPoints, baseMeshElevationPoints, gradientRange);
+                    vertexColors = new CutFill().GetColorCloudForAnalysis(allPoints, baseMeshElevationPoints, gradientRange, colorPalette, customColors);
                     break;
             }
         }

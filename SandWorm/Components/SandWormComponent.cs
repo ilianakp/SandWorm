@@ -190,6 +190,7 @@ namespace SandWorm
             DA.GetDataList(1, colorPalettes);
             DA.GetData(2, ref baseMesh);
 
+            // Calculate elevation points from mesh provided for Cut & Fill analysis. Only do this on reset.
             if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.CutFill && baseMeshElevationPoints == null)
                 baseMeshElevationPoints = CutFill.MeshToPointArray(baseMesh, allPoints);
 
