@@ -47,6 +47,10 @@ namespace SandWorm
         private Vector3?[] trimmedBooleanMatrix;
         private Color[] trimmedRGBArray;
 
+        // Cut & Fill analysis
+        private double?[] baseMeshElevationPoints;
+        private Mesh baseMesh;
+
         // Outputs
         private List<Mesh> _outputMesh;
         private List<GeometryBase> _outputWaterSurface;
@@ -70,11 +74,11 @@ namespace SandWorm
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
             pManager.AddBooleanParameter("Reset", "reset", "Hitting this button will reset everything to defaults.", GH_ParamAccess.item, reset);
-            pManager.AddColourParameter("Color list", "color list", "Provide 5 custom colors to define a gradient for the elevation analysis.", GH_ParamAccess.list);
-            //pManager.AddGenericParameter("Mesh", "mesh", "", GH_ParamAccess.item);
+            pManager.AddColourParameter("Color list", "color list", "Provide a list of custom colors to define a gradient for the elevation analysis.", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Mesh", "mesh", "Provide a base mesh for the Cut & Fill analysis mode.", GH_ParamAccess.item);
 
             pManager[1].Optional = true;
-            //pManager[2].Optional = true;
+            pManager[2].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -184,12 +188,15 @@ namespace SandWorm
 
             colorPalettes = new List<Color>();
             DA.GetDataList(1, colorPalettes);
+            DA.GetData(2, ref baseMesh);
 
-            
+            if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.CutFill && baseMeshElevationPoints == null)
+                baseMeshElevationPoints = CutFill.MeshToPointArray(baseMesh, allPoints);
 
             GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
                 trimmedXYLookupTable, trimmedRGBArray,
                 _colorGradientRange.Value, (Structs.ColorPalettes)_colorPalette.Value, colorPalettes,
+                baseMeshElevationPoints, allPoints,
                 _sensorElevation.Value, trimmedWidth, trimmedHeight);
 
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
@@ -234,12 +241,6 @@ namespace SandWorm
                 GeneralHelpers.HideParameterGeometry(Params.Output[1]);
             }
 
-            //if (_rainDensity.Value > 0)
-            //{
-            //    RainDensity.GetGeometryForAnalysis(ref _outputGeometry, _rainDensity.Value, allPoints, trimmedWidth);
-            //    if (Params.Output.Count > 2)
-            //        DA.SetDataList(2, _outputGeometry);
-            //}
 
             DA.SetDataList(3, stats);
             ScheduleSolve();
@@ -308,6 +309,7 @@ namespace SandWorm
             trimmedXYLookupTable = null;
             runningSum = null;
             renderBuffer.Clear();
+            baseMeshElevationPoints = null;
 
             _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;
