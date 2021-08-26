@@ -100,18 +100,21 @@ namespace SandWorm
             DA.GetData(0, ref reset);
             if (reset || _reset)
             {
+                if (_calibrate.Active)
+                    _sensorElevation.Value = Calibrate((KinectTypes)_sensorType.Value);
+
                 if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
                     KinectForWindows.RemoveRef();
                 else 
                     KinectAzureController.RemoveRef();
 
-                Reset();
+                ResetDataArrays();
                 unitsMultiplier = GeneralHelpers.ConvertDrawingUnits(RhinoDoc.ActiveDoc.ModelUnitSystem);
             }
 
             if (_resize)
             {
-                Reset();
+                ResetDataArrays();
             }
 
             // Flip left and right columns for Kinect for Windows
@@ -290,14 +293,14 @@ namespace SandWorm
             ExpireSolution(false);
         }
 
-        private void Reset()
+        private void ResetDataArrays()
         {
             _quadMesh = null;
             trimmedXYLookupTable = null;
             runningSum = null;
             renderBuffer.Clear();
 
-            _calibrate.Active = false;
+            _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;
             _reset = false;
         }
