@@ -278,7 +278,7 @@ namespace SandWorm
                 var reset = new Grasshopper.Kernel.Special.GH_ButtonObject();
                 reset.CreateAttributes();
                 reset.NickName = "reset";
-                reset.Attributes.Pivot = new PointF(pivot.X - 200, pivot.Y - 31);
+                reset.Attributes.Pivot = new PointF(pivot.X - 200, pivot.Y - 38);
                 reset.Attributes.ExpireLayout();
                 reset.Attributes.PerformLayout();
                 componentList.Add(reset);
@@ -310,7 +310,7 @@ namespace SandWorm
             runningSum = null;
             renderBuffer.Clear();
             baseMeshElevationPoints = null;
-
+            
             _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;
             _reset = false;
