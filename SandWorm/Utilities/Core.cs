@@ -386,5 +386,21 @@ namespace SandWorm
                     break;
             }
         }
+
+        public static double Calibrate(Structs.KinectTypes kinectType)
+        {
+            switch(kinectType)
+            {
+                case Structs.KinectTypes.KinectAzureNear:
+                case Structs.KinectTypes.KinectAzureWide:
+                    return KinectAzureController.Calibrate(kinectType);
+
+                case Structs.KinectTypes.KinectForWindows:
+                    return KinectForWindows.Calibrate();
+
+                default:
+                    return 0;
+            }
+        }
     }
 }

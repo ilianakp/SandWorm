@@ -55,6 +55,41 @@ namespace SandWorm
             }
         }
 
+        public static double Calibrate(Structs.KinectTypes fieldOfViewMode)
+        {
+            CreateCameraConfig(fieldOfViewMode);
+
+            int minX = 3 * (depthWidth / 2) - (3 * 10); // Multiply by 3 for each of the X,Y,Z coordinates
+            int maxX = 3 * (depthWidth / 2) + (3 * 10); // Multiply by 3 for each of the X,Y,Z coordinates
+            int minY = (depthHeight / 2) - 10;
+            int maxY = (depthHeight / 2) + 10;
+
+            double averagedSensorElevation = 0.0;
+            int counter = 0;
+
+            using (Capture capture = sensor.GetCapture())
+            {
+                if (capture.Depth == null)
+                    return 0; // No depth data obtained 
+
+                calibration = sensor.GetCalibration(deviceConfig.DepthMode, deviceConfig.ColorResolution);
+                transformation = calibration.CreateTransformation();
+
+                var pointCloud = transformation.DepthImageToPointCloud(capture.Depth);
+                var pointCloudBuffer = System.Runtime.InteropServices.MemoryMarshal.Cast<byte, short>(pointCloud.Memory.Span); // Cast byte values to short
+
+                for (int y = minY; y < maxY; y++)       // Iterate over y dimension
+                {
+                    for (int x = minX + 2; x < maxX; x += 3, counter++)       // Iterate over x dimension. Increment by 3 to skip over the X,Y coordinates
+                    {
+                        int i = y * depthWidth * 3 + x;
+                        averagedSensorElevation += pointCloudBuffer[i];
+                    }
+                }
+            }
+            return Math.Round(averagedSensorElevation /= counter);
+        }
+
         public static void RemoveRef()
         {
             sensor.Dispose();
@@ -69,7 +104,7 @@ namespace SandWorm
                 DepthMode = GetDepthMode(fieldOfViewMode),
                 ColorFormat = ImageFormat.ColorBGRA32,
                 ColorResolution = ColorResolution.R1536p,
-                SynchronizedImagesOnly = true // Color and depth images can be out of sync
+                SynchronizedImagesOnly = true 
             };
 
             if (fieldOfViewMode == Structs.KinectTypes.KinectAzureNear) // We can have 30 FPS in the narrow field of view

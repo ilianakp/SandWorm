@@ -62,7 +62,7 @@ namespace SandWorm
             _refreshRate.AddItem("0.2 FPS", "0.2 FPS");
 
             MenuStaticText sensorElevationHeader = new MenuStaticText("Sensor elevation", "Distance between the sensor and the table. \nInput should be in millimeters.\nTo automatically estimate this value, check the 'Calibrate' checkbox and reset.");
-            _sensorElevation = new MenuSlider(sensorElevationHeader, 1, 250, 2000, 1000, 0);
+            _sensorElevation = new MenuSlider(sensorElevationHeader, 1, 0, 1500, 1000, 0);
             _calibrate = new MenuCheckBox(10001, "Calibrate", "Calibrate");
 
             MenuStaticText leftColumnsHeader = new MenuStaticText("Left columns", "Number of pixels to trim from the left.");
@@ -130,7 +130,7 @@ namespace SandWorm
             _colorPalette.Value = (int)Structs.ColorPalettes.Europe;
             
             MenuStaticText colorGradientHeader = new MenuStaticText("Color gradient range", "Define maximum elevation for color gradient. \nInput should be in millimeters.");
-            _colorGradientRange = new MenuSlider(colorGradientHeader, 24, 4, 100, 40, 0);
+            _colorGradientRange = new MenuSlider(colorGradientHeader, 24, 15, 100, 40, 0);
 
             MenuStaticText contourIntervalHeader = new MenuStaticText("Contour interval", "Define spacing between contours. \nInput should be in millimeters.");
             _contourIntervalRange = new MenuSlider(contourIntervalHeader, 25, 0, 30, 0, 0);
