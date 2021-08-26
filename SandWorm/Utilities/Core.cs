@@ -382,7 +382,7 @@ namespace SandWorm
                     return KinectAzureController.Calibrate(kinectType);
 
                 case Structs.KinectTypes.KinectForWindows:
-                    return 0;
+                    return KinectForWindows.Calibrate();
 
                 default:
                     return 0;

@@ -52,7 +52,7 @@ namespace SandWorm
         public static void RemoveRef()
         {
             refc--;
-            if ((sensor != null) && (refc == 0))
+            if ((sensor != null) && (refc <= 0))
             {
                 multiFrameReader.MultiSourceFrameArrived -= Reader_FrameArrived;
                 sensor.Close();
@@ -184,6 +184,42 @@ namespace SandWorm
             {
                 sensor = value;
             }
+        }
+
+        public static double Calibrate()
+        {
+            int minX = (depthWidth / 2) - 10;
+            int maxX = (depthWidth / 2) + 10;
+            int minY = (depthHeight / 2) - 10;
+            int maxY = (depthHeight / 2) + 10;
+
+            double averagedSensorElevation = 0.0;
+            int counter = 0;
+
+            using (DepthFrame depthFrame = multiFrameReader.AcquireLatestFrame().DepthFrameReference.AcquireFrame())
+            {
+                if (depthFrame == null)
+                    return 0;
+
+                using (KinectBuffer buffer = depthFrame.LockImageBuffer())
+                {
+                    depthFrameDescription = depthFrame.FrameDescription;
+                    depthWidth = depthFrameDescription.Width;
+                    depthHeight = depthFrameDescription.Height;
+                    depthFrameData = new ushort[depthWidth * depthHeight];
+                    depthFrame.CopyFrameDataToArray(depthFrameData);
+                }
+
+                for (int y = minY; y < maxY; y++)       // Iterate over y dimension
+                {
+                    for (int x = minX; x < maxX; x++, counter++)       // Iterate over x dimension. 
+                    {
+                        int i = y * depthWidth + x;
+                        averagedSensorElevation += depthFrameData[i];
+                    }
+                }
+            }
+            return Math.Round(averagedSensorElevation /= counter);
         }
     }
 }
