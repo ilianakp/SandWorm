@@ -143,8 +143,8 @@ namespace SandWorm
                 runningSum = Enumerable.Range(1, depthFrameDataInt.Length).Select(i => new int()).ToArray();
 
             SetupRenderBuffer(depthFrameDataInt, (KinectTypes)_sensorType.Value, ref rgbArray, _analysisType.Value,
-                _left, _right, _bottomRows.Value, _topRows.Value, _sensorElevation.Value, ref activeHeight, ref activeWidth,
-                _averagedFrames.Value, runningSum, renderBuffer);
+                              _left, _right, _bottomRows.Value, _topRows.Value, _sensorElevation.Value, ref activeHeight,
+                              ref activeWidth, _averagedFrames.Value, runningSum, renderBuffer);
 
 
             if (trimmedXYLookupTable == null) // Only recalculate on reset
@@ -174,10 +174,13 @@ namespace SandWorm
             GeneralHelpers.LogTiming(ref stats, timer, "Initial setup"); // Debug Info
 
             AverageAndBlurPixels(depthFrameDataInt, ref averagedDepthFrameData, runningSum, renderBuffer,
-                _sensorElevation.Value, _averagedFrames.Value, _blurRadius.Value, trimmedWidth, trimmedHeight);
+                                 _sensorElevation.Value, _averagedFrames.Value, _blurRadius.Value, trimmedWidth,
+                                 trimmedHeight);
 
-            GeneratePointCloud(averagedDepthFrameData, trimmedXYLookupTable, KinectAzureController.verticalTiltCorrectionMatrix, (KinectTypes)_sensorType.Value, 
-                allPoints, renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value, unitsMultiplier, _averagedFrames.Value);
+            GeneratePointCloud(averagedDepthFrameData, trimmedXYLookupTable,
+                               KinectAzureController.verticalTiltCorrectionMatrix, (KinectTypes)_sensorType.Value,
+                               allPoints, renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value,
+                               unitsMultiplier, _averagedFrames.Value);
 
             // Produce 1st type of analysis that acts on the pixel array and assigns vertex colors
             if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.Camera)
@@ -197,10 +200,10 @@ namespace SandWorm
             DA.GetDataList(1, colorPalettes);
 
             GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
-                trimmedXYLookupTable, trimmedRGBArray,
-                _colorGradientRange.Value, (Structs.ColorPalettes)_colorPalette.Value, colorPalettes,
-                baseMeshElevationPoints, allPoints,
-                _sensorElevation.Value, trimmedWidth, trimmedHeight);
+                               trimmedXYLookupTable, trimmedRGBArray, _colorGradientRange.Value,
+                               (Structs.ColorPalettes)_colorPalette.Value, colorPalettes, baseMeshElevationPoints,
+                               allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight,
+                               unitsMultiplier);
 
             if (_labelSpacing.Value > 0)
             {
@@ -224,8 +227,10 @@ namespace SandWorm
                 // Produce 2nd type of analysis that acts on the mesh and creates new geometry
                 if (_contourIntervalRange.Value > 0)
                 {
-                    ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints, (int)_contourIntervalRange.Value, 
-                        trimmedWidth, trimmedHeight, (int)_contourRoughness.Value, unitsMultiplier);
+                    ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints,
+                                                              (int)_contourIntervalRange.Value, trimmedWidth,
+                                                              trimmedHeight, (int)_contourRoughness.Value,
+                                                              unitsMultiplier);
                     if (Params.Output[2].Recipients.Count > 0)
                         DA.SetDataList(2, _outputContours);
                 }
