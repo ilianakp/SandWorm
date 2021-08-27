@@ -232,7 +232,10 @@ namespace SandWorm
                                                               trimmedHeight, (int)_contourRoughness.Value,
                                                               unitsMultiplier);
                     if (Params.Output[2].Recipients.Count > 0)
-                        DA.SetDataList(2, _outputContours);
+                    {
+                        Grasshopper.Kernel.Types.GH_Line[] ghLines = GeneralHelpers.ConvertLineToGHLine(_outputContours);
+                        DA.SetDataList(2, ghLines);
+                    }
                 }
 
                 GeneralHelpers.LogTiming(ref stats, timer, "Mesh analysis"); // Debug Info

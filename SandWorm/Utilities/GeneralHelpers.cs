@@ -169,6 +169,16 @@ namespace SandWorm
             }
         }
 
+        public static Grasshopper.Kernel.Types.GH_Line[] ConvertLineToGHLine(List<Rhino.Geometry.Line> rhinoLines)
+        {
+            Grasshopper.Kernel.Types.GH_Line[] ghLines = new Grasshopper.Kernel.Types.GH_Line[rhinoLines.Count];
+
+            System.Threading.Tasks.Parallel.For(0, rhinoLines.Count, i =>
+            { ghLines[i] = new Grasshopper.Kernel.Types.GH_Line(rhinoLines[i]); });
+
+            return ghLines;
+        }
+
         // Multiply two int[] arrays using SIMD instructions
         public static int[] SimdVectorProd(int[] a, int[] b)
         {
