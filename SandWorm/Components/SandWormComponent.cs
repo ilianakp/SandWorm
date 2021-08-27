@@ -264,14 +264,11 @@ namespace SandWorm
             if (_outputContours != null && _outputContours.Count != 0 && Params.Output[2].Recipients.Count == 0)
                 args.Display.DrawLines(_outputContours, Color.White, 1);
             
-            if (_labelSpacing.Value > 0)
+            if (_labelSpacing.Value > 0 && ((AnalysisTypes) _analysisType.Value == AnalysisTypes.CutFill || (AnalysisTypes)_analysisType.Value == AnalysisTypes.Elevation))
             {
                 foreach (var text in labels)
                     args.Display.Draw3dText(text, Color.White);
             }
-
-           // Rhino.Display.Text3d test = new Rhino.Display.Text3d(". 123", Rhino.Geometry.Plane.WorldXY, 10);
-            //args.Display.Draw3dText(test, Color.White);
         }
 
         public override BoundingBox ClippingBox 
