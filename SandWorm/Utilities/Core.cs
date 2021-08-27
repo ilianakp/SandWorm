@@ -285,10 +285,7 @@ namespace SandWorm
             while (renderBuffer.Count >= averageFrames) renderBuffer.RemoveFirst();
         }
 
-        public static class Singleton
-        {
-            public static RainDensity myRainDensity { get; set; } = new RainDensity();
-        }
+
         public static void GenerateMeshColors(ref Color[] vertexColors, Structs.AnalysisTypes analysisType, double[] averagedDepthFrameData, 
             Vector2[]xyLookuptable, Color[] pixelColors, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors,
             double?[] baseMeshElevationPoints, Point3d[] allPoints,
@@ -311,16 +308,6 @@ namespace SandWorm
                 case Structs.AnalysisTypes.Slope:
                     vertexColors = new Slope().GetColorCloudForAnalysis(averagedDepthFrameData,
                         trimmedWidth, trimmedHeight, gradientRange, xyLookuptable);
-                    break;
-
-                case Structs.AnalysisTypes.RainDensity:
-                    if (Singleton.myRainDensity == null)
-                        {
-                            Singleton.myRainDensity = new RainDensity();
-                        }
-                    vertexColors = Singleton.myRainDensity.GetColorCloudForAnalysis(averagedDepthFrameData,
-                    trimmedWidth, trimmedHeight, 1, 1, gradientRange, 50);
-
                     break;
 
                 case Structs.AnalysisTypes.Aspect:
