@@ -29,6 +29,8 @@ namespace SandWorm
         public static MenuSlider _averagedFrames;
         public static MenuSlider _blurRadius;
 
+        private static int _previousAnalysisMode;
+        private static double _previousColorGradientRange;
         #endregion
         public static void MainComponentUI(GH_ExtendableComponentAttributes attr)
         {
@@ -208,14 +210,21 @@ namespace SandWorm
             {
                 // Set color palette to CutFill when user chooses the corresponding analysis type
                 if ((Structs.AnalysisTypes)_analysisType.Value == Structs.AnalysisTypes.CutFill)
+                {
+                    _previousAnalysisMode = _colorPalette.Value;
+                    _previousColorGradientRange = _colorGradientRange.Value;
                     _colorPalette.Value = (int)Structs.ColorPalettes.CutFill;
+                    _colorGradientRange.Value = 15;
+                }
 
+                // Switch back to previous color palette
                 if ((Structs.AnalysisTypes)_analysisType.Value == Structs.AnalysisTypes.Elevation)
-                    _colorPalette.Value = (int)Structs.ColorPalettes.Europe;
+                {
+                    _colorPalette.Value = _previousAnalysisMode;
+                    _colorGradientRange.Value = _previousColorGradientRange;
+                }
             }
-
             #endregion
         }
-
     }
 }
