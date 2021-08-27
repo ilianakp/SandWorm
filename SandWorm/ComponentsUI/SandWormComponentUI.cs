@@ -23,8 +23,9 @@ namespace SandWorm
         public static MenuDropDown _colorPalette;
         public static MenuSlider _colorGradientRange;
         public static MenuSlider _contourIntervalRange;
-        public static MenuSlider _waterLevel;
         public static MenuSlider _contourRoughness;
+        public static MenuSlider _waterLevel;
+        public static MenuSlider _labelSpacing;
 
         public static MenuSlider _averagedFrames;
         public static MenuSlider _blurRadius;
@@ -135,6 +136,10 @@ namespace SandWorm
             MenuStaticText colorGradientHeader = new MenuStaticText("Color gradient range", "Define maximum elevation for color gradient. \nInput should be in millimeters.");
             _colorGradientRange = new MenuSlider(colorGradientHeader, 24, 15, 100, 40, 0);
 
+            MenuStaticText labelSpacingHeader = new MenuStaticText("Label spacing", "Define spacing between labels. \nInput is defined as distance between individual rows/columns.");
+            _labelSpacing = new MenuSlider(labelSpacingHeader, 241, 0, 100, 20, 0);
+            _labelSpacing.Step = 5;
+
             MenuStaticText contourIntervalHeader = new MenuStaticText("Contour interval", "Define spacing between contours. \nInput should be in millimeters.");
             _contourIntervalRange = new MenuSlider(contourIntervalHeader, 25, 0, 30, 0, 0);
 
@@ -156,6 +161,8 @@ namespace SandWorm
             analysisPanel.AddControl(_colorPalette);
             analysisPanel.AddControl(colorGradientHeader);
             analysisPanel.AddControl(_colorGradientRange);
+            analysisPanel.AddControl(labelSpacingHeader);
+            analysisPanel.AddControl(_labelSpacing);
             analysisPanel.AddControl(contourIntervalHeader);
             analysisPanel.AddControl(_contourIntervalRange);
             analysisPanel.AddControl(contourRoughnessHeader);

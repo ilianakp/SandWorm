@@ -105,6 +105,70 @@ namespace SandWorm
             }
         }
 
+        public static void CreateLabels(Rhino.Geometry.Point3d[] pointArray, ref List<Rhino.Display.Text3d> labels,
+                                        Structs.AnalysisTypes analysisType, double?[] baseMeshElevationPoints,
+                                        int xStride, int yStride, int spacing, double unitsMultiplier)
+        {
+            Rhino.Display.Text3d _text;
+            double _distanceToTerrain = 5 * unitsMultiplier;
+
+            int maxSize = 10;
+            double _size = spacing / 5;
+            if (_size > maxSize)
+                _size = maxSize;
+
+            _size *= unitsMultiplier;
+
+            int roundingFactor = CalculateRoundingFactor(unitsMultiplier);
+
+            for (int y = 0; y < yStride; y += spacing)       // Iterate over y dimension
+                for (int x = spacing; x < xStride; x += spacing)       // Iterate over x dimension
+                {
+                    int i = y * xStride + x;
+                    Rhino.Geometry.Point3d _point = new Rhino.Geometry.Point3d(pointArray[i].X, pointArray[i].Y, pointArray[i].Z + _distanceToTerrain);
+                    Rhino.Geometry.Plane _plane = new Rhino.Geometry.Plane(_point, new Rhino.Geometry.Vector3d(0, 0, 1));
+                    double _value = 0;
+                    
+                    switch (analysisType)
+                    {
+                        case Structs.AnalysisTypes.Elevation:
+                            _value = Math.Round(pointArray[i].Z, roundingFactor);
+                            break;
+
+                        case Structs.AnalysisTypes.CutFill:
+                            if (baseMeshElevationPoints[i] == null)
+                                continue;
+                            
+                            _value = Math.Round(pointArray[i].Z - (double)baseMeshElevationPoints[i], roundingFactor);
+                            break;
+                    }
+
+                    _text = new Rhino.Display.Text3d($".{_value}", _plane, _size);
+                    labels.Add(_text);
+                }
+        }
+
+        public static int CalculateRoundingFactor(double unitsMultiplier)
+        {
+            switch (unitsMultiplier)
+            {
+                case 1: // Millimeters
+                    return 0;
+                case 0.1: // Centimeters
+                case 0.0393701: // Inches
+                    return 1;
+                case 0.01: // Decimeters
+                case 0.0328084: // Feet
+                    return 2;
+                case 0.001: // Meters
+                    return 3;
+                case 0.0001: // Kilometers
+                    return 4;
+                default:
+                    return 0;
+            }
+        }
+
         // Multiply two int[] arrays using SIMD instructions
         public static int[] SimdVectorProd(int[] a, int[] b)
         {

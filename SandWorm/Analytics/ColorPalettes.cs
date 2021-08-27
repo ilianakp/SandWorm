@@ -13,7 +13,10 @@ namespace SandWorm
             {
                 case Structs.ColorPalettes.Custom:
                     if (customColors.Count == 0) // No inputs provided; use placeholder
+                    {
                         paletteSwatches.Add(Color.FromArgb(122, 122, 122));
+                        paletteSwatches.Add(Color.FromArgb(122, 122, 122));
+                    }
 
                     for (int i = 0; i < customColors.Count; i++)
                         paletteSwatches.Add(customColors[i]);

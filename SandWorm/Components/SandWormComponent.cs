@@ -40,6 +40,7 @@ namespace SandWorm
         private Mesh _quadMesh;
         private PointCloud _cloud;
         private List<Color> colorPalettes;
+        private List<Rhino.Display.Text3d> labels;
 
         private readonly LinkedList<int[]> renderBuffer = new LinkedList<int[]>();
         private int[] runningSum;
@@ -186,19 +187,28 @@ namespace SandWorm
                     _left, _right, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
             }
 
-            colorPalettes = new List<Color>();
-            DA.GetDataList(1, colorPalettes);
-            DA.GetData(2, ref baseMesh);
-
             // Calculate elevation points from mesh provided for Cut & Fill analysis. Only do this on reset.
+            DA.GetData(2, ref baseMesh);
             if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.CutFill && baseMeshElevationPoints == null)
                 baseMeshElevationPoints = CutFill.MeshToPointArray(baseMesh, allPoints);
+
+
+            colorPalettes = new List<Color>();
+            DA.GetDataList(1, colorPalettes);
 
             GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
                 trimmedXYLookupTable, trimmedRGBArray,
                 _colorGradientRange.Value, (Structs.ColorPalettes)_colorPalette.Value, colorPalettes,
                 baseMeshElevationPoints, allPoints,
                 _sensorElevation.Value, trimmedWidth, trimmedHeight);
+
+            if (_labelSpacing.Value > 0)
+            {
+                labels = new List<Rhino.Display.Text3d>();
+                GeneralHelpers.CreateLabels(allPoints, ref labels, (AnalysisTypes)_analysisType.Value,
+                                            baseMeshElevationPoints, trimmedWidth, trimmedHeight,
+                                            (int)_labelSpacing.Value, unitsMultiplier);
+            }
 
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
 
@@ -253,6 +263,15 @@ namespace SandWorm
 
             if (_outputContours != null && _outputContours.Count != 0 && Params.Output[2].Recipients.Count == 0)
                 args.Display.DrawLines(_outputContours, Color.White, 1);
+            
+            if (_labelSpacing.Value > 0)
+            {
+                foreach (var text in labels)
+                    args.Display.Draw3dText(text, Color.White);
+            }
+
+           // Rhino.Display.Text3d test = new Rhino.Display.Text3d(". 123", Rhino.Geometry.Plane.WorldXY, 10);
+            //args.Display.Draw3dText(test, Color.White);
         }
 
         public override BoundingBox ClippingBox 
