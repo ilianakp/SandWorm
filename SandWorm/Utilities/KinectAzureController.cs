@@ -60,8 +60,6 @@ namespace SandWorm
 
         public static double Calibrate(Structs.KinectTypes fieldOfViewMode)
         {
-            //CreateCameraConfig(fieldOfViewMode);
-
             int minX = 3 * (depthWidth / 2) - (3 * 10); // Multiply by 3 for each of the X,Y,Z coordinates
             int maxX = 3 * (depthWidth / 2) + (3 * 10); // Multiply by 3 for each of the X,Y,Z coordinates
             int minY = (depthHeight / 2) - 10;
@@ -74,9 +72,6 @@ namespace SandWorm
             {
                 if (capture.Depth == null)
                     return 0; // No depth data obtained 
-
-                //calibration = sensor.GetCalibration(deviceConfig.DepthMode, deviceConfig.ColorResolution);
-                //transformation = calibration.CreateTransformation();
 
                 var pointCloud = transformation.DepthImageToPointCloud(capture.Depth);
                 var pointCloudBuffer = System.Runtime.InteropServices.MemoryMarshal.Cast<byte, short>(pointCloud.Memory.Span); // Cast byte values to short
@@ -150,7 +145,7 @@ namespace SandWorm
                     Rhino.RhinoApp.WriteLine("Start Kinect Cameras");
 
                     #region Speed up resetting procedure
-                    // Calibration, transformation and lokkup tables take approx 2 seconds to calculate (or 4 for WFOV). Only do this when necessary
+                    // Calibration, transformation and lookup tables take approx 2 seconds to calculate (or 4 for WFOV). Only do this when necessary
 
                     if (previousKinectType == fieldOfViewMode && previousSensorElevation == sensorElevation)
                         return;
