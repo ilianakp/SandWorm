@@ -30,6 +30,9 @@ namespace SandWorm
         public const int depthWidthWide = 1024; // Assuming low FPS mode
         public const int depthHeightWide = 1024;
 
+        public static double previousSensorElevation;
+        public static Structs.KinectTypes previousKinectType;
+
         public static Vector3?[] undistortMatrix;
         public static double[] verticalTiltCorrectionMatrix;
 
@@ -57,7 +60,7 @@ namespace SandWorm
 
         public static double Calibrate(Structs.KinectTypes fieldOfViewMode)
         {
-            CreateCameraConfig(fieldOfViewMode);
+            //CreateCameraConfig(fieldOfViewMode);
 
             int minX = 3 * (depthWidth / 2) - (3 * 10); // Multiply by 3 for each of the X,Y,Z coordinates
             int maxX = 3 * (depthWidth / 2) + (3 * 10); // Multiply by 3 for each of the X,Y,Z coordinates
@@ -72,8 +75,8 @@ namespace SandWorm
                 if (capture.Depth == null)
                     return 0; // No depth data obtained 
 
-                calibration = sensor.GetCalibration(deviceConfig.DepthMode, deviceConfig.ColorResolution);
-                transformation = calibration.CreateTransformation();
+                //calibration = sensor.GetCalibration(deviceConfig.DepthMode, deviceConfig.ColorResolution);
+                //transformation = calibration.CreateTransformation();
 
                 var pointCloud = transformation.DepthImageToPointCloud(capture.Depth);
                 var pointCloudBuffer = System.Runtime.InteropServices.MemoryMarshal.Cast<byte, short>(pointCloud.Memory.Span); // Cast byte values to short
@@ -138,23 +141,27 @@ namespace SandWorm
         {
             if (sensor == null)
             {
-                string message;
                 CreateCameraConfig(fieldOfViewMode); // Apply user options from Sandworm Options
 
                 try
                 {
                     sensor = Device.Open();
-                    sensor.StopCameras();
-                }
-                catch (Exception ex)
-                {
-                }
-
-                try
-                {
                     sensor.StartCameras(deviceConfig);
+                    Rhino.RhinoApp.WriteLine("Start Kinect Cameras");
+
+                    #region Speed up resetting procedure
+                    // Calibration, transformation and lokkup tables take approx 2 seconds to calculate (or 4 for WFOV). Only do this when necessary
+
+                    if (previousKinectType == fieldOfViewMode && previousSensorElevation == sensorElevation)
+                        return;
+
+                    previousSensorElevation = sensorElevation;
+                    previousKinectType = fieldOfViewMode;
+                    #endregion
+
                     calibration = sensor.GetCalibration(deviceConfig.DepthMode, deviceConfig.ColorResolution);
                     transformation = calibration.CreateTransformation();
+                    Rhino.RhinoApp.WriteLine("Create Transformation Matrices");
 
                     Vector2 depthPixel = new Vector2();
                     Vector3? translationVector;
@@ -177,6 +184,7 @@ namespace SandWorm
                                 verticalTiltCorrectionMatrix[i] = translationVector.Value.Y * sin6;
                         }
                     }
+                    Rhino.RhinoApp.WriteLine("Correct for Vertical Tilt");
 
                     // Create synthetic depth values emulating our sensor elevation and obtain corresponding idealized XY coordinates
                     double syntheticDepthValue;
@@ -191,11 +199,10 @@ namespace SandWorm
                         else
                             idealXYCoordinates[i] = new Vector2();
                     }
+                    Rhino.RhinoApp.WriteLine("Calculate XY Coordinates");
                 }
                 catch (Exception ex)
                 {
-                    message = ex.ToString();
-                    //sensor?.Dispose();
                 }
             }
         }
