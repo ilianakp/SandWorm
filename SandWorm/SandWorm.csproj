@@ -143,7 +143,6 @@
   <ItemGroup>
     <Compile Include="Analysis.cs" />
     <Compile Include="Analytics\Aspect.cs" />
-    <Compile Include="Analytics\RainDensity.cs" />
     <Compile Include="Analytics\ColorPalettes.cs" />
     <Compile Include="Analytics\ContoursFromPoints.cs" />
     <Compile Include="Analytics\Elevation.cs" />
@@ -191,7 +190,6 @@
     <Compile Include="Utilities\Core.cs" />
     <Compile Include="GaussianBlurProcessor.cs" />
     <Compile Include="Utilities\KinectForWindows.cs" />
-    <Compile Include="Components\SetupComponent.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
