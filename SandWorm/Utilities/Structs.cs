@@ -29,6 +29,7 @@ namespace SandWorm
         public enum ColorPalettes
         {
             Custom,
+            CutFill,
             Chile,
             Desert,
             Dune,

@@ -143,6 +143,7 @@
   <ItemGroup>
     <Compile Include="Analysis.cs" />
     <Compile Include="Analytics\Aspect.cs" />
+    <Compile Include="Analytics\CutFill.cs" />
     <Compile Include="Analytics\ColorPalettes.cs" />
     <Compile Include="Analytics\ContoursFromPoints.cs" />
     <Compile Include="Analytics\Elevation.cs" />

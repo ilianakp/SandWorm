@@ -288,6 +288,7 @@ namespace SandWorm
 
         public static void GenerateMeshColors(ref Color[] vertexColors, Structs.AnalysisTypes analysisType, double[] averagedDepthFrameData, 
             Vector2[]xyLookuptable, Color[] pixelColors, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors,
+            double?[] baseMeshElevationPoints, Point3d[] allPoints,
             double sensorElevation, int trimmedWidth, int trimmedHeight)
         {
             switch (analysisType)
@@ -314,7 +315,8 @@ namespace SandWorm
                         trimmedWidth, trimmedHeight, gradientRange);
                     break;
 
-                case Structs.AnalysisTypes.CutFill: // TODO
+                case Structs.AnalysisTypes.CutFill:
+                    vertexColors = new CutFill().GetColorCloudForAnalysis(allPoints, baseMeshElevationPoints, gradientRange, colorPalette, customColors);
                     break;
             }
         }

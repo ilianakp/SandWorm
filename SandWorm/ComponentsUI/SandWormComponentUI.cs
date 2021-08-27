@@ -123,6 +123,7 @@ namespace SandWorm
             _analysisType = new MenuDropDown(23, "Ouput type", "Choose type of geometry to output.");
             _analysisType.AddEnum(typeof(Structs.AnalysisTypes));
             _analysisType.Value = (int)Structs.AnalysisTypes.Elevation;
+            _analysisType.ValueChanged += _analysisType__valueChanged;
 
             MenuStaticText colorPaletteHeader = new MenuStaticText("Color palette", "Choose color palette for elevation analysis.");
             _colorPalette = new MenuDropDown(231, "Color palette", "Choose color palette for elevation analysis.");
@@ -201,6 +202,16 @@ namespace SandWorm
             void _slider__ValueChanged(object sender, EventArgs e)
             {
                 _resize = true;
+            }
+
+            void _analysisType__valueChanged(object sender, EventArgs e)
+            {
+                // Set color palette to CutFill when user chooses the corresponding analysis type
+                if ((Structs.AnalysisTypes)_analysisType.Value == Structs.AnalysisTypes.CutFill)
+                    _colorPalette.Value = (int)Structs.ColorPalettes.CutFill;
+
+                if ((Structs.AnalysisTypes)_analysisType.Value == Structs.AnalysisTypes.Elevation)
+                    _colorPalette.Value = (int)Structs.ColorPalettes.Europe;
             }
 
             #endregion

@@ -14,7 +14,6 @@ namespace SandWorm
                 case Structs.ColorPalettes.Custom:
                     if (customColors.Count == 0) // No inputs provided; use placeholder
                         paletteSwatches.Add(Color.FromArgb(122, 122, 122));
-                        paletteSwatches.Add(Color.FromArgb(122, 122, 122));
 
                     for (int i = 0; i < customColors.Count; i++)
                         paletteSwatches.Add(customColors[i]);
@@ -26,6 +25,12 @@ namespace SandWorm
                     paletteSwatches.Add(Color.FromArgb(255, 247, 52));
                     paletteSwatches.Add(Color.FromArgb(196, 65, 0));
                     paletteSwatches.Add(Color.FromArgb(230, 188, 167));
+                    break;
+
+                case Structs.ColorPalettes.CutFill:
+                    paletteSwatches.Add(Color.FromArgb(235, 100, 75));
+                    paletteSwatches.Add(Color.FromArgb(255, 255, 255));
+                    paletteSwatches.Add(Color.FromArgb(164, 206, 101));
                     break;
 
                 case Structs.ColorPalettes.Desert:
