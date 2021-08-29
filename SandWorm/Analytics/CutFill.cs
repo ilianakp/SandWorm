@@ -67,9 +67,12 @@ namespace SandWorm.Analytics
                 }
             }
             
-            stats.Add($"Cut: {System.Math.Round(_cut * 0.001)} cubic centimeters");
-            stats.Add($"Fill: {System.Math.Round(_fill * 0.001)} cubic centimeters");
-            stats.Add($"Cut/Fill Balance: {System.Math.Round((_cut + _fill) * 0.001)} cubic centimeters");
+            stats.Add($"Cut Volume, in cubic centimeters:");
+            stats.Add(System.Math.Round(_cut * 0.001).ToString());
+            stats.Add($"Fill Volume, in cubic centimeters:");
+            stats.Add(System.Math.Round(_fill * 0.001).ToString());
+            stats.Add($"Cut/Fill Balance, in cubic centimeters:");
+            stats.Add(System.Math.Round((_cut + _fill) * 0.001).ToString());
             return vertexColors;
         }
 
