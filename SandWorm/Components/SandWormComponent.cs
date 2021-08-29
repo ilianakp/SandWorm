@@ -274,8 +274,9 @@ namespace SandWorm
             
             if (_labelSpacing.Value > 0 && ((AnalysisTypes) _analysisType.Value == AnalysisTypes.CutFill || (AnalysisTypes)_analysisType.Value == AnalysisTypes.Elevation))
             {
-                foreach (var text in labels)
-                    args.Display.Draw3dText(text, Color.White);
+                if (labels != null)
+                    foreach (var text in labels)
+                        args.Display.Draw3dText(text, Color.White);
             }
         }
 
