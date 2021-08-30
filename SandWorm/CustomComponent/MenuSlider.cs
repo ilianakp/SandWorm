@@ -221,13 +221,18 @@ namespace SandWorm
         public override bool Read(GH_IReader reader)
         {
             GH_IReader gH_IReader = reader.FindChunk("Slider", Index);
-            minValue = gH_IReader.GetDouble("MinValue");
-            maxValue = gH_IReader.GetDouble("MaxValue");
-            currentValue = gH_IReader.GetDouble("CurrentValue");
-            if (!gH_IReader.TryGetInt32("NumDecimals", ref numDecimals))
+            if (gH_IReader != null)
             {
-                numDecimals = 2;
+                minValue = gH_IReader.GetDouble("MinValue");
+                maxValue = gH_IReader.GetDouble("MaxValue");
+                currentValue = gH_IReader.GetDouble("CurrentValue");
+
+                if (!gH_IReader.TryGetInt32("NumDecimals", ref numDecimals))
+                {
+                    numDecimals = 2;
+                }
             }
+
             FixValues();
             return true;
         }
