@@ -146,7 +146,7 @@ namespace SandWorm
                     sensor = Device.Open();
                     sensor.StopCameras();
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                 }
 

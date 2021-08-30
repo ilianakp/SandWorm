@@ -23,6 +23,7 @@ namespace SandWorm
             Elevation,
             Slope,
             RainDensity,
+            Agent,
             Aspect,
             CutFill
         }
