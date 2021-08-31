@@ -9,6 +9,7 @@ namespace SandWorm
 {
     public class FlowLine
     {
+        private int zDistance = 3;
         public int Endvertex { get; set; }
         public Polyline Polyline { get; set; } 
 
@@ -16,13 +17,15 @@ namespace SandWorm
         {
             Endvertex = startVertex;
             Polyline = new Polyline();
-            Polyline.Add(points[Endvertex]);
+            Point3d _pt = new Point3d(points[Endvertex].X, points[Endvertex].Y, points[Endvertex].Z + zDistance); // Raise the polyline slightly above terrain for better visibility
+            Polyline.Add(_pt);
         }
 
         public void Grow(ref Point3d[] points, int xStride)
         {
             findNextPoint(ref points, xStride);
-            Polyline.Add(points[Endvertex]);
+            Point3d _pt = new Point3d(points[Endvertex].X, points[Endvertex].Y, points[Endvertex].Z + zDistance);
+            Polyline.Add(_pt);
         }
 
         public void Shrink()
