@@ -170,9 +170,9 @@ namespace SandWorm
                         break;
                 }
             }
-
+#if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Initial setup"); // Debug Info
-
+#endif
             AverageAndBlurPixels(depthFrameDataInt, ref averagedDepthFrameData, runningSum, renderBuffer,
                                  _sensorElevation.Value, _averagedFrames.Value, _blurRadius.Value, trimmedWidth,
                                  trimmedHeight);
@@ -212,18 +212,18 @@ namespace SandWorm
                                             baseMeshElevationPoints, trimmedWidth, trimmedHeight,
                                             (int)_labelSpacing.Value, unitsMultiplier);
             }
-
+#if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
-
+#endif
             if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
             {
                 _cloud = null;
                 // Generate the mesh
                 _quadMesh = CreateQuadMesh(_quadMesh, allPoints, _vertexColors, trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
                 _outputMesh.Add(_quadMesh);
-
+#if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
-
+#endif
                 // Produce 2nd type of analysis that acts on the mesh and creates new geometry
                 if (_contourIntervalRange.Value > 0)
                 {
@@ -237,8 +237,9 @@ namespace SandWorm
                         DA.SetDataList(2, ghLines);
                     }
                 }
-
+#if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Mesh analysis"); // Debug Info
+#endif
                 DA.SetDataList(0, _outputMesh);
             }
             else if ((OutputTypes)_outputType.Value == OutputTypes.PointCloud)
@@ -249,8 +250,9 @@ namespace SandWorm
                     _cloud.AddRange(allPoints, _vertexColors);
                 else
                     _cloud.AddRange(allPoints);
-
+#if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Point cloud display"); // Debug Info
+#endif
             }
 
             if (_waterLevel.Value > 0)
