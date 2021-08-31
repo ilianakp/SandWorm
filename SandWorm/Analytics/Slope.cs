@@ -165,7 +165,7 @@ namespace SandWorm
                     double parallelDeltaY = (xyLookupTable[h].Y - xyLookupTable[i].Y);
                     double parallelDeltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-                    parallelSlope += Math.Abs((pixelArray[h - 1] - pixelArray[i])) / parallelDeltaXY; // NW pixel
+                    parallelSlope += Math.Abs((pixelArray[h - 1] - pixelArray[i])) / parallelDeltaXY; //NW pixel
                     parallelSlope += Math.Abs((pixelArray[h] - pixelArray[i])) / parallelDeltaY; //N pixel
                     parallelSlope += Math.Abs((pixelArray[h + 1] - pixelArray[i])) / parallelDeltaXY; //NE pixel
                     parallelSlope += Math.Abs((pixelArray[i - 1] - pixelArray[i])) / parallelDeltaX; //W pixel

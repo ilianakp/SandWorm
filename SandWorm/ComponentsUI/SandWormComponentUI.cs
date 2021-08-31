@@ -25,6 +25,7 @@ namespace SandWorm
         public static MenuSlider _contourIntervalRange;
         public static MenuSlider _contourRoughness;
         public static MenuSlider _waterLevel;
+        public static MenuSlider _rainDensity;
         public static MenuSlider _labelSpacing;
 
         public static MenuSlider _averagedFrames;
@@ -144,10 +145,14 @@ namespace SandWorm
             _contourIntervalRange = new MenuSlider(contourIntervalHeader, 25, 0, 30, 0, 0);
 
             MenuStaticText contourRoughnessHeader = new MenuStaticText("Contour roughness", "Specify how rough contour sampling should be.");
-            _contourRoughness = new MenuSlider(contourRoughnessHeader, 27, 1, 20, 2, 0);
+            _contourRoughness = new MenuSlider(contourRoughnessHeader, 26, 1, 20, 2, 0);
 
             MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
-            _waterLevel = new MenuSlider(waterLevelHeader, 26, 0, 300, 0, 0);
+            _waterLevel = new MenuSlider(waterLevelHeader, 27, 0, 300, 0, 0);
+
+            MenuStaticText rainDensityHeader = new MenuStaticText("Rain density", "Define distance between the rain drops. \nInput is defined as distance between individual rows/columns.");
+            _rainDensity = new MenuSlider(rainDensityHeader, 271, 0, 100, 20, 0);
+            _rainDensity.Step = 4;
 
 
             analysisMenu.AddControl(analysisPanel);
@@ -169,6 +174,8 @@ namespace SandWorm
             analysisPanel.AddControl(_contourRoughness);
             analysisPanel.AddControl(waterLevelHeader);
             analysisPanel.AddControl(_waterLevel);
+            analysisPanel.AddControl(rainDensityHeader);
+            analysisPanel.AddControl(_rainDensity);
 
             #endregion
 

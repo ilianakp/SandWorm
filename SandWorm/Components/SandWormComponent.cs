@@ -52,6 +52,10 @@ namespace SandWorm
         private double?[] baseMeshElevationPoints;
         private Mesh baseMesh;
 
+        // Water flow analysis
+        private int flowLinesAge = 0;
+        private List<FlowLine> flowLines;
+
         // Outputs
         private List<Mesh> _outputMesh;
         private List<GeometryBase> _outputWaterSurface;
@@ -213,6 +217,30 @@ namespace SandWorm
                                             (int)_labelSpacing.Value, unitsMultiplier);
             }
 
+            if (_rainDensity.Value > 0)
+            {
+                if (flowLinesAge == 0)
+                {
+                    flowLines = new List<FlowLine>();
+                    FlowLine.CreateFlowLines(allPoints, ref flowLines, trimmedWidth, trimmedHeight, (int)_rainDensity.Value);
+                }
+                if (flowLinesAge < 30)
+                {
+                    foreach (var _flowLine in flowLines)
+                        _flowLine.Grow(ref allPoints, trimmedWidth);
+                    flowLinesAge++;
+                } 
+                else if (flowLines[0].Polyline.Length > 0)
+                {
+                    foreach (var _flowLine in flowLines)
+                        _flowLine.Shrink();
+                }
+                else
+                {
+                    flowLinesAge = 0;
+                }
+            }
+
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
 
             if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
@@ -278,7 +306,13 @@ namespace SandWorm
                     foreach (var text in labels)
                         args.Display.Draw3dText(text, Color.White);
             }
-        }
+
+            if (_rainDensity.Value > 0)
+            {
+                foreach (var _flowLine in flowLines)
+                    args.Display.DrawPolyline(_flowLine.Polyline, Color.Blue);
+            }
+            }
 
         public override BoundingBox ClippingBox 
         {
