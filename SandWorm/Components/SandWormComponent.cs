@@ -224,7 +224,7 @@ namespace SandWorm
                     flowLines = new List<FlowLine>();
                     FlowLine.CreateFlowLines(allPoints, ref flowLines, trimmedWidth, trimmedHeight, (int)_rainDensity.Value);
                 }
-                if (flowLinesAge < 30)
+                if (flowLinesAge < 50)
                 {
                     foreach (var _flowLine in flowLines)
                         _flowLine.Grow(ref allPoints, trimmedWidth);
