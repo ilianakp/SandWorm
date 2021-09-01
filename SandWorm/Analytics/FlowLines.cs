@@ -169,16 +169,11 @@ namespace SandWorm
         public static void DistributeRandomFlowLines(Point3d[] pointArray, ref List<FlowLine> flowLines, int spacing)
         {
             Random random = new Random();
-            int flowLinesCount = pointArray.Length / (spacing * 10);
+            int flowLinesCount = pointArray.Length / (spacing * 10); // Arbitrary division by 10 to reduce the amount of flowlines
             int pointsCount = pointArray.Length - 1;
 
             for (int i = 0; i < flowLinesCount; i++)
-            {
-                int pointIndex = random.Next(pointsCount);
-
-                var _flowLine = new FlowLine(pointIndex, ref pointArray);
-                flowLines.Add(_flowLine);
-            }
+                flowLines.Add(new FlowLine(random.Next(pointsCount), ref pointArray));
         }
     }
 }
