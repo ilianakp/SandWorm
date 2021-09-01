@@ -150,9 +150,9 @@ namespace SandWorm
             MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
             _waterLevel = new MenuSlider(waterLevelHeader, 27, 0, 300, 0, 0);
 
-            MenuStaticText rainDensityHeader = new MenuStaticText("Rain density", "Define distance between the rain drops. \nInput is defined as distance between individual rows/columns.");
-            _rainDensity = new MenuSlider(rainDensityHeader, 271, 0, 100, 20, 0);
-            _rainDensity.Step = 4;
+            MenuStaticText rainDensityHeader = new MenuStaticText("Raindrop spacing", "Define distance between the rain drops. \nInput is defined as distance between individual rows/columns.");
+            _rainDensity = new MenuSlider(rainDensityHeader, 271, 0, 1000, 500, 0);
+            _rainDensity.Step = 10;
 
 
             analysisMenu.AddControl(analysisPanel);

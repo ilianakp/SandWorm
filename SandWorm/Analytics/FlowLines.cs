@@ -12,20 +12,29 @@ namespace SandWorm
         private int zDistance = 3;
         public int Endvertex { get; set; }
         public Polyline Polyline { get; set; } 
+        public int Inactive { get; set; }
 
         public FlowLine(int startVertex, ref Point3d[] points)
         {
             Endvertex = startVertex;
             Polyline = new Polyline();
+            Inactive = 0;
             Point3d _pt = new Point3d(points[Endvertex].X, points[Endvertex].Y, points[Endvertex].Z + zDistance); // Raise the polyline slightly above terrain for better visibility
             Polyline.Add(_pt);
         }
 
         public void Grow(ref Point3d[] points, int xStride)
         {
+            int _previousEndvertex = Endvertex;
             findNextPoint(ref points, xStride);
-            Point3d _pt = new Point3d(points[Endvertex].X, points[Endvertex].Y, points[Endvertex].Z + zDistance);
-            Polyline.Add(_pt);
+            if (Endvertex != _previousEndvertex)
+            {
+                Point3d _pt = new Point3d(points[Endvertex].X, points[Endvertex].Y, points[Endvertex].Z + zDistance);
+                Polyline.Add(_pt);
+                Inactive = 0;
+            }
+            else
+                Inactive++;
         }
 
         public void Shrink()
@@ -142,7 +151,6 @@ namespace SandWorm
 
             if (maxSlope > 0)
                 Endvertex = maxSlopeIndex;
-
         }
 
         private void CheckForMaxSlope(double currentSlope, ref double maxSlope, int currentIndex, ref int maxSlopeIndex)
@@ -160,9 +168,7 @@ namespace SandWorm
                 for (int x = spacing; x < xStride; x += spacing)       // Iterate over x dimension
                 {
                     int i = y * xStride + x;
-
-                    var _flowLine = new FlowLine(i, ref pointArray);
-                    flowLines.Add(_flowLine);
+                    flowLines.Add(new FlowLine(i, ref pointArray));
                 }
         }
 

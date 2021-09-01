@@ -219,25 +219,30 @@ namespace SandWorm
 
             if (_rainDensity.Value > 0)
             {
-                if (flowLinesAge == 0)
-                {
+                if (flowLines == null)
                     flowLines = new List<FlowLine>();
-                    FlowLine.DistributeRandomFlowLines(allPoints, ref flowLines, (int)_rainDensity.Value);
+
+                FlowLine.DistributeRandomFlowLines(allPoints, ref flowLines, (int)_rainDensity.Value);
+                List<int> deadIndices = new List<int>();
+
+                for (int i = 0; i < flowLines.Count; i++)
+                {
+                    if (flowLines[i].Polyline.Length > 30)
+                        flowLines[i].Shrink();
+
+                    if (flowLines[i].Inactive < 5)
+                        flowLines[i].Grow(ref allPoints, trimmedWidth);
+                    else if (flowLines[i].Polyline.Length > 0)
+                        flowLines[i].Shrink();
+                    else
+                        deadIndices.Add(i);
                 }
-                if (flowLinesAge < 50)
+
+                int j = deadIndices.Count - 1;
+                while (j > 0)
                 {
-                    foreach (var _flowLine in flowLines)
-                        _flowLine.Grow(ref allPoints, trimmedWidth);
-                    flowLinesAge++;
-                } 
-                else if (flowLines[0].Polyline.Length > 0)
-                {
-                    foreach (var _flowLine in flowLines)
-                        _flowLine.Shrink();
-                }
-                else
-                {
-                    flowLinesAge = 0;
+                    flowLines.RemoveAt(j);
+                    j--;
                 }
             }
 
