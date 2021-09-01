@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
+using System.Windows.Forms;
 
 using Rhino;
 using Rhino.Geometry;
@@ -94,6 +95,33 @@ namespace SandWorm
         {
             base.OnComponentLoaded();
         }
+
+        public static class Timers
+        {
+            public static Timer cycleTimer { get; set; } = new Timer();
+
+        }
+
+        public void CycleTimer(Timer timer, int interval)
+        {
+            timer = new Timer();
+            timer.Tick += new EventHandler(timer_Tick);
+            timer.Interval = interval; // in milliseconds
+            timer.Start();
+        }
+
+        private void timer_Tick(object sender, EventArgs e)
+        {
+            cycleAnalysis();
+            Timers.cycleTimer = null;
+        }
+
+        private void cycleAnalysis()
+        {
+            _analysisType.Value = (int)GeneralHelpers.Next((AnalysisTypes)_analysisType.Value); //Iterates over analysis types
+        }
+
+
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
@@ -239,16 +267,26 @@ namespace SandWorm
                 GeneralHelpers.HideParameterGeometry(Params.Output[1]);
             }
 
-            //if (_rainDensity.Value > 0)
-            //{
-            //    RainDensity.GetGeometryForAnalysis(ref _outputGeometry, _rainDensity.Value, allPoints, trimmedWidth);
-            //    if (Params.Output.Count > 2)
-            //        DA.SetDataList(2, _outputGeometry);
-            //}
+
+
+            if ((int)_cycleInterval.Value > 0)
+            {
+                if (Timers.cycleTimer == null)
+                {
+                    Timers.cycleTimer = new Timer();
+                    CycleTimer(Timers.cycleTimer, (int)_cycleInterval.Value * 60000);
+                }
+
+            }
+            else
+                Timers.cycleTimer = null;
+
 
             DA.SetDataList(3, stats);
             ScheduleSolve();
         }
+
+
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {
             if (_cloud != null)

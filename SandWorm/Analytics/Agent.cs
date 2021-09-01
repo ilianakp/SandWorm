@@ -232,9 +232,9 @@ namespace SandWorm.Analytics
             }
 
             // Walk agents towards acceptable slope to reach destination as pixel array
-            for(int rows = 0; rows < height-1; rows++)
+            for(int rows = 1; rows < height-1; rows++)
             {
-                for(int columns = 0; columns < width-1; columns++)
+                for(int columns = 1; columns < width-1; columns++)
                 
                 {
                     int h = (rows - 1) * width + columns;

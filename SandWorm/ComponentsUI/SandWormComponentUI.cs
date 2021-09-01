@@ -17,6 +17,7 @@ namespace SandWorm
         public static MenuSlider _rightColumns;
         public static MenuSlider _topRows;
         public static MenuSlider _bottomRows;
+        public static MenuSlider _cycleInterval;
 
         public static MenuDropDown _outputType;
         public static MenuDropDown _analysisType;
@@ -135,11 +136,14 @@ namespace SandWorm
             MenuStaticText contourIntervalHeader = new MenuStaticText("Contour interval", "Define spacing between contours. \nInput should be in millimeters.");
             _contourIntervalRange = new MenuSlider(contourIntervalHeader, 25, 0, 30, 0, 0);
 
+            MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
+            _waterLevel = new MenuSlider(waterLevelHeader, 26, 0, 300, 0, 0);
+
             MenuStaticText contourRoughnessHeader = new MenuStaticText("Contour roughness", "Specify how rough contour sampling should be.");
             _contourRoughness = new MenuSlider(contourRoughnessHeader, 27, 1, 20, 2, 0);
 
-            MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
-            _waterLevel = new MenuSlider(waterLevelHeader, 26, 0, 300, 0, 0);
+            MenuStaticText analysisCycle = new MenuStaticText("Analysis cycle interval", "Define time in minutes to cycle through all the analysis types. 0 = Manually control the analysis type.");
+            _cycleInterval = new MenuSlider(analysisCycle, 28, 0, 60, 0, 0);
 
 
             analysisMenu.AddControl(analysisPanel);
@@ -159,6 +163,8 @@ namespace SandWorm
             analysisPanel.AddControl(_contourRoughness);
             analysisPanel.AddControl(waterLevelHeader);
             analysisPanel.AddControl(_waterLevel);
+            analysisPanel.AddControl(analysisCycle);
+            analysisPanel.AddControl(_cycleInterval);
 
             #endregion
 
