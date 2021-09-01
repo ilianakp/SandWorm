@@ -97,7 +97,7 @@ namespace SandWorm
                 }   
             }
 
-            if (_e <= pointArray.Count() - 1)
+            if (_e <= pointArray.Length - 1)
             {
                 deltaX = pointArray[i].X - pointArray[_e].X;
 
@@ -108,7 +108,7 @@ namespace SandWorm
                 }
             }
 
-            if (_nw <= pointArray.Count() - 1)
+            if (_nw <= pointArray.Length - 1)
             {
                 deltaX = pointArray[i].X - pointArray[_nw].X;
                 deltaY = pointArray[i].Y - pointArray[_nw].Y;
@@ -120,7 +120,7 @@ namespace SandWorm
                 }
             }
 
-            if (_n <= pointArray.Count() - 1)
+            if (_n <= pointArray.Length - 1)
             {
                 deltaY = pointArray[i].Y - pointArray[_n].Y;
 
@@ -128,7 +128,7 @@ namespace SandWorm
                 CheckForMaxSlope(_slope, ref maxSlope, _n, ref maxSlopeIndex);
             }
 
-            if (_ne <= pointArray.Count() - 1)
+            if (_ne <= pointArray.Length - 1)
             {
                 deltaX = pointArray[i].X - pointArray[_ne].X;
                 deltaY = pointArray[i].Y - pointArray[_ne].Y;
@@ -154,7 +154,7 @@ namespace SandWorm
             }
         }
 
-        public static void CreateFlowLines(Point3d[] pointArray, ref List<FlowLine> flowLines, int xStride, int yStride, int spacing)
+        public static void DistributeFlowLines(Point3d[] pointArray, ref List<FlowLine> flowLines, int xStride, int yStride, int spacing)
         {
             for (int y = 0; y < yStride; y += spacing)       // Iterate over y dimension
                 for (int x = spacing; x < xStride; x += spacing)       // Iterate over x dimension
@@ -164,6 +164,21 @@ namespace SandWorm
                     var _flowLine = new FlowLine(i, ref pointArray);
                     flowLines.Add(_flowLine);
                 }
+        }
+
+        public static void DistributeRandomFlowLines(Point3d[] pointArray, ref List<FlowLine> flowLines, int spacing)
+        {
+            Random random = new Random();
+            int flowLinesCount = pointArray.Length / (spacing * 10);
+            int pointsCount = pointArray.Length - 1;
+
+            for (int i = 0; i < flowLinesCount; i++)
+            {
+                int pointIndex = random.Next(pointsCount);
+
+                var _flowLine = new FlowLine(pointIndex, ref pointArray);
+                flowLines.Add(_flowLine);
+            }
         }
     }
 }

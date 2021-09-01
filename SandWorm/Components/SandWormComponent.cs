@@ -222,7 +222,7 @@ namespace SandWorm
                 if (flowLinesAge == 0)
                 {
                     flowLines = new List<FlowLine>();
-                    FlowLine.CreateFlowLines(allPoints, ref flowLines, trimmedWidth, trimmedHeight, (int)_rainDensity.Value);
+                    FlowLine.DistributeRandomFlowLines(allPoints, ref flowLines, (int)_rainDensity.Value);
                 }
                 if (flowLinesAge < 50)
                 {
