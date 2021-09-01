@@ -25,7 +25,8 @@ namespace SandWorm
         public static MenuSlider _contourIntervalRange;
         public static MenuSlider _contourRoughness;
         public static MenuSlider _waterLevel;
-        public static MenuSlider _rainDensity;
+        public static MenuSlider _raindropSpacing;
+        public static MenuSlider _flowLinesLength;
         public static MenuSlider _labelSpacing;
 
         public static MenuSlider _averagedFrames;
@@ -151,8 +152,11 @@ namespace SandWorm
             _waterLevel = new MenuSlider(waterLevelHeader, 27, 0, 300, 0, 0);
 
             MenuStaticText rainDensityHeader = new MenuStaticText("Raindrop spacing", "Define distance between the rain drops. \nInput is defined as distance between individual rows/columns.");
-            _rainDensity = new MenuSlider(rainDensityHeader, 271, 0, 1000, 500, 0);
-            _rainDensity.Step = 10;
+            _raindropSpacing = new MenuSlider(rainDensityHeader, 271, 0, 1000, 500, 0);
+            _raindropSpacing.Step = 10;
+
+            MenuStaticText flowLinesLengthHeader = new MenuStaticText("Flowlines length", "Define the maximum length of each flowline. \nInput is defined as distance between individual rows/columns.");
+            _flowLinesLength = new MenuSlider(flowLinesLengthHeader, 272, 1, 100, 50, 0);
 
 
             analysisMenu.AddControl(analysisPanel);
@@ -175,7 +179,9 @@ namespace SandWorm
             analysisPanel.AddControl(waterLevelHeader);
             analysisPanel.AddControl(_waterLevel);
             analysisPanel.AddControl(rainDensityHeader);
-            analysisPanel.AddControl(_rainDensity);
+            analysisPanel.AddControl(_raindropSpacing);
+            analysisPanel.AddControl(flowLinesLengthHeader);
+            analysisPanel.AddControl(_flowLinesLength);
 
             #endregion
 

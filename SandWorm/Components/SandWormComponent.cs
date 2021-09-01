@@ -217,17 +217,17 @@ namespace SandWorm
                                             (int)_labelSpacing.Value, unitsMultiplier);
             }
 
-            if (_rainDensity.Value > 0)
+            if (_raindropSpacing.Value > 0)
             {
                 if (flowLines == null)
                     flowLines = new List<FlowLine>();
 
-                FlowLine.DistributeRandomFlowLines(allPoints, ref flowLines, (int)_rainDensity.Value);
+                FlowLine.DistributeRandomFlowLines(allPoints, ref flowLines, (int)_raindropSpacing.Value);
                 List<int> deadIndices = new List<int>();
 
                 for (int i = 0; i < flowLines.Count; i++)
                 {
-                    if (flowLines[i].Polyline.Length > 30)
+                    if (flowLines[i].Polyline.Length > _flowLinesLength.Value)
                         flowLines[i].Shrink();
 
                     if (flowLines[i].Inactive < 5)
@@ -312,7 +312,7 @@ namespace SandWorm
                         args.Display.Draw3dText(text, Color.White);
             }
 
-            if (_rainDensity.Value > 0)
+            if (_raindropSpacing.Value > 0)
             {
                 foreach (var _flowLine in flowLines)
                     args.Display.DrawPolyline(_flowLine.Polyline, Color.Blue);
