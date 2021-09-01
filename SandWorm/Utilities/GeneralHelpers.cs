@@ -29,6 +29,12 @@ namespace SandWorm
             timer.Restart();
         }
 
+        public static void OutputMessage(ref List<string> output, string eventDescription)
+        {
+            var logInfo = eventDescription;
+            output.Add(logInfo);
+        }
+
         public static double ConvertDrawingUnits(Rhino.UnitSystem units)
         {
             double unitsMultiplier = 1.0;

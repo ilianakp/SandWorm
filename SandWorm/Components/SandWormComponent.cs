@@ -166,6 +166,9 @@ namespace SandWorm
                 }
             }
 
+            var CurrentAnalysisName = AnalysisTypes.GetNames(typeof(AnalysisTypes));
+            GeneralHelpers.OutputMessage(ref stats, CurrentAnalysisName[(int)(AnalysisTypes)_analysisType.Value]);
+
             GeneralHelpers.LogTiming(ref stats, timer, "Initial setup"); // Debug Info
 
             AverageAndBlurPixels(depthFrameDataInt, ref averagedDepthFrameData, runningSum, renderBuffer,
@@ -191,6 +194,8 @@ namespace SandWorm
                 trimmedXYLookupTable, trimmedRGBArray,
                 _colorGradientRange.Value, (Structs.ColorPalettes)_colorPalette.Value, colorPalettes,
                 _sensorElevation.Value, trimmedWidth, trimmedHeight);
+
+            
 
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
 
