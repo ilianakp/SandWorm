@@ -114,7 +114,7 @@ namespace SandWorm
 
                 if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
                     KinectForWindows.RemoveRef();
-                else 
+                else
                     KinectAzureController.RemoveRef();
 
                 ResetDataArrays();
@@ -235,15 +235,12 @@ namespace SandWorm
                     else if (flowLines[i].Polyline.Length > 0)
                         flowLines[i].Shrink();
                     else
-                        deadIndices.Add(i);
+                        deadIndices.Add(i); // Mark polylines for removal if they were stuck for more than 5 ticks 
                 }
 
-                int j = deadIndices.Count - 1;
-                while (j > 0)
-                {
+                for (int j = deadIndices.Count - 1; j > 0; j--)
                     flowLines.RemoveAt(j);
-                    j--;
-                }
+
             }
 
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
@@ -304,8 +301,8 @@ namespace SandWorm
 
             if (_outputContours != null && _outputContours.Count != 0 && Params.Output[2].Recipients.Count == 0)
                 args.Display.DrawLines(_outputContours, Color.White, 1);
-            
-            if (_labelSpacing.Value > 0 && ((AnalysisTypes) _analysisType.Value == AnalysisTypes.CutFill || (AnalysisTypes)_analysisType.Value == AnalysisTypes.Elevation))
+
+            if (_labelSpacing.Value > 0 && ((AnalysisTypes)_analysisType.Value == AnalysisTypes.CutFill || (AnalysisTypes)_analysisType.Value == AnalysisTypes.Elevation))
             {
                 if (labels != null)
                     foreach (var text in labels)
@@ -317,9 +314,8 @@ namespace SandWorm
                 foreach (var _flowLine in flowLines)
                     args.Display.DrawPolyline(_flowLine.Polyline, Color.Blue);
             }
-            }
-
-        public override BoundingBox ClippingBox 
+        }
+        public override BoundingBox ClippingBox
         {
             get
             {
@@ -329,7 +325,6 @@ namespace SandWorm
                     return new BoundingBox();
             }
         }
-
         protected override Bitmap Icon => Properties.Resources.Icons_Main;
         public override Guid ComponentGuid => new Guid("{53fefb98-1cec-4134-b707-0c366072af2c}");
         public override void AddedToDocument(GH_Document document)
@@ -367,7 +362,6 @@ namespace SandWorm
         {
             ExpireSolution(false);
         }
-
         private void ResetDataArrays()
         {
             _quadMesh = null;
@@ -375,7 +369,8 @@ namespace SandWorm
             runningSum = null;
             renderBuffer.Clear();
             baseMeshElevationPoints = null;
-            
+            flowLines = null;
+
             _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;
             _reset = false;
