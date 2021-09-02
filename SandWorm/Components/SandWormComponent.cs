@@ -57,7 +57,6 @@ namespace SandWorm
         private List<FlowLine> flowLines;
 
         // Outputs
-        private List<Mesh> _outputMesh;
         private List<GeometryBase> _outputWaterSurface;
         private List<Line> _outputContours;
 
@@ -139,7 +138,6 @@ namespace SandWorm
             int[] depthFrameDataInt = new int[trimmedWidth * trimmedHeight];
             double[] averagedDepthFrameData = new double[trimmedWidth * trimmedHeight];
             allPoints = new Point3d[trimmedWidth * trimmedHeight];
-            _outputMesh = new List<Mesh>();
             _outputWaterSurface = new List<GeometryBase>();
             _outputContours = new List<Line>();
 
@@ -222,7 +220,7 @@ namespace SandWorm
                 if (flowLines == null)
                     flowLines = new List<FlowLine>();
 
-                FlowLine.DistributeRandomRaindrops(allPoints, ref flowLines, (int)_raindropSpacing.Value);
+                FlowLine.DistributeRandomRaindrops(ref allPoints, ref flowLines, (int)_raindropSpacing.Value);
                 FlowLine.GrowAndRemoveFlowlines(ref allPoints, ref flowLines, (int)_raindropSpacing.Value, _flowLinesLength.Value);
             }
 
@@ -232,9 +230,7 @@ namespace SandWorm
             {
                 _cloud = null;
                 // Generate the mesh
-                _quadMesh = CreateQuadMesh(_quadMesh, allPoints, _vertexColors, trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
-                _outputMesh.Add(_quadMesh);
-
+                _quadMesh = CreateQuadMesh(ref _quadMesh, ref allPoints, ref _vertexColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
                 GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
 
                 // Produce 2nd type of analysis that acts on the mesh and creates new geometry
@@ -252,7 +248,7 @@ namespace SandWorm
                 }
 
                 GeneralHelpers.LogTiming(ref stats, timer, "Mesh analysis"); // Debug Info
-                DA.SetDataList(0, _outputMesh);
+                DA.SetDataList(0, new List<Mesh> { _quadMesh });
             }
             else if ((OutputTypes)_outputType.Value == OutputTypes.PointCloud)
             {
@@ -272,7 +268,6 @@ namespace SandWorm
                 DA.SetDataList(1, _outputWaterSurface);
                 GeneralHelpers.HideParameterGeometry(Params.Output[1]);
             }
-
 
             DA.SetDataList(3, stats);
             ScheduleSolve();

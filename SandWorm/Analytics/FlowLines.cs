@@ -172,7 +172,7 @@ namespace SandWorm
                 }
         }
 
-        public static void DistributeRandomRaindrops(Point3d[] pointArray, ref List<FlowLine> flowLines, int spacing)
+        public static void DistributeRandomRaindrops(ref Point3d[] pointArray, ref List<FlowLine> flowLines, int spacing)
         {
             Random random = new Random();
             int flowLinesCount = pointArray.Length / (spacing * 10); // Arbitrary division by 10 to reduce the amount of flowlines
