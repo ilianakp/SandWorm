@@ -222,25 +222,8 @@ namespace SandWorm
                 if (flowLines == null)
                     flowLines = new List<FlowLine>();
 
-                FlowLine.DistributeRandomFlowLines(allPoints, ref flowLines, (int)_raindropSpacing.Value);
-                List<int> deadIndices = new List<int>();
-
-                for (int i = 0; i < flowLines.Count; i++)
-                {
-                    if (flowLines[i].Polyline.Length > _flowLinesLength.Value)
-                        flowLines[i].Shrink();
-
-                    if (flowLines[i].Inactive < 5)
-                        flowLines[i].Grow(ref allPoints, trimmedWidth);
-                    else if (flowLines[i].Polyline.Length > 0)
-                        flowLines[i].Shrink();
-                    else
-                        deadIndices.Add(i); // Mark polylines for removal if they were stuck for more than 5 ticks 
-                }
-
-                for (int j = deadIndices.Count - 1; j > 0; j--)
-                    flowLines.RemoveAt(j);
-
+                FlowLine.DistributeRandomRaindrops(allPoints, ref flowLines, (int)_raindropSpacing.Value);
+                FlowLine.GrowAndRemoveFlowlines(ref allPoints, ref flowLines, (int)_raindropSpacing.Value, _flowLinesLength.Value);
             }
 
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info

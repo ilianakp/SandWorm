@@ -11,7 +11,7 @@ namespace SandWorm
     {
         private int zDistance = 3;
         public int Endvertex { get; set; }
-        public Polyline Polyline { get; set; } 
+        public Polyline Polyline { get; set; }
         public int Inactive { get; set; }
 
         public FlowLine(int startVertex, ref Point3d[] points)
@@ -92,7 +92,7 @@ namespace SandWorm
                 {
                     _slope = (pointArray[i].Z - pointArray[_se].Z) / Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
                     CheckForMaxSlope(_slope, ref maxSlope, _se, ref maxSlopeIndex);
-                }   
+                }
             }
 
             if (_w >= 0)
@@ -103,7 +103,7 @@ namespace SandWorm
                 {
                     _slope = (pointArray[i].Z - pointArray[_w].Z) / deltaX;
                     CheckForMaxSlope(_slope, ref maxSlope, _w, ref maxSlopeIndex);
-                }   
+                }
             }
 
             if (_e <= pointArray.Length - 1)
@@ -172,7 +172,7 @@ namespace SandWorm
                 }
         }
 
-        public static void DistributeRandomFlowLines(Point3d[] pointArray, ref List<FlowLine> flowLines, int spacing)
+        public static void DistributeRandomRaindrops(Point3d[] pointArray, ref List<FlowLine> flowLines, int spacing)
         {
             Random random = new Random();
             int flowLinesCount = pointArray.Length / (spacing * 10); // Arbitrary division by 10 to reduce the amount of flowlines
@@ -180,6 +180,27 @@ namespace SandWorm
 
             for (int i = 0; i < flowLinesCount; i++)
                 flowLines.Add(new FlowLine(random.Next(pointsCount), ref pointArray));
+        }
+
+        public static void GrowAndRemoveFlowlines(ref Point3d[] pointArray, ref List<FlowLine> flowLines, int spacing, double maxLength)
+        {
+            List<int> deadIndices = new List<int>();
+
+            for (int i = 0; i < flowLines.Count; i++)
+            {
+                if (flowLines[i].Polyline.Length > maxLength)
+                    flowLines[i].Shrink();
+
+                if (flowLines[i].Inactive < 5)
+                    flowLines[i].Grow(ref pointArray, spacing);
+                else if (flowLines[i].Polyline.Length > 0)
+                    flowLines[i].Shrink();
+                else
+                    deadIndices.Add(i); // Mark polylines for removal if they were stuck for more than 5 ticks 
+            }
+
+            for (int i = deadIndices.Count - 1; i > 0; i--)
+                flowLines.RemoveAt(i);
         }
     }
 }
