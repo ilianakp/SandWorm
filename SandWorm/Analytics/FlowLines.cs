@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,7 +24,7 @@ namespace SandWorm
             Polyline.Add(_pt);
         }
 
-        public void Grow(ref Point3d[] points, int xStride)
+        public void Grow(Point3d[] points, int xStride)
         {
             int _previousEndvertex = Endvertex;
             findNextPoint(ref points, xStride);
@@ -172,35 +173,36 @@ namespace SandWorm
                 }
         }
 
-        public static void DistributeRandomRaindrops(ref Point3d[] pointArray, ref List<FlowLine> flowLines, int spacing)
+        public static void DistributeRandomRaindrops(ref Point3d[] pointArray, ref ConcurrentDictionary<int, FlowLine> flowLines, int spacing)
         {
             Random random = new Random();
             int flowLinesCount = pointArray.Length / (spacing * 10); // Arbitrary division by 10 to reduce the amount of flowlines
             int pointsCount = pointArray.Length - 1;
 
             for (int i = 0; i < flowLinesCount; i++)
-                flowLines.Add(new FlowLine(random.Next(pointsCount), ref pointArray));
+            {
+                int _index = random.Next(pointsCount);
+                flowLines.TryAdd(_index, new FlowLine(_index, ref pointArray));
+            }
         }
 
-        public static void GrowAndRemoveFlowlines(ref Point3d[] pointArray, ref List<FlowLine> flowLines, int spacing, double maxLength)
+        public static void GrowAndRemoveFlowlines(Point3d[] pointArray, ConcurrentDictionary<int, FlowLine> flowLines, int xStride, double maxLength)
         {
-            List<int> deadIndices = new List<int>();
-
-            for (int i = 0; i < flowLines.Count; i++)
+            Parallel.ForEach(flowLines, kvp =>
             {
-                if (flowLines[i].Polyline.Length > maxLength)
-                    flowLines[i].Shrink();
+                if (kvp.Value.Polyline.Count > maxLength)
+                    kvp.Value.Shrink();
 
-                if (flowLines[i].Inactive < 5)
-                    flowLines[i].Grow(ref pointArray, spacing);
-                else if (flowLines[i].Polyline.Length > 0)
-                    flowLines[i].Shrink();
+                if (kvp.Value.Inactive < 3) // Only grow if a polyline wasn't idle for more than 3 ticks
+                    kvp.Value.Grow(pointArray, xStride);
                 else
-                    deadIndices.Add(i); // Mark polylines for removal if they were stuck for more than 5 ticks 
-            }
-            for (int i = deadIndices.Count - 1; i > 0; i--)
-                flowLines.RemoveAt(i);
-            
+                {
+                    if (kvp.Value.Polyline.Count > 3)
+                        kvp.Value.Shrink();
+                    else
+                        flowLines.TryRemove(kvp.Key, out _); // Remove single line segments of stuck polylines
+                }
+            });
         }
     }
 }

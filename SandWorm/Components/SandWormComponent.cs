@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -54,7 +55,7 @@ namespace SandWorm
 
         // Water flow analysis
         private int flowLinesAge = 0;
-        private List<FlowLine> flowLines;
+        private ConcurrentDictionary<int, FlowLine> flowLines;
 
         // Outputs
         private List<GeometryBase> _outputWaterSurface;
@@ -218,10 +219,10 @@ namespace SandWorm
             if (_raindropSpacing.Value > 0)
             {
                 if (flowLines == null)
-                    flowLines = new List<FlowLine>();
+                    flowLines = new ConcurrentDictionary<int, FlowLine>();
 
                 FlowLine.DistributeRandomRaindrops(ref allPoints, ref flowLines, (int)_raindropSpacing.Value);
-                FlowLine.GrowAndRemoveFlowlines(ref allPoints, ref flowLines, trimmedWidth, _flowLinesLength.Value);
+                FlowLine.GrowAndRemoveFlowlines(allPoints, flowLines, trimmedWidth, _flowLinesLength.Value);
             }
 
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
@@ -289,8 +290,8 @@ namespace SandWorm
 
             if (_raindropSpacing.Value > 0)
             {
-                foreach (var _flowLine in flowLines)
-                    args.Display.DrawPolyline(_flowLine.Polyline, Color.Blue);
+                foreach (var kvp in flowLines)
+                    args.Display.DrawPolyline(kvp.Value.Polyline, Color.Blue);
             }
         }
         public override BoundingBox ClippingBox
