@@ -221,7 +221,7 @@ namespace SandWorm
                     flowLines = new List<FlowLine>();
 
                 FlowLine.DistributeRandomRaindrops(ref allPoints, ref flowLines, (int)_raindropSpacing.Value);
-                FlowLine.GrowAndRemoveFlowlines(ref allPoints, ref flowLines, (int)_raindropSpacing.Value, _flowLinesLength.Value);
+                FlowLine.GrowAndRemoveFlowlines(ref allPoints, ref flowLines, trimmedWidth, _flowLinesLength.Value);
             }
 
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info

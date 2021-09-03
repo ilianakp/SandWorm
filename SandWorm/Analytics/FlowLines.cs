@@ -198,9 +198,9 @@ namespace SandWorm
                 else
                     deadIndices.Add(i); // Mark polylines for removal if they were stuck for more than 5 ticks 
             }
-
             for (int i = deadIndices.Count - 1; i > 0; i--)
                 flowLines.RemoveAt(i);
+            
         }
     }
 }
