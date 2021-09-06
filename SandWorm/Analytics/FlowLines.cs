@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Rhino.Geometry;
 
@@ -10,7 +8,7 @@ namespace SandWorm
 {
     public class FlowLine
     {
-        private int zDistance = 3;
+        private int zDistance = 1;
         public int Endvertex { get; set; }
         public Polyline Polyline { get; set; }
         public int Inactive { get; set; }

@@ -148,17 +148,6 @@ namespace SandWorm
             MenuStaticText contourRoughnessHeader = new MenuStaticText("Contour roughness", "Specify how rough contour sampling should be.");
             _contourRoughness = new MenuSlider(contourRoughnessHeader, 26, 1, 20, 2, 0);
 
-            MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
-            _waterLevel = new MenuSlider(waterLevelHeader, 27, 0, 300, 0, 0);
-
-            MenuStaticText rainDensityHeader = new MenuStaticText("Raindrop spacing", "Define distance between the rain drops. \nInput is defined as distance between individual rows/columns.");
-            _raindropSpacing = new MenuSlider(rainDensityHeader, 271, 0, 1000, 500, 0);
-            _raindropSpacing.Step = 10;
-
-            MenuStaticText flowLinesLengthHeader = new MenuStaticText("Flowlines length", "Define the maximum length of each flowline. \nInput is defined as distance between individual rows/columns.");
-            _flowLinesLength = new MenuSlider(flowLinesLengthHeader, 272, 1, 100, 50, 0);
-
-
             analysisMenu.AddControl(analysisPanel);
             attr.AddMenu(analysisMenu);
 
@@ -174,15 +163,41 @@ namespace SandWorm
             analysisPanel.AddControl(_labelSpacing);
             analysisPanel.AddControl(contourIntervalHeader);
             analysisPanel.AddControl(_contourIntervalRange);
-            analysisPanel.AddControl(contourRoughnessHeader);
-            analysisPanel.AddControl(_contourRoughness);
-            analysisPanel.AddControl(waterLevelHeader);
-            analysisPanel.AddControl(_waterLevel);
-            analysisPanel.AddControl(rainDensityHeader);
-            analysisPanel.AddControl(_raindropSpacing);
-            analysisPanel.AddControl(flowLinesLengthHeader);
-            analysisPanel.AddControl(_flowLinesLength);
+            //analysisPanel.AddControl(contourRoughnessHeader);
+            //analysisPanel.AddControl(_contourRoughness);
+            #endregion
 
+            #region Water flow
+            MenuPanel waterPanel = new MenuPanel(30, "panel_water")
+            {
+                Name = "Water Flow",
+                Header = "Simulate water flow on the surface."
+            };
+            GH_ExtendableMenu waterMenu = new GH_ExtendableMenu(31, "menu_rainwater")
+            {
+                Name = "Water Flow",
+                Header = "Simulate water flow on the surface."
+            };
+
+            MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
+            _waterLevel = new MenuSlider(waterLevelHeader, 32, 0, 100, 0, 0);
+
+            MenuStaticText flowLinesLengthHeader = new MenuStaticText("Flowlines length", "Define the maximum length of each flowline. \nInput is defined as distance between individual rows/columns.");
+            _flowLinesLength = new MenuSlider(flowLinesLengthHeader, 34, 0, 100, 0, 0);
+
+            MenuStaticText raindropSpacingHeader = new MenuStaticText("Raindrop spacing", "Define distance between the rain drops. \nInput is defined as distance between individual rows/columns.");
+            _raindropSpacing = new MenuSlider(raindropSpacingHeader, 33, 50, 1000, 500, 0);
+            _raindropSpacing.Step = 10;
+
+            waterMenu.AddControl(waterPanel);
+            attr.AddMenu(waterMenu);
+
+            waterPanel.AddControl(waterLevelHeader);
+            waterPanel.AddControl(_waterLevel);
+            waterPanel.AddControl(flowLinesLengthHeader);
+            waterPanel.AddControl(_flowLinesLength);
+            waterPanel.AddControl(raindropSpacingHeader);
+            waterPanel.AddControl(_raindropSpacing);
             #endregion
 
             #region Post processing
@@ -203,7 +218,7 @@ namespace SandWorm
             _averagedFrames.ValueChanged += _slider__ValueChanged;
 
             MenuStaticText blurRadiusHeader = new MenuStaticText("Blur Radius", "Define the extent of gaussian blurring.");
-            _blurRadius = new MenuSlider(blurRadiusHeader, 43, 0, 15, 4, 0);
+            _blurRadius = new MenuSlider(blurRadiusHeader, 43, 0, 15, 5, 0);
 
             postProcessingMenu.AddControl(postProcessingPanel);
             attr.AddMenu(postProcessingMenu);
