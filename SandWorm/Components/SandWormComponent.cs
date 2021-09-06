@@ -173,9 +173,9 @@ namespace SandWorm
                         break;
                 }
             }
-
+#if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Initial setup"); // Debug Info
-
+#endif
             AverageAndBlurPixels(depthFrameDataInt, ref averagedDepthFrameData, runningSum, renderBuffer,
                                  _sensorElevation.Value, _averagedFrames.Value, _blurRadius.Value, trimmedWidth,
                                  trimmedHeight);
@@ -247,14 +247,18 @@ namespace SandWorm
                     flowLines = null;
             #endregion
 
+#if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
-
+#endif
             if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
             {
                 _cloud = null;
                 _quadMesh = CreateQuadMesh(ref _quadMesh, ref allPoints, ref _vertexColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
-                GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
                 DA.SetDataList(0, new List<Mesh> { _quadMesh });
+
+#if DEBUG
+                GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
+#endif
             }
             else if ((OutputTypes)_outputType.Value == OutputTypes.PointCloud)
             {
@@ -264,8 +268,9 @@ namespace SandWorm
                     _cloud.AddRange(allPoints, _vertexColors);
                 else
                     _cloud.AddRange(allPoints);
-
+#if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Point cloud display"); // Debug Info
+#endif
             }
 
             if (_waterLevel.Value > 0)
