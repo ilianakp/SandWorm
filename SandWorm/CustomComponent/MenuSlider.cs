@@ -305,9 +305,11 @@ namespace SandWorm
             graphics.DrawLine(pen, base.CanvasPivot.X + base.Width - _handleDiameter / 2f, base.CanvasPivot.Y + base.Height / 2f - 3f, base.CanvasPivot.X + base.Width - _handleDiameter / 2f, base.CanvasPivot.Y + base.Height / 2f + 3f);
             graphics.FillEllipse(solidBrush, _handleArea);
             graphics.DrawEllipse(pen2, _handleArea);
-            StringFormat stringFormat = new StringFormat();
-            stringFormat.Trimming = StringTrimming.EllipsisCharacter;
-            stringFormat.LineAlignment = StringAlignment.Near;
+            StringFormat stringFormat = new StringFormat
+            {
+                Trimming = StringTrimming.EllipsisCharacter,
+                LineAlignment = StringAlignment.Near
+            };
             if (Value < (MaxValue + MinValue) / 2.0)
             {
                 stringFormat.Alignment = StringAlignment.Near;

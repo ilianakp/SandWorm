@@ -62,8 +62,7 @@ namespace SandWorm
                 {
                     using (var meshAccess = mesh.GetUnsafeLock(true))
                     {
-                        int arrayLength;
-                        Point3d* points = meshAccess.VertexPoint3dArray(out arrayLength);
+                        Point3d* points = meshAccess.VertexPoint3dArray(out int arrayLength);
                         for (int i = 0; i < arrayLength; i++)
                         {
                             points->Z = vertices[i].Z;
@@ -249,8 +248,6 @@ namespace SandWorm
             {
                 case Structs.KinectTypes.KinectAzureNear:
                 case Structs.KinectTypes.KinectAzureWide:
-
-                    double correctedElevation = 0.0;
                     for (int rows = 0, i = 0; rows < trimmedHeight; rows++)
                         for (int columns = 0; columns < trimmedWidth; columns++, i++)
                         {
@@ -258,7 +255,7 @@ namespace SandWorm
                             tempPoint.Y = trimmedXYLookupTable[i].Y;
 
                             // Correct for Kinect Azure's tilt of the depth camera
-                            correctedElevation = averagedDepthFrameData[i] - verticalTiltCorrectionLookupTable[i];
+                            double correctedElevation = averagedDepthFrameData[i] - verticalTiltCorrectionLookupTable[i];
                             tempPoint.Z = (correctedElevation - sensorElevation) * -unitsMultiplier;
                             averagedDepthFrameData[i] = correctedElevation;
 
@@ -382,7 +379,7 @@ namespace SandWorm
             {
                 case Structs.KinectTypes.KinectAzureNear:
                 case Structs.KinectTypes.KinectAzureWide:
-                    return KinectAzureController.Calibrate(kinectType);
+                    return KinectAzureController.Calibrate();
 
                 case Structs.KinectTypes.KinectForWindows:
                     return KinectForWindows.Calibrate();

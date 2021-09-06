@@ -54,7 +54,6 @@ namespace SandWorm
         private Mesh baseMesh;
 
         // Water flow analysis
-        private int flowLinesAge = 0;
         private ConcurrentDictionary<int, FlowLine> flowLines;
 
         // Outputs
