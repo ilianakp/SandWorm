@@ -209,6 +209,9 @@ namespace SandWorm
                                (Structs.ColorPalettes)_colorPalette.Value, colorPalettes, baseMeshElevationPoints,
                                allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight,
                                unitsMultiplier);
+#if DEBUG
+            GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis");
+#endif
 
             #region Contour lines
             if (_contourIntervalRange.Value > 0)
@@ -223,6 +226,9 @@ namespace SandWorm
                     DA.SetDataList(2, ghLines);
                 }
             }
+#if DEBUG
+            GeneralHelpers.LogTiming(ref stats, timer, "Contour lines");
+#endif
             #endregion
 
             #region Labels
@@ -233,6 +239,9 @@ namespace SandWorm
                                             baseMeshElevationPoints, trimmedWidth, trimmedHeight,
                                             (int)_labelSpacing.Value, unitsMultiplier);
             }
+#if DEBUG
+            GeneralHelpers.LogTiming(ref stats, timer, "Labels");
+#endif
             #endregion
 
             #region Flow lines
@@ -245,11 +254,12 @@ namespace SandWorm
                 FlowLine.GrowAndRemoveFlowlines(allPoints, flowLines, trimmedWidth, _flowLinesLength.Value);
             } else
                     flowLines = null;
+#if DEBUG
+            GeneralHelpers.LogTiming(ref stats, timer, "Flow lines");
+#endif
             #endregion
 
-#if DEBUG
-            GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
-#endif
+
             if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
             {
                 _cloud = null;
