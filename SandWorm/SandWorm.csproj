@@ -147,6 +147,7 @@
     <Compile Include="Analytics\ColorPalettes.cs" />
     <Compile Include="Analytics\ContoursFromPoints.cs" />
     <Compile Include="Analytics\Elevation.cs" />
+    <Compile Include="Analytics\FlowLines.cs" />
     <Compile Include="Analytics\None.cs" />
     <Compile Include="Analytics\RGB.cs" />
     <Compile Include="Analytics\Slope.cs" />

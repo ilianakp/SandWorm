@@ -14,7 +14,7 @@ namespace SandWorm
 {
     public static class Core
     {
-        public static Mesh CreateQuadMesh(Mesh mesh, Point3d[] vertices, Color[] colors, Vector3?[] booleanMatrix, 
+        public static Mesh CreateQuadMesh(ref Mesh mesh, ref Point3d[] vertices, ref Color[] colors, ref Vector3?[] booleanMatrix, 
             Structs.KinectTypes kinectType, int xStride, int yStride)
         {        
             int xd = xStride;       // The x-dimension of the data

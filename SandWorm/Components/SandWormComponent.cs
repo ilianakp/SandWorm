@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -52,8 +53,11 @@ namespace SandWorm
         private double?[] baseMeshElevationPoints;
         private Mesh baseMesh;
 
+        // Water flow analysis
+        private int flowLinesAge = 0;
+        private ConcurrentDictionary<int, FlowLine> flowLines;
+
         // Outputs
-        private List<Mesh> _outputMesh;
         private List<GeometryBase> _outputWaterSurface;
         private List<Line> _outputContours;
 
@@ -110,7 +114,7 @@ namespace SandWorm
 
                 if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
                     KinectForWindows.RemoveRef();
-                else 
+                else
                     KinectAzureController.RemoveRef();
 
                 ResetDataArrays();
@@ -135,7 +139,6 @@ namespace SandWorm
             int[] depthFrameDataInt = new int[trimmedWidth * trimmedHeight];
             double[] averagedDepthFrameData = new double[trimmedWidth * trimmedHeight];
             allPoints = new Point3d[trimmedWidth * trimmedHeight];
-            _outputMesh = new List<Mesh>();
             _outputWaterSurface = new List<GeometryBase>();
             _outputContours = new List<Line>();
 
@@ -182,19 +185,21 @@ namespace SandWorm
                                allPoints, renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value,
                                unitsMultiplier, _averagedFrames.Value);
 
-            // Produce 1st type of analysis that acts on the pixel array and assigns vertex colors
+            #region RGB from camera
             if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.Camera)
             {
                 trimmedRGBArray = new Color[trimmedHeight * trimmedWidth];
                 TrimColorArray(rgbArray, ref trimmedRGBArray, (KinectTypes)_sensorType.Value,
                     _left, _right, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
             }
+            #endregion
 
+            #region Cut Fill
             // Calculate elevation points from mesh provided for Cut & Fill analysis. Only do this on reset.
             DA.GetData(2, ref baseMesh);
             if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.CutFill && baseMeshElevationPoints == null)
                 baseMeshElevationPoints = CutFill.MeshToPointArray(baseMesh, allPoints);
-
+            #endregion
 
             colorPalettes = new List<Color>();
             DA.GetDataList(1, colorPalettes);
@@ -205,6 +210,22 @@ namespace SandWorm
                                allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight,
                                unitsMultiplier);
 
+            #region Contour lines
+            if (_contourIntervalRange.Value > 0)
+            {
+                ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints,
+                                                          (int)_contourIntervalRange.Value, trimmedWidth,
+                                                          trimmedHeight, (int)_contourRoughness.Value,
+                                                          unitsMultiplier);
+                if (Params.Output[2].Recipients.Count > 0)
+                {
+                    Grasshopper.Kernel.Types.GH_Line[] ghLines = GeneralHelpers.ConvertLineToGHLine(_outputContours);
+                    DA.SetDataList(2, ghLines);
+                }
+            }
+            #endregion
+
+            #region Labels
             if (_labelSpacing.Value > 0)
             {
                 labels = new List<Rhino.Display.Text3d>();
@@ -212,35 +233,32 @@ namespace SandWorm
                                             baseMeshElevationPoints, trimmedWidth, trimmedHeight,
                                             (int)_labelSpacing.Value, unitsMultiplier);
             }
+            #endregion
+
+            #region Flow lines
+            if (_flowLinesLength.Value > 0)
+            {
+                if (flowLines == null)
+                    flowLines = new ConcurrentDictionary<int, FlowLine>();
+
+                FlowLine.DistributeRandomRaindrops(ref allPoints, ref flowLines, (int)_raindropSpacing.Value);
+                FlowLine.GrowAndRemoveFlowlines(allPoints, flowLines, trimmedWidth, _flowLinesLength.Value);
+            } else
+                    flowLines = null;
+            #endregion
+
 #if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
 #endif
             if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
             {
                 _cloud = null;
-                // Generate the mesh
-                _quadMesh = CreateQuadMesh(_quadMesh, allPoints, _vertexColors, trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
-                _outputMesh.Add(_quadMesh);
+                _quadMesh = CreateQuadMesh(ref _quadMesh, ref allPoints, ref _vertexColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
+                DA.SetDataList(0, new List<Mesh> { _quadMesh });
+
 #if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
 #endif
-                // Produce 2nd type of analysis that acts on the mesh and creates new geometry
-                if (_contourIntervalRange.Value > 0)
-                {
-                    ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints,
-                                                              (int)_contourIntervalRange.Value, trimmedWidth,
-                                                              trimmedHeight, (int)_contourRoughness.Value,
-                                                              unitsMultiplier);
-                    if (Params.Output[2].Recipients.Count > 0)
-                    {
-                        Grasshopper.Kernel.Types.GH_Line[] ghLines = GeneralHelpers.ConvertLineToGHLine(_outputContours);
-                        DA.SetDataList(2, ghLines);
-                    }
-                }
-#if DEBUG
-                GeneralHelpers.LogTiming(ref stats, timer, "Mesh analysis"); // Debug Info
-#endif
-                DA.SetDataList(0, _outputMesh);
             }
             else if ((OutputTypes)_outputType.Value == OutputTypes.PointCloud)
             {
@@ -258,13 +276,24 @@ namespace SandWorm
             if (_waterLevel.Value > 0)
             {
                 WaterLevel.GetGeometryForAnalysis(ref _outputWaterSurface, _waterLevel.Value, _quadMesh);
-                DA.SetDataList(1, _outputWaterSurface);
-                GeneralHelpers.HideParameterGeometry(Params.Output[1]);
+                if (Params.Output[1].Recipients.Count > 0)
+                    DA.SetDataList(1, _outputWaterSurface);
             }
-
 
             DA.SetDataList(3, stats);
             ScheduleSolve();
+        }
+        public override void DrawViewportMeshes(IGH_PreviewArgs args)
+        {
+            if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
+                args.Display.DrawMeshFalseColors(_quadMesh);
+
+            if (_waterLevel.Value > 0 && _outputWaterSurface.Count > 0 && Params.Output[1].Recipients.Count == 0)
+            {
+                Color blue = Color.FromArgb(75, 190, 255);
+                Rhino.Display.DisplayMaterial material = new Rhino.Display.DisplayMaterial(blue, blue, blue, blue, 0.7, 0.5);
+                args.Display.DrawMeshShaded((Mesh)_outputWaterSurface[0], material);
+            }
         }
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {
@@ -273,16 +302,21 @@ namespace SandWorm
 
             if (_outputContours != null && _outputContours.Count != 0 && Params.Output[2].Recipients.Count == 0)
                 args.Display.DrawLines(_outputContours, Color.White, 1);
-            
-            if (_labelSpacing.Value > 0 && ((AnalysisTypes) _analysisType.Value == AnalysisTypes.CutFill || (AnalysisTypes)_analysisType.Value == AnalysisTypes.Elevation))
+
+            if (_labelSpacing.Value > 0 && ((AnalysisTypes)_analysisType.Value == AnalysisTypes.CutFill || (AnalysisTypes)_analysisType.Value == AnalysisTypes.Elevation))
             {
                 if (labels != null)
                     foreach (var text in labels)
                         args.Display.Draw3dText(text, Color.White);
             }
-        }
 
-        public override BoundingBox ClippingBox 
+            if (_flowLinesLength.Value > 0)
+            {
+                foreach (var kvp in flowLines)
+                    args.Display.DrawPolyline(kvp.Value.Polyline, Color.FromArgb(75, 170, 255));
+            }
+        }
+        public override BoundingBox ClippingBox
         {
             get
             {
@@ -292,7 +326,6 @@ namespace SandWorm
                     return new BoundingBox();
             }
         }
-
         protected override Bitmap Icon => Properties.Resources.Icons_Main;
         public override Guid ComponentGuid => new Guid("{53fefb98-1cec-4134-b707-0c366072af2c}");
         public override void AddedToDocument(GH_Document document)
@@ -330,7 +363,6 @@ namespace SandWorm
         {
             ExpireSolution(false);
         }
-
         private void ResetDataArrays()
         {
             _quadMesh = null;
@@ -338,7 +370,8 @@ namespace SandWorm
             runningSum = null;
             renderBuffer.Clear();
             baseMeshElevationPoints = null;
-            
+            flowLines = null;
+
             _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;
             _reset = false;
