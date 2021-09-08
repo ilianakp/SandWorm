@@ -9,11 +9,12 @@ namespace SandWorm.Analytics
 {
     class MeshFlow
     {
-        private static double[] waterHead;
+        public static double[] waterHead;
+        public static Point3d[] waterElevationPoints;
         private static double[] runoffCoefficients;
-        private const double rain = 0.1;
+        private static double rain = 0.00001;
 
-        public static void CreateMeshFlow(Point3d[] pointArray, ref Mesh waterMesh, int xStride, int yStride)
+        public static void CalculateWaterHeadArray(Point3d[] pointArray, int xStride, int yStride)
         {
             if(runoffCoefficients == null)
             {
@@ -25,17 +26,28 @@ namespace SandWorm.Analytics
             if (waterHead == null)
                 waterHead = new double[pointArray.Length];
 
+            if (waterElevationPoints == null)
+            {
+                waterElevationPoints = new Point3d[xStride * yStride];
+                Parallel.For(0, pointArray.Length, i =>
+                {
+                    waterElevationPoints[i].X = pointArray[i].X;
+                    waterElevationPoints[i].Y = pointArray[i].Y;
+                });
+            }
+                
 
             double deltaX;
             double deltaY;
             double deltaXY;
-            List<double> slopes = new List<double>();
+            
             List<int> indices;
             List<double> deltas;
+            List<double> slopes = new List<double>();
+
             int currentIndex;
             double head = 0;
             double waterLevel = 0;
-
 
             #region First pixel NW
             deltaX = Math.Abs(pointArray[1].X - pointArray[0].X);
@@ -46,14 +58,9 @@ namespace SandWorm.Analytics
             deltas = new List<double>() { deltaX, deltaY, deltaXY};
             currentIndex = 0;
 
-            CalculateWaterLevel(currentIndex, pointArray, head, waterLevel);
+            waterLevel = CalculateWaterLevel(currentIndex, pointArray, out head);
             CalculateSlopes(slopes, waterLevel, pointArray, indices, deltas);
             DistributeWaterhead(currentIndex, slopes, indices, pointArray, head, waterLevel);
-            /*
-            slopes.Add((waterLevel - pointArray[indices[0]].Z - waterHead[indices[0]]) / deltaX); // E Pixel
-            slopes.Add((waterLevel - pointArray[indices[1]].Z - waterHead[indices[1]]) / deltaY); // S Pixel
-            slopes.Add((waterLevel - pointArray[indices[2]].Z - waterHead[indices[2]]) / deltaXY); // SE Pixel
-            */
             #endregion
 
             #region Last pixel NE
@@ -61,16 +68,12 @@ namespace SandWorm.Analytics
             deltaY = Math.Abs(pointArray[2 * xStride - 1].Y - pointArray[xStride - 1].Y);
             deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-            slopes.Clear();
             indices = new List<int>() { xStride - 2, 2 * xStride - 1, 2 * xStride - 2 };
+            deltas = new List<double>() { deltaX, deltaY, deltaXY };
             currentIndex = xStride - 1;
 
-            CalculateWaterLevel(currentIndex, pointArray, head, waterLevel);
-
-            slopes.Add((waterLevel - pointArray[indices[0]].Z - waterHead[indices[0]]) / deltaX); // W Pixel
-            slopes.Add((waterLevel - pointArray[indices[1]].Z - waterHead[indices[1]]) / deltaY); // S Pixel
-            slopes.Add((waterLevel - pointArray[indices[2]].Z - waterHead[indices[2]]) / deltaXY); // SW Pixel
-
+            waterLevel = CalculateWaterLevel(currentIndex, pointArray, out head);
+            CalculateSlopes(slopes, waterLevel, pointArray, indices, deltas);
             DistributeWaterhead(currentIndex, slopes, indices, pointArray, head, waterLevel);
             #endregion
 
@@ -79,18 +82,13 @@ namespace SandWorm.Analytics
             deltaY = Math.Abs(pointArray[(yStride - 2) * xStride].Y - pointArray[(yStride - 1) * xStride].Y);
             deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-            slopes.Clear();
             indices = new List<int>() { (yStride - 1) * xStride + 1 , (yStride - 2) * xStride , (yStride - 2) * xStride + 1 };
+            deltas = new List<double>() { deltaX, deltaY, deltaXY };
             currentIndex = (yStride - 1) * xStride;
 
-            CalculateWaterLevel(currentIndex, pointArray, head, waterLevel);
-
-            slopes.Add((waterLevel - pointArray[indices[0]].Z - waterHead[indices[0]]) / deltaX); // E Pixel
-            slopes.Add((waterLevel - pointArray[indices[1]].Z - waterHead[indices[1]]) / deltaY); // N Pixel
-            slopes.Add((waterLevel - pointArray[indices[2]].Z - waterHead[indices[2]]) / deltaXY); //NE Pixel
-
+            waterLevel = CalculateWaterLevel(currentIndex, pointArray, out head);
+            CalculateSlopes(slopes, waterLevel, pointArray, indices, deltas);
             DistributeWaterhead(currentIndex, slopes, indices, pointArray, head, waterLevel);
-
             #endregion
 
             #region Last pixel SE
@@ -98,16 +96,12 @@ namespace SandWorm.Analytics
             deltaY = Math.Abs(pointArray[(yStride - 1) * xStride - 1].Y - pointArray[yStride * xStride - 1].Y);
             deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-            slopes.Clear();
             indices = new List<int>() { yStride * xStride - 2, (yStride - 1) * xStride - 1, (yStride - 1) * xStride - 2 };
+            deltas = new List<double>() { deltaX, deltaY, deltaXY };
             currentIndex = yStride * xStride - 1;
 
-            CalculateWaterLevel(currentIndex, pointArray, head, waterLevel);
-
-            slopes.Add((waterLevel - pointArray[indices[0]].Z - waterHead[indices[0]]) / deltaX); // W Pixel
-            slopes.Add((waterLevel - pointArray[indices[1]].Z - waterHead[indices[1]]) / deltaY); // N Pixel
-            slopes.Add((waterLevel - pointArray[indices[2]].Z - waterHead[indices[2]]) / deltaXY); //NW Pixel
-
+            waterLevel = CalculateWaterLevel(currentIndex, pointArray, out head);
+            CalculateSlopes(slopes, waterLevel, pointArray, indices, deltas);
             DistributeWaterhead(currentIndex, slopes, indices, pointArray, head, waterLevel);
             #endregion
 
@@ -118,18 +112,12 @@ namespace SandWorm.Analytics
                 deltaY = Math.Abs(pointArray[i + xStride].Y - pointArray[i].Y);
                 deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-                slopes.Clear();
                 indices = new List<int>() { i - 1, i + 1, i + xStride - 1 , i + xStride , i + xStride + 1 };
+                deltas = new List<double>() { deltaX, deltaX, deltaXY, deltaY, deltaXY};
                 currentIndex = i;
 
-                CalculateWaterLevel(currentIndex, pointArray, head, waterLevel);
-
-                slopes.Add((waterLevel - pointArray[indices[0]].Z - waterHead[indices[0]]) / deltaX); // W Pixel
-                slopes.Add((waterLevel - pointArray[indices[1]].Z - waterHead[indices[1]]) / deltaX); // E Pixel
-                slopes.Add((waterLevel - pointArray[indices[2]].Z - waterHead[indices[2]]) / deltaXY); // SW Pixel
-                slopes.Add((waterLevel - pointArray[indices[3]].Z - waterHead[indices[3]]) / deltaY); // S Pixel
-                slopes.Add((waterLevel - pointArray[indices[4]].Z - waterHead[indices[4]]) / deltaXY); // SE Pixel
-
+                waterLevel = CalculateWaterLevel(currentIndex, pointArray, out head);
+                CalculateSlopes(slopes, waterLevel, pointArray, indices, deltas);
                 DistributeWaterhead(currentIndex, slopes, indices, pointArray, head, waterLevel);
             }
             #endregion
@@ -141,18 +129,12 @@ namespace SandWorm.Analytics
                 deltaY = Math.Abs(pointArray[i - xStride].Y - pointArray[i].Y);
                 deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-                slopes.Clear();
                 indices = new List<int>() { i - 1, i + 1, i - xStride - 1, i - xStride, i - xStride + 1 };
+                deltas = new List<double>() { deltaX, deltaX, deltaXY, deltaY, deltaXY };
                 currentIndex = i;
 
-                CalculateWaterLevel(currentIndex, pointArray, head, waterLevel);
-
-                slopes.Add((waterLevel - pointArray[indices[0]].Z - waterHead[indices[0]]) / deltaX); // W Pixel
-                slopes.Add((waterLevel - pointArray[indices[1]].Z - waterHead[indices[1]]) / deltaX); // E Pixel
-                slopes.Add((waterLevel - pointArray[indices[2]].Z - waterHead[indices[2]]) / deltaXY); // NW Pixel
-                slopes.Add((waterLevel - pointArray[indices[3]].Z - waterHead[indices[3]]) / deltaY); // N Pixel
-                slopes.Add((waterLevel - pointArray[indices[4]].Z - waterHead[indices[4]]) / deltaXY); // NE Pixel
-
+                waterLevel = CalculateWaterLevel(currentIndex, pointArray, out head);
+                CalculateSlopes(slopes, waterLevel, pointArray, indices, deltas);
                 DistributeWaterhead(currentIndex, slopes, indices, pointArray, head, waterLevel);
             }
             #endregion
@@ -160,22 +142,16 @@ namespace SandWorm.Analytics
             #region First column
             for (int i = xStride; i < (yStride - 1) * xStride; i += xStride)
             {
-                deltaX = Math.Abs(pointArray[i - xStride].X - pointArray[i].X);
-                deltaY = Math.Abs(pointArray[i + 1].Y - pointArray[i].Y);
+                deltaX = Math.Abs(pointArray[i].X - pointArray[i + 1].X);
+                deltaY = Math.Abs(pointArray[i].Y - pointArray[i - xStride].Y);
                 deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-                slopes.Clear();
                 indices = new List<int>() { i - xStride, i + xStride, i - xStride + 1, i + 1, i + xStride + 1 };
+                deltas = new List<double>() { deltaY, deltaY, deltaXY, deltaX, deltaXY };
                 currentIndex = i;
 
-                CalculateWaterLevel(currentIndex, pointArray, head, waterLevel);
-
-                slopes.Add((waterLevel - pointArray[indices[0]].Z - waterHead[indices[0]]) / deltaY); // N Pixel
-                slopes.Add((waterLevel - pointArray[indices[1]].Z - waterHead[indices[1]]) / deltaY); // S Pixel
-                slopes.Add((waterLevel - pointArray[indices[2]].Z - waterHead[indices[2]]) / deltaXY); // NE Pixel
-                slopes.Add((waterLevel - pointArray[indices[3]].Z - waterHead[indices[3]]) / deltaX); // E Pixel
-                slopes.Add((waterLevel - pointArray[indices[4]].Z - waterHead[indices[4]]) / deltaXY); // SE Pixel
-
+                waterLevel = CalculateWaterLevel(currentIndex, pointArray, out head);
+                CalculateSlopes(slopes, waterLevel, pointArray, indices, deltas);
                 DistributeWaterhead(currentIndex, slopes, indices, pointArray, head, waterLevel);
             }
             #endregion
@@ -183,28 +159,23 @@ namespace SandWorm.Analytics
             #region Last column
             for (int i = 2 * xStride - 1; i < yStride * xStride - 1; i += xStride)
             {
-                deltaX = Math.Abs(pointArray[i - xStride].X - pointArray[i].X);
-                deltaY = Math.Abs(pointArray[i - 1].Y - pointArray[i].Y);
+                deltaX = Math.Abs(pointArray[i].X - pointArray[i - 1].X);
+                deltaY = Math.Abs(pointArray[i].Y - pointArray[i - xStride].Y);
                 deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-                slopes.Clear();
                 indices = new List<int>() { i - xStride, i + xStride, i - xStride - 1, i - 1, i + xStride - 1 };
+                deltas = new List<double>() { deltaY, deltaY, deltaXY, deltaX, deltaXY };
                 currentIndex = i;
 
-                CalculateWaterLevel(currentIndex, pointArray, head, waterLevel);
-
-                slopes.Add((waterLevel - pointArray[indices[0]].Z - waterHead[indices[0]]) / deltaY); // N Pixel
-                slopes.Add((waterLevel - pointArray[indices[1]].Z - waterHead[indices[1]]) / deltaY); // S Pixel
-                slopes.Add((waterLevel - pointArray[indices[2]].Z - waterHead[indices[2]]) / deltaXY); // NW Pixel
-                slopes.Add((waterLevel - pointArray[indices[3]].Z - waterHead[indices[3]]) / deltaX); // W Pixel
-                slopes.Add((waterLevel - pointArray[indices[4]].Z - waterHead[indices[4]]) / deltaXY); // SW Pixel
-
+                waterLevel = CalculateWaterLevel(currentIndex, pointArray, out head);
+                CalculateSlopes(slopes, waterLevel, pointArray, indices, deltas);
                 DistributeWaterhead(currentIndex, slopes, indices, pointArray, head, waterLevel);
             }
             #endregion
 
-            // rest of the array
-            Parallel.For(1, yStride - 1, rows =>         // Iterate over y dimension
+            #region Rest of the array
+            for (int rows = 1; rows < yStride - 1; rows++)
+            //Parallel.For(1, yStride - 1, rows =>         // Iterate over y dimension
             {
                 for (int columns = 1; columns < xStride - 1; columns++)             // Iterate over x dimension
                 {
@@ -212,35 +183,47 @@ namespace SandWorm.Analytics
                     int i = rows * xStride + columns;
                     int j = (rows + 1) * xStride + columns;
 
-                    List<double> pSlopes = new List<double>(); // Declare local lists for the parallel loop 
-                    List<int> pD8 = new List<int>() { h - 1, h, h + 1, i - 1, i + 1, j - 1, j, j + 1 };
+                    // Declare local variables for the parallel loop 
+                    double pDeltaX = Math.Abs(pointArray[i].X - pointArray[i + 1].X);
+                    double pDeltaY = Math.Abs(pointArray[i].Y - pointArray[h].Y);
+                    double pDeltaXY = Math.Sqrt(Math.Pow(pDeltaX, 2) + Math.Pow(pDeltaY, 2));
 
-                    double pDeltaX = Math.Abs(pointArray[i + 1].X - pointArray[i].X);
-                    double pDeltaY = Math.Abs(pointArray[h].Y - pointArray[i].Y);
-                    double pdeltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
+                    List<double> pSlopes = new List<double>();
+                    List<int> pIndices = new List<int>() { h - 1, h, h + 1, i - 1, i + 1, j - 1, j, j + 1 };
+                    List<double> pDeltas = new List<double>() { pDeltaXY, pDeltaY, pDeltaXY, pDeltaX, pDeltaX, pDeltaXY, pDeltaY, pDeltaXY };
 
                     double pHead = 0;
                     double pWaterLevel = 0;
 
-                    CalculateWaterLevel(i, pointArray, pHead, pWaterLevel);
-
-                    pSlopes.Add(((pointArray[i].Z - pointArray[pD8[0]].Z)) / pdeltaXY); //NW pixel
-                    pSlopes.Add(((pointArray[i].Z - pointArray[pD8[1]].Z)) / pDeltaY); //N pixel
-                    pSlopes.Add(((pointArray[i].Z - pointArray[pD8[2]].Z)) / pdeltaXY); //NE pixel
-                    pSlopes.Add(((pointArray[i].Z - pointArray[pD8[3]].Z)) / pDeltaX); //W pixel
-                    pSlopes.Add(((pointArray[i].Z - pointArray[pD8[4]].Z)) / pDeltaX); //E pixel
-                    pSlopes.Add(((pointArray[i].Z - pointArray[pD8[5]].Z)) / pdeltaXY); //SW pixel
-                    pSlopes.Add(((pointArray[i].Z - pointArray[pD8[6]].Z)) / pDeltaY); //S pixel
-                    pSlopes.Add(((pointArray[i].Z - pointArray[pD8[7]].Z)) / pdeltaXY); //SE pixel
-
-                    
+                    pWaterLevel = CalculateWaterLevel(i, pointArray, out pHead);
+                    CalculateSlopes(pSlopes, pWaterLevel, pointArray, pIndices, pDeltas);
+                    DistributeWaterhead(i, pSlopes, pIndices, pointArray, pHead, pWaterLevel);
                 }
+            }
+            //);
+            #endregion
+           
+            Parallel.For(0, pointArray.Length, i =>
+            {
+                if (waterHead[i] > 0)
+                    waterElevationPoints[i].Z = pointArray[i].Z + waterHead[i];
+                else
+                    waterElevationPoints[i].Z = pointArray[i].Z - 1;
             });
-
-
         }
 
-        private static int? FindMaxSlope(List<double> slopes, List<int> indices)
+        private static double CalculateWaterLevel(int currentIndex, Point3d[] pointArray, out double head)
+        {
+            head = 1 * runoffCoefficients[currentIndex] + waterHead[currentIndex];
+            return pointArray[currentIndex].Z + head;
+        }
+        private static void CalculateSlopes(List<double> slopes, double waterLevel, Point3d[] pointArray, List<int> indices, List<double> deltas)
+        {
+            slopes.Clear();
+            for (int i = 0; i < indices.Count; i++)
+                slopes.Add((waterLevel - pointArray[indices[i]].Z - waterHead[indices[i]]) / deltas[i]); 
+        }
+        private static int? FindMaxSlopeIndex(List<double> slopes, List<int> indices)
         {
             double maxSlope = 0;
             int? maxIndex = null;
@@ -256,38 +239,26 @@ namespace SandWorm.Analytics
         }
         private static void DistributeWaterhead(int currentIndex, List<double> slopes, List<int> indices, Point3d[] pointArray, double head, double waterLevel)
         {
-
-            int? maxIndex = FindMaxSlope(slopes, indices);
+            int? maxIndex = FindMaxSlopeIndex(slopes, indices);
 
             if (maxIndex != null) // Water head at current cell is higher than at least one of the surrounding cells
             {
-                int i = indices[(int)maxIndex]; // Index of the lowest cell
-                double _waterHeadHalved = (waterLevel - pointArray[i].Z - waterHead[i]) / 2;
+                int i = (int)maxIndex; // Index of the lowest cell
+                double waterHeadHalved = (waterLevel - pointArray[i].Z - waterHead[i]) / 2;
 
-                if (_waterHeadHalved >= head) // If elevation difference between cells permits, move the whole water head to the lowest cell
+                if (waterHeadHalved >= head) // If elevation difference between cells permits, move the whole water head to the lowest cell
                 {
                     waterHead[i] += head;
-                    waterHead[currentIndex] -= head;
+                    waterHead[currentIndex] = 0;
                 }
                 else // Split water head equally between cells
                 {
-                    waterHead[i] += _waterHeadHalved;
-                    waterHead[currentIndex] -= _waterHeadHalved;
+                    waterHead[i] += waterHeadHalved;
+                    waterHead[currentIndex] = head - waterHeadHalved;
                 }
-            } 
+            }
             else // Flow to adjacent cells not possible
-                waterHead[currentIndex] = head; 
-        }
-        private static void CalculateWaterLevel(int currentIndex, Point3d[] pointArray, double head, double waterLevel)
-        {
-            head = rain * runoffCoefficients[currentIndex] + waterHead[currentIndex];
-            waterLevel = pointArray[currentIndex].Z + head;
-        }
-        private static void CalculateSlopes(List<double> slopes, double waterLevel, Point3d[] pointArray, List<int> indices, List<double> deltas)
-        {
-            slopes.Clear();
-            for (int i = 0; i < indices.Count; i++)
-                slopes.Add((waterLevel - pointArray[indices[i]].Z - waterHead[indices[i]]) / deltas[i]); // E Pixel
+                waterHead[currentIndex] = head;
         }
     }
 }

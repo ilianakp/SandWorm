@@ -38,10 +38,11 @@ namespace SandWorm
         private BGRA[] rgbArray;
         private Point3d[] allPoints;
         private Color[] _vertexColors;
-        private Mesh _quadMesh;
-        private PointCloud _cloud;
+        private Mesh quadMesh;
+        private PointCloud pointCloud;
         private List<Color> colorPalettes;
         private List<Rhino.Display.Text3d> labels;
+        private Mesh waterMesh;
 
         private readonly LinkedList<int[]> renderBuffer = new LinkedList<int[]>();
         private int[] runningSum;
@@ -54,7 +55,11 @@ namespace SandWorm
         private Mesh baseMesh;
 
         // Water flow analysis
+        private Color blueWaterSurface = Color.FromArgb(75, 190, 255);
+        private Color blueFlowLines = Color.FromArgb(75, 170, 255);
+        private Rhino.Display.DisplayMaterial material;
         private ConcurrentDictionary<int, FlowLine> flowLines;
+        Color[] waterColors = null;
 
         // Outputs
         private List<GeometryBase> _outputWaterSurface;
@@ -140,6 +145,9 @@ namespace SandWorm
             allPoints = new Point3d[trimmedWidth * trimmedHeight];
             _outputWaterSurface = new List<GeometryBase>();
             _outputContours = new List<Line>();
+
+            if(material == null)
+                material = new Rhino.Display.DisplayMaterial(blueWaterSurface, blueWaterSurface, blueWaterSurface, blueWaterSurface, 0.7, 0.5);
 
             if (runningSum == null)
                 runningSum = Enumerable.Range(1, depthFrameDataInt.Length).Select(i => new int()).ToArray();
@@ -261,9 +269,13 @@ namespace SandWorm
 
             if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
             {
-                _cloud = null;
-                _quadMesh = CreateQuadMesh(ref _quadMesh, ref allPoints, ref _vertexColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
-                DA.SetDataList(0, new List<Mesh> { _quadMesh });
+                pointCloud = null;
+                quadMesh = CreateQuadMesh(ref quadMesh, ref allPoints, ref _vertexColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
+                
+                MeshFlow.CalculateWaterHeadArray(allPoints, trimmedWidth, trimmedHeight);
+                waterMesh = CreateQuadMesh(ref waterMesh, ref MeshFlow.waterElevationPoints, ref waterColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
+
+                DA.SetDataList(0, new List<Mesh> { quadMesh });
 
 #if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
@@ -271,12 +283,12 @@ namespace SandWorm
             }
             else if ((OutputTypes)_outputType.Value == OutputTypes.PointCloud)
             {
-                _cloud = new PointCloud();
+                pointCloud = new PointCloud();
 
                 if (_vertexColors.Length > 0)
-                    _cloud.AddRange(allPoints, _vertexColors);
+                    pointCloud.AddRange(allPoints, _vertexColors);
                 else
-                    _cloud.AddRange(allPoints);
+                    pointCloud.AddRange(allPoints);
 #if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Point cloud display"); // Debug Info
 #endif
@@ -284,7 +296,7 @@ namespace SandWorm
 
             if (_waterLevel.Value > 0)
             {
-                WaterLevel.GetGeometryForAnalysis(ref _outputWaterSurface, _waterLevel.Value, _quadMesh);
+                WaterLevel.GetGeometryForAnalysis(ref _outputWaterSurface, _waterLevel.Value, quadMesh);
                 if (Params.Output[1].Recipients.Count > 0)
                     DA.SetDataList(1, _outputWaterSurface);
             }
@@ -295,19 +307,17 @@ namespace SandWorm
         public override void DrawViewportMeshes(IGH_PreviewArgs args)
         {
             if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
-                args.Display.DrawMeshFalseColors(_quadMesh);
+                args.Display.DrawMeshFalseColors(quadMesh);
 
             if (_waterLevel.Value > 0 && _outputWaterSurface.Count > 0 && Params.Output[1].Recipients.Count == 0)
-            {
-                Color blue = Color.FromArgb(75, 190, 255);
-                Rhino.Display.DisplayMaterial material = new Rhino.Display.DisplayMaterial(blue, blue, blue, blue, 0.7, 0.5);
                 args.Display.DrawMeshShaded((Mesh)_outputWaterSurface[0], material);
-            }
+
+            args.Display.DrawMeshShaded(waterMesh, material);
         }
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {
-            if (_cloud != null)
-                args.Display.DrawPointCloud(_cloud, 3);
+            if (pointCloud != null)
+                args.Display.DrawPointCloud(pointCloud, 3);
 
             if (_outputContours != null && _outputContours.Count != 0 && Params.Output[2].Recipients.Count == 0)
                 args.Display.DrawLines(_outputContours, Color.White, 1);
@@ -322,15 +332,15 @@ namespace SandWorm
             if (_flowLinesLength.Value > 0)
             {
                 foreach (var kvp in flowLines)
-                    args.Display.DrawPolyline(kvp.Value.Polyline, Color.FromArgb(75, 170, 255));
+                    args.Display.DrawPolyline(kvp.Value.Polyline, blueFlowLines);
             }
         }
         public override BoundingBox ClippingBox
         {
             get
             {
-                if (_quadMesh != null)
-                    return _quadMesh.GetBoundingBox(false);
+                if (quadMesh != null)
+                    return quadMesh.GetBoundingBox(false);
                 else
                     return new BoundingBox();
             }
@@ -374,12 +384,15 @@ namespace SandWorm
         }
         private void ResetDataArrays()
         {
-            _quadMesh = null;
+            quadMesh = null;
             trimmedXYLookupTable = null;
             runningSum = null;
             renderBuffer.Clear();
             baseMeshElevationPoints = null;
             flowLines = null;
+            waterMesh = null;
+            MeshFlow.waterElevationPoints = null;
+            MeshFlow.waterHead = null;
 
             _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;

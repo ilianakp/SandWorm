@@ -73,7 +73,7 @@ namespace SandWorm
                 }
             }
 
-            if (colors.Length > 0) // Colors only provided if the mesh style permits
+            if (colors != null && colors.Length > 0) // Colors only provided if the mesh style permits
                 mesh.VertexColors.SetColors(colors);
             else
                 mesh.VertexColors.Clear();
