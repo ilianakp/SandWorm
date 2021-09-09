@@ -134,6 +134,8 @@ namespace SandWorm
             GeneralHelpers.SwapLeftRight((KinectTypes)_sensorType.Value, _leftColumns.Value, _rightColumns.Value, ref _left, ref _right);
             GeneralHelpers.SetupLogging(ref timer, ref stats);
 
+            
+
             // Trim 
             GetTrimmedDimensions((KinectTypes)_sensorType.Value, ref trimmedWidth, ref trimmedHeight, runningSum,
                                   _bottomRows.Value, _topRows.Value, _left, _right);
@@ -270,16 +272,17 @@ namespace SandWorm
             if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
             {
                 pointCloud = null;
-                quadMesh = CreateQuadMesh(ref quadMesh, ref allPoints, ref _vertexColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
-                
-                MeshFlow.CalculateWaterHeadArray(allPoints, trimmedWidth, trimmedHeight);
-                waterMesh = CreateQuadMesh(ref waterMesh, ref MeshFlow.waterElevationPoints, ref waterColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
-
+                quadMesh = CreateQuadMesh(ref quadMesh, allPoints, ref _vertexColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
                 DA.SetDataList(0, new List<Mesh> { quadMesh });
 
 #if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
 #endif
+                MeshFlow.CalculateWaterHeadArray(allPoints, trimmedWidth, trimmedHeight, _simulateFloodEvent.Active);
+                _simulateFloodEvent.Active = false;
+                GeneralHelpers.LogTiming(ref stats, timer, "Mesh Flow");
+                waterMesh = CreateQuadMesh(ref waterMesh, MeshFlow.waterElevationPoints, ref waterColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
+
             }
             else if ((OutputTypes)_outputType.Value == OutputTypes.PointCloud)
             {

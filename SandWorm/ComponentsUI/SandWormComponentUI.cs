@@ -27,6 +27,7 @@ namespace SandWorm
         public static MenuSlider _waterLevel;
         public static MenuSlider _raindropSpacing;
         public static MenuSlider _flowLinesLength;
+        public static MenuCheckBox _simulateFloodEvent;
         public static MenuSlider _labelSpacing;
 
         public static MenuSlider _averagedFrames;
@@ -139,8 +140,10 @@ namespace SandWorm
             _colorGradientRange = new MenuSlider(colorGradientHeader, 24, 15, 100, 40, 0);
 
             MenuStaticText labelSpacingHeader = new MenuStaticText("Label spacing", "Define spacing between labels. \nInput is defined as distance between individual rows/columns.");
-            _labelSpacing = new MenuSlider(labelSpacingHeader, 241, 0, 100, 20, 0);
-            _labelSpacing.Step = 5;
+            _labelSpacing = new MenuSlider(labelSpacingHeader, 241, 0, 100, 20, 0)
+            {
+                Step = 5
+            };
 
             MenuStaticText contourIntervalHeader = new MenuStaticText("Contour interval", "Define spacing between contours. \nInput should be in millimeters.");
             _contourIntervalRange = new MenuSlider(contourIntervalHeader, 25, 0, 30, 0, 0);
@@ -179,6 +182,8 @@ namespace SandWorm
                 Header = "Simulate water flow on the surface."
             };
 
+            _simulateFloodEvent = new MenuCheckBox(10002, "Simulate flood event", "Simulate flood event");
+
             MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
             _waterLevel = new MenuSlider(waterLevelHeader, 32, 0, 100, 0, 0);
 
@@ -186,12 +191,15 @@ namespace SandWorm
             _flowLinesLength = new MenuSlider(flowLinesLengthHeader, 34, 0, 100, 0, 0);
 
             MenuStaticText raindropSpacingHeader = new MenuStaticText("Raindrop spacing", "Define distance between the rain drops. \nInput is defined as distance between individual rows/columns.");
-            _raindropSpacing = new MenuSlider(raindropSpacingHeader, 33, 50, 1000, 500, 0);
-            _raindropSpacing.Step = 10;
+            _raindropSpacing = new MenuSlider(raindropSpacingHeader, 33, 50, 1000, 500, 0)
+            {
+                Step = 10
+            };
 
             waterMenu.AddControl(waterPanel);
             attr.AddMenu(waterMenu);
 
+            waterPanel.AddControl(_simulateFloodEvent);
             waterPanel.AddControl(waterLevelHeader);
             waterPanel.AddControl(_waterLevel);
             waterPanel.AddControl(flowLinesLengthHeader);
