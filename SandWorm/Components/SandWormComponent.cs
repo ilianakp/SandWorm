@@ -396,6 +396,7 @@ namespace SandWorm
             waterMesh = null;
             MeshFlow.waterElevationPoints = null;
             MeshFlow.waterHead = null;
+            MeshFlow.velocity = null;
 
             _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;

@@ -13,6 +13,7 @@ namespace SandWorm.Analytics
         public static Point3d[] waterElevationPoints;
         private static double[] runoffCoefficients;
         private static double rain = 1;
+        public static double[] velocity;
 
         public static void CalculateWaterHeadArray(Point3d[] pointArray, int xStride, int yStride, bool simulateFlood)
         {
@@ -36,6 +37,9 @@ namespace SandWorm.Analytics
                 });
             }
 
+            if(velocity == null)
+                 velocity = new double[xStride * yStride];
+
             if (simulateFlood) // Distribute precipitation equally
                 for (int i = 0; i < waterHead.Length; i++)
                     waterHead[i] += rain * runoffCoefficients[i];
@@ -54,6 +58,11 @@ namespace SandWorm.Analytics
             for (int i = xStride - 1; i < (yStride - 1) * xStride; i += xStride)
                 waterHead[i] = 0;
 
+            double[] waterHeadBuffer = new double[xStride * yStride];
+            
+            double dt = 0.05;
+            double c = 5;
+
             for (int rows = 1; rows < yStride - 1; rows++)
             //Parallel.For(1, yStride - 1, rows =>         // Iterate over y dimension
             {
@@ -68,19 +77,33 @@ namespace SandWorm.Analytics
 
                     // Declare local variables for the parallel loop 
                     double deltaX = Math.Abs(pointArray[i].X - pointArray[i + 1].X);
-                    double deltaY = Math.Abs(pointArray[i].Y - pointArray[h].Y);
-                    double deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
+                    //double deltaY = Math.Abs(pointArray[i].Y - pointArray[h].Y);
+                    //double deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-                    List<int> indices = new List<int>() { h - 1, h, h + 1, i - 1, i + 1, j - 1, j, j + 1 };
-                    List<double> deltas = new List<double>() { deltaXY, deltaY, deltaXY, deltaX, deltaX, deltaXY, deltaY, deltaXY };
+                    List<int> indices = new List<int>() { h, i - 1, i + 1, j};
 
-                    Dictionary<int, double> indexSlopePairs = CalculateSlopes(pointArray, i, indices, deltas);
-                    DistributeWaterhead(pointArray, indexSlopePairs, i);
+                    // U - water head
+                    // h - deltaX
+                    // v - deltaU
+                    // c - constant speed
+                    // dt - time of simulation
+
+
+                    double force = Math.Pow(c, 2) * ((pointArray[h].Z + waterHead[h] + pointArray[j].Z + waterHead[j] + pointArray[i - 1].Z + waterHead[i - 1] + pointArray[i + 1].Z + waterHead[i + 1]) - (4 * (pointArray[i].Z + waterHead[i]))) / Math.Pow(deltaX, 2);
+                    velocity[i] += 0.99 * force * dt;
+                    waterHeadBuffer[i] = waterHead[i] + (velocity[i] * dt);
+
+                    //Dictionary<int, double> indexSlopePairs = CalculateSlopes(pointArray, i, indices, deltas);
+                    //DistributeWaterhead(pointArray, indexSlopePairs, i);
                 }
             }
             //);
 
-           
+            Parallel.For(0, pointArray.Length, i =>
+            {
+                waterHead[i] = waterHeadBuffer[i];
+            });
+
             Parallel.For(0, pointArray.Length, i =>
             {
                 if (waterHead[i] > 0)
