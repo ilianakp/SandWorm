@@ -41,11 +41,18 @@ namespace SandWorm.Analytics
                     waterHead[i] += rain * runoffCoefficients[i];
                 
 
-            // Borders are a water sink
-            for (int rows = 0; rows < 1 | rows > yStride - 1; rows++)
-                for (int columns = 0; columns < 1 | columns > xStride - 1; columns++)
-                    waterHead[rows * xStride + columns] = 0;
+            // Borders are a water sink            
+            for (int i = 0; i < xStride - 1; i++)
+                waterHead[i] = 0;
 
+            for (int i = (yStride - 1) * xStride; i < yStride * xStride; i++)
+                waterHead[i] = 0;
+
+            for (int i = xStride; i < (yStride - 1) * xStride; i += xStride)
+                waterHead[i] = 0;
+
+            for (int i = xStride - 1; i < (yStride - 1) * xStride; i += xStride)
+                waterHead[i] = 0;
 
             for (int rows = 1; rows < yStride - 1; rows++)
             //Parallel.For(1, yStride - 1, rows =>         // Iterate over y dimension
