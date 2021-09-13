@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Rhino.Geometry;
+using static SandWorm.Structs;
 
 namespace SandWorm.Analytics
 {
@@ -13,7 +14,8 @@ namespace SandWorm.Analytics
         public static Point3d[] waterElevationPoints;
         private static double[] runoffCoefficients;
         private static double rain = 1;
-        public static double[] velocity;
+        private static double flowVelocity;
+        public static FlowDirections[] flowDirections;
 
         public static void CalculateWaterHeadArray(Point3d[] pointArray, int xStride, int yStride, bool simulateFlood)
         {
@@ -37,8 +39,8 @@ namespace SandWorm.Analytics
                 });
             }
 
-            if(velocity == null)
-                 velocity = new double[xStride * yStride];
+            if (flowDirections == null)
+                flowDirections = new FlowDirections[xStride * yStride];
 
             if (simulateFlood) // Distribute precipitation equally
                 for (int i = 0; i < waterHead.Length; i++)
@@ -46,63 +48,74 @@ namespace SandWorm.Analytics
                 
 
             // Borders are a water sink            
-            for (int i = 0; i < xStride - 1; i++)
+            for (int i = 0; i < xStride - 1; i++) // Bottom border
+            {
                 waterHead[i] = 0;
+                flowDirections[i] = FlowDirections.None;
+            }
+                
 
-            for (int i = (yStride - 1) * xStride; i < yStride * xStride; i++)
+            for (int i = (yStride - 1) * xStride; i < yStride * xStride; i++) // Top border
+            {
                 waterHead[i] = 0;
+                flowDirections[i] = FlowDirections.None;
+            }
+                
 
-            for (int i = xStride; i < (yStride - 1) * xStride; i += xStride)
+            for (int i = xStride; i < (yStride - 1) * xStride; i += xStride) // Left border
+            {
                 waterHead[i] = 0;
+                flowDirections[i] = FlowDirections.None;
+            }
 
-            for (int i = xStride - 1; i < (yStride - 1) * xStride; i += xStride)
+            for (int i = xStride - 1; i < (yStride - 1) * xStride; i += xStride) // Right border
+            {
                 waterHead[i] = 0;
+                flowDirections[i] = FlowDirections.None;
+            }
 
-            double[] waterHeadBuffer = new double[xStride * yStride];
             
-            double dt = 0.05;
-            double c = 5;
+            flowVelocity = 0.2;
 
             for (int rows = 1; rows < yStride - 1; rows++)
             //Parallel.For(1, yStride - 1, rows =>         // Iterate over y dimension
             {
                 for (int columns = 1; columns < xStride - 1; columns++)             // Iterate over x dimension
                 {
-                    int h = (rows - 1) * xStride + columns;
                     int i = rows * xStride + columns;
-                    int j = (rows + 1) * xStride + columns;
-
                     if (waterHead[i] == 0)
+                    {
+                        flowDirections[i] = FlowDirections.None;
                         continue;
+                    }
+                        
+
+                    int h = (rows - 1) * xStride + columns;
+                    int j = (rows + 1) * xStride + columns;
 
                     // Declare local variables for the parallel loop 
                     double deltaX = Math.Abs(pointArray[i].X - pointArray[i + 1].X);
-                    //double deltaY = Math.Abs(pointArray[i].Y - pointArray[h].Y);
-                    //double deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
+                    double deltaY = Math.Abs(pointArray[i].Y - pointArray[h].Y);
+                    double deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-                    List<int> indices = new List<int>() { h, i - 1, i + 1, j};
+                    List<int> indices = new List<int>() { h - 1, h, h + 1, i + 1, j + 1, j, j - 1, i - 1 }; // SW, S, SE, E, NE, N, NW, W
+                    List<double> deltas = new List<double>() { deltaXY, deltaY, deltaXY, deltaX, deltaXY, deltaY, deltaXY, deltaX };
 
-                    // U - water head
-                    // h - deltaX
-                    // v - deltaU
-                    // c - constant speed
-                    // dt - time of simulation
+                    SetFlowDirection(pointArray, flowDirections, i, indices, deltas);
 
-
-                    double force = Math.Pow(c, 2) * ((pointArray[h].Z + waterHead[h] + pointArray[j].Z + waterHead[j] + pointArray[i - 1].Z + waterHead[i - 1] + pointArray[i + 1].Z + waterHead[i + 1]) - (4 * (pointArray[i].Z + waterHead[i]))) / Math.Pow(deltaX, 2);
-                    velocity[i] += 0.99 * force * dt;
-                    waterHeadBuffer[i] = waterHead[i] + (velocity[i] * dt);
-
-                    //Dictionary<int, double> indexSlopePairs = CalculateSlopes(pointArray, i, indices, deltas);
-                    //DistributeWaterhead(pointArray, indexSlopePairs, i);
                 }
             }
             //);
 
-            Parallel.For(0, pointArray.Length, i =>
+            for (int rows = 1; rows < yStride - 1; rows++)
             {
-                waterHead[i] = waterHeadBuffer[i];
-            });
+                for (int columns = 1; columns < xStride - 1; columns++)
+                {
+                    int i = rows * xStride + columns;
+                    DistributeWater(flowDirections, i, xStride);
+                }
+            }
+                
 
             Parallel.For(0, pointArray.Length, i =>
             {
@@ -114,45 +127,67 @@ namespace SandWorm.Analytics
         }
 
 
-        private static Dictionary<int, double> CalculateSlopes(Point3d[] pointArray, int currentIndex, List<int> indices, List<double> deltas)
+        private static void SetFlowDirection(Point3d[] pointArray, FlowDirections[] flowDirections, int currentIndex, List<int> indices, List<double> deltas)
         {
-            Dictionary<int, double> indexSlopePairs = new Dictionary<int, double>();
             double waterLevel = pointArray[currentIndex].Z + waterHead[currentIndex];
+            double maxSlope = 0;
+            int maxIndex = 0;
 
             for (int i = 0; i < indices.Count; i++)
             {
                 double _slope = (waterLevel - (pointArray[indices[i]].Z + waterHead[indices[i]])) / deltas[i];
-                if (_slope > 0)
-                    indexSlopePairs.Add(indices[i], _slope);
+                if (_slope > maxSlope)
+                {
+                    maxSlope = _slope;
+                    maxIndex = i;
+                }
             }
-            return indexSlopePairs;
+
+            if (maxSlope == 0) // All neighboring cells are higher than current
+                flowDirections[currentIndex] = FlowDirections.None;
+            else
+                flowDirections[currentIndex] = (FlowDirections)maxIndex;
         }
 
-        private static void DistributeWaterhead(Point3d[] pointArray, Dictionary<int, double> indexSlopePairs, int currentIndex)
+        private static void DistributeWater(FlowDirections[] flowDirections, int currentIndex, int xStride)
         {
-            if (indexSlopePairs.Count == 0) // All neighboring cells are higher than current
-                return;
+            int southIndex = currentIndex - xStride;
+            int northIndex = currentIndex + xStride;
+            
+            // TODO calculate the amount of water, which can be passed down
 
-            foreach (var indexSlope in indexSlopePairs.OrderByDescending(key => key.Value)) // Iterate through slopes list in descending order
+            if (flowDirections[currentIndex] != FlowDirections.None)
             {
-                if (waterHead[currentIndex] == 0)
-                    break;
-
-                double waterHeadHalved = (pointArray[currentIndex].Z + waterHead[currentIndex] - (pointArray[indexSlope.Key].Z + waterHead[indexSlope.Key])) / 2;
-                
-                if (waterHeadHalved <= 0)
-                    continue;
-                if (waterHeadHalved >= waterHead[currentIndex]) // If elevation difference between cells permits, move the whole water head to the lowest cell
-                {
-                    waterHead[indexSlope.Key] += waterHead[currentIndex];
+                if (waterHead[currentIndex] > flowVelocity)
+                    waterHead[currentIndex] -= flowVelocity;
+                else
                     waterHead[currentIndex] = 0;
-                }
-                else // Split water head equally between cells
-                {
-                    waterHead[currentIndex] -= waterHeadHalved;
-                    waterHead[indexSlope.Key] += waterHeadHalved;
-                }
             }
+                
+
+            if (flowDirections[southIndex - 1] == FlowDirections.NE)
+                waterHead[currentIndex] += flowVelocity;
+
+            if (flowDirections[southIndex] == FlowDirections.N)
+                waterHead[currentIndex] += flowVelocity;
+
+            if (flowDirections[southIndex + 1] == FlowDirections.NW)
+                waterHead[currentIndex] += flowVelocity;
+
+            if (flowDirections[currentIndex + 1] == FlowDirections.W)
+                waterHead[currentIndex] += flowVelocity;
+
+            if (flowDirections[northIndex + 1] == FlowDirections.SW)
+                waterHead[currentIndex] += flowVelocity;
+
+            if (flowDirections[northIndex] == FlowDirections.S)
+                waterHead[currentIndex] += flowVelocity;
+
+            if (flowDirections[northIndex - 1] == FlowDirections.SE)
+                waterHead[currentIndex] += flowVelocity;
+
+            if (flowDirections[currentIndex - 1] == FlowDirections.E)
+                waterHead[currentIndex] += flowVelocity;
         }
     }
 }
