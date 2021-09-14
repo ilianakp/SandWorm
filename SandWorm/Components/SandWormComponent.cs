@@ -278,7 +278,7 @@ namespace SandWorm
 #if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
 #endif
-                MeshFlow.CalculateWaterHeadArray(allPoints, trimmedWidth, trimmedHeight, _simulateFloodEvent.Active);
+                MeshFlow.CalculateWaterHeadArray(allPoints, averagedDepthFrameData, trimmedWidth, trimmedHeight, _simulateFloodEvent.Active);
                 _simulateFloodEvent.Active = false;
                 GeneralHelpers.LogTiming(ref stats, timer, "Mesh Flow");
                 waterMesh = CreateQuadMesh(ref waterMesh, MeshFlow.waterElevationPoints, ref waterColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
