@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rhino.Geometry;
 
@@ -8,7 +9,7 @@ namespace SandWorm.Analytics
     {
         public static double[] waterHead;
         public static Point3d[] waterElevationPoints;
-        private static double[] runoffCoefficients;
+        public static double[] runoffCoefficients;
         private static double rain = 1;
         public static int[] flowDirections;
         private static double[] waterAmounts;
@@ -24,7 +25,7 @@ namespace SandWorm.Analytics
             {
                 runoffCoefficients = new double[elevationsArray.Length];
                 for (int i = 0; i < runoffCoefficients.Length; i++) // Populate array with arbitrary runoff values. Ideally, this should be provided by users through UI 
-                    runoffCoefficients[i] = 0.4;
+                    runoffCoefficients[i] = 0.8;
             }
 
             if (waterHead == null)
@@ -44,18 +45,19 @@ namespace SandWorm.Analytics
                 flowDirections = new int[xStride * yStride];
 
             if (simulateFlood) // Distribute precipitation equally
-                for (int i = 0; i < waterHead.Length; i++)
-                    waterHead[i] += rain * runoffCoefficients[i];
-                
+                Parallel.For(0, waterHead.Length, i =>
+                {
+                    waterHead[i] += rain;
+                });
 
             // Borders are a water sink            
-            for (int i = 0; i < xStride - 1; i++) // Bottom border
+            for (int i = 0, e = xStride - 1; i < e; i++) // Bottom border
                 waterHead[i] = 0;
 
-            for (int i = (yStride - 1) * xStride; i < yStride * xStride; i++) // Top border
+            for (int i = (yStride - 1) * xStride, e = yStride * xStride; i < e; i++) // Top border
                 waterHead[i] = 0;
 
-            for (int i = xStride; i < (yStride - 1) * xStride; i += xStride) 
+            for (int i = xStride, e = (yStride - 1) * xStride; i < e; i += xStride) 
             {
                 waterHead[i] = 0; // Left border
                 waterHead[i - 1] = 0; // Right border
@@ -142,7 +144,12 @@ namespace SandWorm.Analytics
             double waterFlow = waterAmounts[currentIndex] < flowVelocity ? waterAmounts[currentIndex] : flowVelocity;
 
             waterHead[currentIndex] -= waterFlow;
-            waterHead[destination] += waterFlow;
+
+            // If the cell isn't wet reduce outflow to neighbors by infiltration & evaporation
+            if (waterHead[currentIndex] > 0)
+                waterHead[destination] += waterFlow * 0.96; // There are always some water losses. This is a somewhat arbitrary factor
+            else
+                waterHead[destination] += waterFlow * runoffCoefficients[currentIndex]; 
         }
     }
 }
