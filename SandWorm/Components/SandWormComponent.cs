@@ -398,10 +398,14 @@ namespace SandWorm
             baseMeshElevationPoints = null;
             flowLines = null;
             waterMesh = null;
-            MeshFlow.waterElevationPoints = null;
             MeshFlow.waterHead = null;
-            MeshFlow.flowDirections = null;
-            MeshFlow.runoffCoefficients = null;
+
+            //MeshFlow._d_waterHead.Dispose();
+            //MeshFlow._d_waterAmounts.Dispose();
+            //MeshFlow._d_elevationsArray.Dispose();
+            //MeshFlow._d_flowDirections.Dispose();
+            MeshFlow.accelerator.Dispose();
+            MeshFlow.context.Dispose();
 
             _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;
