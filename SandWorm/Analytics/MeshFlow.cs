@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rhino.Geometry;
 
@@ -24,8 +20,6 @@ namespace SandWorm.Analytics
 
         public static void CalculateWaterHeadArray(Point3d[] pointArray, double[] elevationsArray, int xStride, int yStride, bool simulateFlood)
         {
-            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-            stopwatch.Start();
             if(runoffCoefficients == null)
             {
                 runoffCoefficients = new double[elevationsArray.Length];
@@ -69,10 +63,6 @@ namespace SandWorm.Analytics
 
             waterAmounts = new double[xStride * yStride];
 
-            stopwatch.Stop();
-            Rhino.RhinoApp.WriteLine($"Initial setup: {stopwatch.ElapsedMilliseconds} ms");
-            stopwatch.Restart();
-
             //for (int rows = 1; rows < yStride - 1; rows++)
             Parallel.For(1, yStride - 1, rows =>         // Iterate over y dimension
             {
@@ -94,9 +84,6 @@ namespace SandWorm.Analytics
                     SetFlowDirection(elevationsArray, flowDirections, i, indices, deltas);
                 }
             });
-            stopwatch.Stop();
-            Rhino.RhinoApp.WriteLine($"First pass: {stopwatch.ElapsedMilliseconds} ms");
-            stopwatch.Restart();
 
             //for (int rows = 1; rows < yStride - 1; rows++)
             Parallel.For(0, yStride - 1, rows =>
@@ -108,20 +95,13 @@ namespace SandWorm.Analytics
                 }
             });
 
-            stopwatch.Stop();
-            Rhino.RhinoApp.WriteLine($"Second pass: {stopwatch.ElapsedMilliseconds} ms");
-            stopwatch.Restart();
-
             Parallel.For(0, elevationsArray.Length, i =>
             {
                 if (waterHead[i] > 0)
                     waterElevationPoints[i].Z = pointArray[i].Z + waterHead[i];
                 else
                     waterElevationPoints[i].Z = pointArray[i].Z - 1; // Hide water mesh under terrain
-            });
-            stopwatch.Stop();
-            Rhino.RhinoApp.WriteLine($"Third pass: {stopwatch.ElapsedMilliseconds} ms");
-            
+            });          
         }
 
 
@@ -134,9 +114,9 @@ namespace SandWorm.Analytics
 
             for (int i = 0; i < indices.Count; i++)
             {
-                double _deltaZ = waterLevel - elevationsArray[indices[i]] + waterHead[indices[i]];
+                double _deltaZ = waterLevel - elevationsArray[indices[i]] + waterHead[indices[i]]; // Working on inverted elevation values 
                 double _slope = _deltaZ * deltas[i];
-                if (_slope < maxSlope)
+                if (_slope < maxSlope) // Again, inverted elevation values
                 {
                     maxSlope = _slope;
                     maxDeltaZ = _deltaZ;
@@ -144,11 +124,11 @@ namespace SandWorm.Analytics
                 }
             }
 
-            flowDirections[currentIndex] = maxIndex;
-
             double _waterAmountHalved = maxDeltaZ * -0.5; // Divide by -2 to split the water equally. Negative number is due to inverted elevation table coming from the sensor
-            double waterAmount = _waterAmountHalved < waterHead[currentIndex] ? _waterAmountHalved : waterHead[currentIndex];
-            waterAmounts[currentIndex] = waterAmount; 
+            double waterAmount = _waterAmountHalved < waterHead[currentIndex] ? _waterAmountHalved : waterHead[currentIndex]; // Clamp to the amount of water a cell actually contains
+            
+            waterAmounts[currentIndex] = waterAmount;
+            flowDirections[currentIndex] = maxIndex;
         }
 
         private static void DistributeWater(int[] flowDirections, int currentIndex)
