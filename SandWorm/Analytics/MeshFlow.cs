@@ -26,14 +26,54 @@ namespace SandWorm.Analytics
 
         private static Context context;
         private static Accelerator accelerator;
-
-        static void Kernel(Index1D i, ArrayView<int> data, ArrayView<int> output)
+        private static MemoryBuffer1D<int, Stride1D.Dense> _d_flowDirections;
+        private static MemoryBuffer1D<double, Stride1D.Dense> _d_waterAmounts;
+        private static MemoryBuffer1D<double, Stride1D.Dense> _d_elevationsArray;
+        private static MemoryBuffer1D<double, Stride1D.Dense> _d_waterHead;
+        private static Action<Index1D, ArrayView<double>, ArrayView<double>, int, int, ArrayView<int>, ArrayView<double>> loadedKernel;
+        static void Kernel(Index1D i, ArrayView<double> _elevationsArray, ArrayView<double> _waterHead, int _xStride, int _yStride, ArrayView<int> _flowDirections, ArrayView<double> _waterAmounts)
         {
-            output[i] = i * 2;
+            if (_waterHead[i] == 0)
+                _flowDirections[i] = i;
+            else
+            {
+                int h = i - _xStride;
+                int j = i + _xStride;
+
+                int[] indices = new int[8] { h - 1, h, h + 1, i + 1, j + 1, j, j - 1, i - 1 }; // SW, S, SE, E, NE, N, NW, W
+                double[] deltas = new double[8] { 0.7, 1, 0.7, 1, 0.7, 1, 0.7, 1};
+
+                double waterLevel = _elevationsArray[i] - _waterHead[i];
+                double maxSlope = 0;
+                double maxDeltaZ = 0;
+                int maxIndex = i;
+
+                for (int o = 0; o < indices.Length; o++)
+                {
+                    if (indices[o] >= 0 && indices[o] <= _xStride * _yStride)
+                    {
+                        double _deltaZ = waterLevel - _elevationsArray[indices[o]] + _waterHead[indices[o]]; // Working on inverted elevation values 
+                        double _slope = _deltaZ * deltas[o];
+                        if (_slope < maxSlope) // Again, inverted elevation values
+                        {
+                            maxSlope = _slope;
+                            maxDeltaZ = _deltaZ;
+                            maxIndex = indices[o];
+                        }
+                    }
+                }
+
+                double _waterAmountHalved = maxDeltaZ * -0.5; // Divide by -2 to split the water equally. Negative number is due to inverted elevation table coming from the sensor
+                double waterAmount = _waterAmountHalved < _waterHead[i] ? _waterAmountHalved : _waterHead[i]; // Clamp to the amount of water a cell actually contains
+
+                _waterAmounts[i] = waterAmount;
+                _flowDirections[i] = maxIndex;
+            }
         }
 
         public static void CalculateWaterHeadArray(Point3d[] pointArray, double[] elevationsArray, int xStride, int yStride, bool simulateFlood)
         {
+            #region Initialize
             if (runoffCoefficients == null)
             {
                 runoffCoefficients = new double[elevationsArray.Length];
@@ -78,39 +118,46 @@ namespace SandWorm.Analytics
 
             waterAmounts = new double[xStride * yStride];
 
-
-
-            if (context.IsDisposed)
+            #endregion
+            
+            if (context == null || context.IsDisposed)
             {
                 context = Context.Create(builder => builder.Cuda());
                 accelerator = context.GetPreferredDevice(false)
                                           .CreateAccelerator(context);
+
+                _d_elevationsArray = accelerator.Allocate1D(elevationsArray);
+                _d_waterHead = accelerator.Allocate1D(waterHead);
+
+                _d_flowDirections = accelerator.Allocate1D(flowDirections);
+                _d_waterAmounts = accelerator.Allocate1D(waterAmounts);
+
+                // precompile the kernel
+                loadedKernel = accelerator.LoadAutoGroupedStreamKernel<Index1D, ArrayView<double>, ArrayView<double>, int, int, ArrayView<int>, ArrayView<double>>(Kernel);
             }
 
-            MemoryBuffer1D<int, Stride1D.Dense> deviceData = accelerator.Allocate1D(new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-            MemoryBuffer1D<int, Stride1D.Dense> deviceOutput = accelerator.Allocate1D<int>(100);
 
-            // precompile the kernel
-            Action<Index1D, ArrayView<int>, ArrayView<int>> loadedKernel =
-                accelerator.LoadAutoGroupedStreamKernel<Index1D, ArrayView<int>, ArrayView<int>>(Kernel);
+            _d_elevationsArray.CopyFromCPU(elevationsArray);
+            _d_waterHead.CopyFromCPU(waterHead);
+
+            #region GPU stuff
 
             // finish compiling and tell the accelerator to start computing the kernel
-            loadedKernel((int)deviceOutput.Length, deviceData.View, deviceOutput.View);
+            loadedKernel(xStride * yStride, _d_elevationsArray.View, _d_waterHead.View, xStride, yStride, _d_flowDirections.View, _d_waterAmounts.View);
 
             accelerator.Synchronize();
 
-            // moved output data from the GPU to the CPU for output to console
-            int[] hostOutput = deviceOutput.GetAsArray1D();
+            // move output data from the GPU to the CPU 
+            flowDirections = _d_flowDirections.GetAsArray1D();
+            waterAmounts = _d_waterAmounts.GetAsArray1D();
+
+            //deviceOutput.Dispose();
+            //deviceData.Dispose();
+            //accelerator.Dispose();
+            //context.Dispose();
+            #endregion
 
             /*
-             
-            deviceOutput.Dispose();
-            deviceData.Dispose();
-            accelerator.Dispose();
-            context.Dispose();
-            */
-
-
             //for (int rows = 1; rows < yStride - 1; rows++)
             Parallel.For(1, yStride - 1, rows =>         // Iterate over y dimension
             {
@@ -132,7 +179,7 @@ namespace SandWorm.Analytics
                     SetFlowDirection(elevationsArray, flowDirections, i, indices, deltas);
                 }
             });
-
+            */
             //for (int rows = 1; rows < yStride - 1; rows++)
             Parallel.For(0, yStride - 1, rows =>
             {
