@@ -275,14 +275,17 @@ namespace SandWorm
                 quadMesh = CreateQuadMesh(ref quadMesh, allPoints, ref _vertexColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
                 DA.SetDataList(0, new List<Mesh> { quadMesh });
 
-#if DEBUG
+//#if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
-#endif
-                MeshFlow.CalculateWaterHeadArray(allPoints, averagedDepthFrameData, trimmedWidth, trimmedHeight, _simulateFloodEvent.Active);
-                _simulateFloodEvent.Active = false;
-                GeneralHelpers.LogTiming(ref stats, timer, "Mesh Flow");
-                waterMesh = CreateQuadMesh(ref waterMesh, MeshFlow.waterElevationPoints, ref waterColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
+//#endif
+                if (_simulateFloodEvent.Active)
+                {
+                    MeshFlow.CalculateWaterHeadArray(allPoints, averagedDepthFrameData, trimmedWidth, trimmedHeight, _makeItRain.Active);
+                    _makeItRain.Active = false;
+                    GeneralHelpers.LogTiming(ref stats, timer, "Mesh Flow");
+                    waterMesh = CreateQuadMesh(ref waterMesh, MeshFlow.waterElevationPoints, ref waterColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
 
+                }
             }
             else if ((OutputTypes)_outputType.Value == OutputTypes.PointCloud)
             {
@@ -314,8 +317,9 @@ namespace SandWorm
 
             if (_waterLevel.Value > 0 && _outputWaterSurface.Count > 0 && Params.Output[1].Recipients.Count == 0)
                 args.Display.DrawMeshShaded((Mesh)_outputWaterSurface[0], material);
-
-            args.Display.DrawMeshShaded(waterMesh, material);
+            
+            if (_simulateFloodEvent.Active)
+                args.Display.DrawMeshShaded(waterMesh, material);
         }
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {

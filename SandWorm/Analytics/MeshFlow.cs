@@ -14,16 +14,18 @@ namespace SandWorm.Analytics
         public static Point3d[] waterElevationPoints;
         private static double[] runoffCoefficients;
         private static double rain = 1;
-        private static double flowVelocity;
         public static int[] flowDirections;
         private static double[] waterAmounts;
 
+        private const double flowVelocity = 2;
         private const double deltaX = 1;
         private const double deltaY = 1;
         private const double deltaXY = 0.7; // 1 / sqrt(2)
 
         public static void CalculateWaterHeadArray(Point3d[] pointArray, double[] elevationsArray, int xStride, int yStride, bool simulateFlood)
         {
+            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
             if(runoffCoefficients == null)
             {
                 runoffCoefficients = new double[elevationsArray.Length];
@@ -54,33 +56,22 @@ namespace SandWorm.Analytics
 
             // Borders are a water sink            
             for (int i = 0; i < xStride - 1; i++) // Bottom border
-            {
                 waterHead[i] = 0;
-                //flowDirections[i] = i;
-            }
-                
 
             for (int i = (yStride - 1) * xStride; i < yStride * xStride; i++) // Top border
-            {
-                waterHead[i] = 0;
-               //flowDirections[i] = i;
-            }
-                
+                waterHead[i] = 0;                
 
             for (int i = xStride; i < (yStride - 1) * xStride; i += xStride) // Left border
-            {
                 waterHead[i] = 0;
-               // flowDirections[i] = i;
-            }
 
             for (int i = xStride - 1; i < (yStride - 1) * xStride; i += xStride) // Right border
-            {
                 waterHead[i] = 0;
-                //flowDirections[i] = i;
-            }
 
             waterAmounts = new double[xStride * yStride];
-            flowVelocity = 4;
+
+            stopwatch.Stop();
+            Rhino.RhinoApp.WriteLine($"Initial setup: {stopwatch.ElapsedMilliseconds} ms");
+            stopwatch.Restart();
 
             //for (int rows = 1; rows < yStride - 1; rows++)
             Parallel.For(1, yStride - 1, rows =>         // Iterate over y dimension
@@ -102,19 +93,24 @@ namespace SandWorm.Analytics
 
                     SetFlowDirection(elevationsArray, flowDirections, i, indices, deltas);
                 }
-            }
-            );
+            });
+            stopwatch.Stop();
+            Rhino.RhinoApp.WriteLine($"First pass: {stopwatch.ElapsedMilliseconds} ms");
+            stopwatch.Restart();
 
             //for (int rows = 1; rows < yStride - 1; rows++)
-            Parallel.For(1, yStride - 1, rows =>
+            Parallel.For(0, yStride - 1, rows =>
             {
                 for (int columns = 1; columns < xStride - 1; columns++)
                 {
                     int i = rows * xStride + columns;
                     DistributeWater(flowDirections, i);
                 }
-            }
-            );
+            });
+
+            stopwatch.Stop();
+            Rhino.RhinoApp.WriteLine($"Second pass: {stopwatch.ElapsedMilliseconds} ms");
+            stopwatch.Restart();
 
             Parallel.For(0, elevationsArray.Length, i =>
             {
@@ -123,6 +119,9 @@ namespace SandWorm.Analytics
                 else
                     waterElevationPoints[i].Z = pointArray[i].Z - 1; // Hide water mesh under terrain
             });
+            stopwatch.Stop();
+            Rhino.RhinoApp.WriteLine($"Third pass: {stopwatch.ElapsedMilliseconds} ms");
+            
         }
 
 
@@ -154,11 +153,9 @@ namespace SandWorm.Analytics
 
         private static void DistributeWater(int[] flowDirections, int currentIndex)
         {
-            if (waterHead[currentIndex] == 0)
-                return;
-
             int destination = flowDirections[currentIndex];
-            if (destination == currentIndex)
+
+            if (waterHead[currentIndex] == 0 || destination == currentIndex)
                 return;
 
             // Clamp water flow to max value defined by flow velocity

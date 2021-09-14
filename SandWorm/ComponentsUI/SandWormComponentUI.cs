@@ -28,6 +28,7 @@ namespace SandWorm
         public static MenuSlider _raindropSpacing;
         public static MenuSlider _flowLinesLength;
         public static MenuCheckBox _simulateFloodEvent;
+        public static MenuCheckBox _makeItRain;
         public static MenuSlider _labelSpacing;
 
         public static MenuSlider _averagedFrames;
@@ -183,6 +184,7 @@ namespace SandWorm
             };
 
             _simulateFloodEvent = new MenuCheckBox(10002, "Simulate flood event", "Simulate flood event");
+            _makeItRain = new MenuCheckBox(10003, "Make it rain", "Make it rain");
 
             MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
             _waterLevel = new MenuSlider(waterLevelHeader, 32, 0, 100, 0, 0);
@@ -200,6 +202,7 @@ namespace SandWorm
             attr.AddMenu(waterMenu);
 
             waterPanel.AddControl(_simulateFloodEvent);
+            waterPanel.AddControl(_makeItRain);
             waterPanel.AddControl(waterLevelHeader);
             waterPanel.AddControl(_waterLevel);
             waterPanel.AddControl(flowLinesLengthHeader);
