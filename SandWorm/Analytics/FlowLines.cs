@@ -43,7 +43,7 @@ namespace SandWorm
 
         private void findNextPoint(ref Point3d[] pointArray, int xStride)
         {
-            double maxDistance = 500; // Necessary for checks around the mesh borders
+            double maxDistance = 50; // Necessary for checks around the mesh borders
 
             int maxSlopeIndex = Endvertex;
             double maxSlope = 0.0;

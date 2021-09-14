@@ -53,13 +53,13 @@ namespace SandWorm.Analytics
                 waterHead[i] = 0;
 
             for (int i = (yStride - 1) * xStride; i < yStride * xStride; i++) // Top border
-                waterHead[i] = 0;                
-
-            for (int i = xStride; i < (yStride - 1) * xStride; i += xStride) // Left border
                 waterHead[i] = 0;
 
-            for (int i = xStride - 1; i < (yStride - 1) * xStride; i += xStride) // Right border
-                waterHead[i] = 0;
+            for (int i = xStride; i < (yStride - 1) * xStride; i += xStride) 
+            {
+                waterHead[i] = 0; // Left border
+                waterHead[i - 1] = 0; // Right border
+            }
 
             waterAmounts = new double[xStride * yStride];
 
@@ -75,8 +75,8 @@ namespace SandWorm.Analytics
                         continue;
                     }
                         
-                    int h = (rows - 1) * xStride + columns;
-                    int j = (rows + 1) * xStride + columns;
+                    int h = i - xStride;
+                    int j = i + xStride;
 
                     List<int> indices = new List<int>() { h - 1, h, h + 1, i + 1, j + 1, j, j - 1, i - 1 }; // SW, S, SE, E, NE, N, NW, W
                     List<double> deltas = new List<double>() { deltaXY, deltaY, deltaXY, deltaX, deltaXY, deltaY, deltaXY, deltaX };
