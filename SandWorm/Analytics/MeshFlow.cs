@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rhino.Geometry;
 
+using ILGPU;
+using ILGPU.Runtime;
+using ILGPU.Runtime.Cuda;
+using System.IO;
+
 namespace SandWorm.Analytics
 {
     class MeshFlow
@@ -19,9 +24,17 @@ namespace SandWorm.Analytics
         private const double deltaY = 1;
         private const double deltaXY = 0.7; // 1 / sqrt(2)
 
+        private static Context context;
+        private static Accelerator accelerator;
+
+        static void Kernel(Index1D i, ArrayView<int> data, ArrayView<int> output)
+        {
+            output[i] = i * 2;
+        }
+
         public static void CalculateWaterHeadArray(Point3d[] pointArray, double[] elevationsArray, int xStride, int yStride, bool simulateFlood)
         {
-            if(runoffCoefficients == null)
+            if (runoffCoefficients == null)
             {
                 runoffCoefficients = new double[elevationsArray.Length];
                 for (int i = 0; i < runoffCoefficients.Length; i++) // Populate array with arbitrary runoff values. Ideally, this should be provided by users through UI 
@@ -64,6 +77,39 @@ namespace SandWorm.Analytics
             }
 
             waterAmounts = new double[xStride * yStride];
+
+
+
+            if (context.IsDisposed)
+            {
+                context = Context.Create(builder => builder.Cuda());
+                accelerator = context.GetPreferredDevice(false)
+                                          .CreateAccelerator(context);
+            }
+
+            MemoryBuffer1D<int, Stride1D.Dense> deviceData = accelerator.Allocate1D(new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+            MemoryBuffer1D<int, Stride1D.Dense> deviceOutput = accelerator.Allocate1D<int>(100);
+
+            // precompile the kernel
+            Action<Index1D, ArrayView<int>, ArrayView<int>> loadedKernel =
+                accelerator.LoadAutoGroupedStreamKernel<Index1D, ArrayView<int>, ArrayView<int>>(Kernel);
+
+            // finish compiling and tell the accelerator to start computing the kernel
+            loadedKernel((int)deviceOutput.Length, deviceData.View, deviceOutput.View);
+
+            accelerator.Synchronize();
+
+            // moved output data from the GPU to the CPU for output to console
+            int[] hostOutput = deviceOutput.GetAsArray1D();
+
+            /*
+             
+            deviceOutput.Dispose();
+            deviceData.Dispose();
+            accelerator.Dispose();
+            context.Dispose();
+            */
+
 
             //for (int rows = 1; rows < yStride - 1; rows++)
             Parallel.For(1, yStride - 1, rows =>         // Iterate over y dimension
