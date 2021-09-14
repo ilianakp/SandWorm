@@ -39,18 +39,5 @@ namespace SandWorm
             Turbo,
             Viridis
         }
-
-        public enum FlowDirections
-        {
-            SW,
-            S,
-            SE,
-            E,
-            NE,
-            N,
-            NW,
-            W,
-            None
-        }
     }
 }
