@@ -5,6 +5,7 @@ using Rhino.Geometry;
 using ILGPU;
 using ILGPU.Runtime;
 using ILGPU.Runtime.Cuda;
+using ILGPU.Runtime.OpenCL;
 
 namespace SandWorm.Analytics
 {
@@ -52,9 +53,23 @@ namespace SandWorm.Analytics
 
             if (context == null || context.IsDisposed)
             {
-                context = Context.Create(builder => builder.Cuda());
-                accelerator = context.GetPreferredDevice(false)
-                                          .CreateAccelerator(context);
+                context = Context.Create(builder => builder.AllAccelerators());
+
+                if (context.GetCudaDevices().Count > 0) // prefer NVIDIA
+                    accelerator = context.GetCudaDevice(0).CreateAccelerator(context);
+                else if (context.GetCLDevices().Count > 0) // try an openCL GPU
+                {
+                    foreach (var cld in context.GetCLDevices())
+                        if (cld.DeviceType == CLDeviceType.CL_DEVICE_TYPE_GPU)
+                        {
+                            accelerator = cld.CreateAccelerator(context);
+                            break;
+                        }
+                }
+                else // let ILGPU decide
+                    accelerator = context.GetPreferredDevice(false).CreateAccelerator(context);
+
+                Rhino.RhinoApp.WriteLine($"Calculations accelerated with {accelerator.Name}.");
 
                 // allocate memory buffers on the GPU
                 _d_elevationsArray = accelerator.Allocate1D(elevationsArray);
