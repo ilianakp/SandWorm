@@ -5,7 +5,6 @@ using Rhino.Geometry;
 using ILGPU;
 using ILGPU.Runtime;
 using ILGPU.Runtime.Cuda;
-using ILGPU.Runtime.OpenCL;
 
 namespace SandWorm.Analytics
 {
@@ -18,7 +17,7 @@ namespace SandWorm.Analytics
         public static int[] flowDirections;
         private static double[] waterAmounts;
 
-        private const double flowVelocity = 2;
+        private const double flowVelocity = 2; // Set max amount of water cells can exchange with each other in one iteration
 
         // GPU variables
         public static Context context;
@@ -57,15 +56,6 @@ namespace SandWorm.Analytics
 
                 if (context.GetCudaDevices().Count > 0) // prefer NVIDIA
                     accelerator = context.GetCudaDevice(0).CreateAccelerator(context);
-                else if (context.GetCLDevices().Count > 0) // try an openCL GPU
-                {
-                    foreach (var cld in context.GetCLDevices())
-                        if (cld.DeviceType == CLDeviceType.CL_DEVICE_TYPE_GPU)
-                        {
-                            accelerator = cld.CreateAccelerator(context);
-                            break;
-                        }
-                }
                 else // let ILGPU decide
                     accelerator = context.GetPreferredDevice(false).CreateAccelerator(context);
 
