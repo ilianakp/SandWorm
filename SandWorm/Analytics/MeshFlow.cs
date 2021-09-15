@@ -127,10 +127,11 @@ namespace SandWorm.Analytics
                 double maxSlope = 0;
                 double maxDeltaZ = 0;
                 int maxIndex = i;
+                int maxCount = _xStride * _yStride;
 
                 for (int o = 0; o < indices.Length; o++)
                 {
-                    if (indices[o] >= 0 && indices[o] <= _xStride * _yStride) // Make sure we are not out of bounds
+                    if (indices[o] >= 0 && indices[o] < maxCount) // Make sure index is not out of bounds
                     {
                         double _deltaZ = waterLevel - _elevationsArray[indices[o]] + _waterHead[indices[o]]; // Working on inverted elevation values 
                         double _slope = _deltaZ * deltas[o];
