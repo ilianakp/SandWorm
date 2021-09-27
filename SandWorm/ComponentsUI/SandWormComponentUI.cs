@@ -169,6 +169,9 @@ namespace SandWorm
             analysisPanel.AddControl(_contourIntervalRange);
             //analysisPanel.AddControl(contourRoughnessHeader);
             //analysisPanel.AddControl(_contourRoughness);
+
+            _previousAnalysisMode = _colorPalette.Value;
+                _previousColorGradientRange = _colorGradientRange.Value;
             #endregion
 
             #region Water flow

@@ -53,6 +53,8 @@ namespace SandWorm
         // Cut & Fill analysis
         private double?[] baseMeshElevationPoints;
         private Mesh baseMesh;
+        private Rhino.Display.DisplayMaterial meshMaterial;
+        private Color meshColor = Color.FromArgb(128, 128, 128);
 
         // Water flow analysis
         private Color blueWaterSurface = Color.FromArgb(75, 190, 255);
@@ -149,7 +151,11 @@ namespace SandWorm
             _outputContours = new List<Line>();
 
             if(material == null)
+            {
                 material = new Rhino.Display.DisplayMaterial(blueWaterSurface, blueWaterSurface, blueWaterSurface, blueWaterSurface, 0.7, 0.5);
+                meshMaterial = new Rhino.Display.DisplayMaterial(meshColor, meshColor, meshColor, meshColor, 0.7, 0.5);
+            }
+                
 
             if (runningSum == null)
                 runningSum = Enumerable.Range(1, depthFrameDataInt.Length).Select(i => new int()).ToArray();
@@ -312,13 +318,19 @@ namespace SandWorm
         }
         public override void DrawViewportMeshes(IGH_PreviewArgs args)
         {
-            if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
-                args.Display.DrawMeshFalseColors(quadMesh);
+            if ((OutputTypes)_outputType.Value == OutputTypes.Mesh && quadMesh != null)
+            {
+                if ((AnalysisTypes)_analysisType.Value != AnalysisTypes.None)
+                    args.Display.DrawMeshFalseColors(quadMesh);
+                else
+                    args.Display.DrawMeshShaded(quadMesh, meshMaterial);
+            }
+                
 
             if (_waterLevel.Value > 0 && _outputWaterSurface.Count > 0 && Params.Output[1].Recipients.Count == 0)
                 args.Display.DrawMeshShaded((Mesh)_outputWaterSurface[0], material);
             
-            if (_simulateFloodEvent.Active)
+            if (_simulateFloodEvent.Active && waterMesh != null)
                 args.Display.DrawMeshShaded(waterMesh, material);
         }
         public override void DrawViewportWires(IGH_PreviewArgs args)
@@ -400,12 +412,12 @@ namespace SandWorm
             waterMesh = null;
             MeshFlow.waterHead = null;
 
-            //MeshFlow._d_waterHead.Dispose();
-            //MeshFlow._d_waterAmounts.Dispose();
-            //MeshFlow._d_elevationsArray.Dispose();
-            //MeshFlow._d_flowDirections.Dispose();
-            MeshFlow.accelerator.Dispose();
-            MeshFlow.context.Dispose();
+            if (MeshFlow.accelerator != null)
+            {
+                MeshFlow.accelerator.Dispose();
+                MeshFlow.context.Dispose();
+            }
+            
 
             _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;
