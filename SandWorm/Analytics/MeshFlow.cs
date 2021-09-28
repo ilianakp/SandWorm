@@ -26,7 +26,7 @@ namespace SandWorm.Analytics
         public static MemoryBuffer1D<double, Stride1D.Dense> _d_waterAmounts;
         public static MemoryBuffer1D<double, Stride1D.Dense> _d_elevationsArray;
         public static MemoryBuffer1D<double, Stride1D.Dense> _d_waterHead;
-        private static Action<Index1D, ArrayView<double>, ArrayView<double>, int, int, ArrayView<int>, ArrayView<double>> loadedKernel;
+        private static Action<Index1D, ArrayView<double>, ArrayView<double>, int, int, ArrayView<int>, ArrayView<double>, double> loadedKernel;
 
         public static void CalculateWaterHeadArray(Point3d[] pointArray, double[] elevationsArray, int xStride, int yStride, bool simulateFlood)
         {
@@ -69,14 +69,14 @@ namespace SandWorm.Analytics
                 _d_waterAmounts = accelerator.Allocate1D(waterAmounts);
 
                 // precompile the kernel
-                loadedKernel = accelerator.LoadAutoGroupedStreamKernel<Index1D, ArrayView<double>, ArrayView<double>, int, int, ArrayView<int>, ArrayView<double>>(FlowDirectionKernel);
+                loadedKernel = accelerator.LoadAutoGroupedStreamKernel<Index1D, ArrayView<double>, ArrayView<double>, int, int, ArrayView<int>, ArrayView<double>, double>(FlowDirectionKernel);
             }
             #endregion
 
             if (simulateFlood) // Distribute precipitation equally
                 Parallel.For(0, waterHead.Length, i =>
                 {
-                    waterHead[i] += rain;
+                    waterHead[i] += rain * SandWormComponent.unitsMultiplier;
                 });
 
             DrainBorders(xStride, yStride);
@@ -86,7 +86,7 @@ namespace SandWorm.Analytics
             _d_waterHead.CopyFromCPU(waterHead);
 
             // tell the accelerator to start computing the kernel
-            loadedKernel(elevationsArray.Length, _d_elevationsArray.View, _d_waterHead.View, xStride, yStride, _d_flowDirections.View, _d_waterAmounts.View);
+            loadedKernel(elevationsArray.Length, _d_elevationsArray.View, _d_waterHead.View, xStride, yStride, _d_flowDirections.View, _d_waterAmounts.View, SandWormComponent.unitsMultiplier);
             accelerator.Synchronize();
 
             // copy output data from the GPU back to the CPU 
@@ -107,11 +107,11 @@ namespace SandWorm.Analytics
                 if (waterHead[i] > 0)
                     waterElevationPoints[i].Z = pointArray[i].Z + waterHead[i];
                 else
-                    waterElevationPoints[i].Z = pointArray[i].Z - 1; // Hide water mesh under terrain
+                    waterElevationPoints[i].Z = pointArray[i].Z - (1 * SandWormComponent.unitsMultiplier); // Hide water mesh under terrain
             });
         }
 
-        private static void FlowDirectionKernel(Index1D i, ArrayView<double> _elevationsArray, ArrayView<double> _waterHead, int _xStride, int _yStride, ArrayView<int> _flowDirections, ArrayView<double> _waterAmounts)
+        private static void FlowDirectionKernel(Index1D i, ArrayView<double> _elevationsArray, ArrayView<double> _waterHead, int _xStride, int _yStride, ArrayView<int> _flowDirections, ArrayView<double> _waterAmounts, double _unitsMultiplier)
         {
             if (_waterHead[i] == 0)
                 _flowDirections[i] = i;
@@ -123,7 +123,7 @@ namespace SandWorm.Analytics
                 int[] indices = new int[8] { h - 1, h, h + 1, i + 1, j + 1, j, j - 1, i - 1 }; // SW, S, SE, E, NE, N, NW, W
                 double[] deltas = new double[8] { 0.7, 1, 0.7, 1, 0.7, 1, 0.7, 1 }; // deltaXY = 0.7, deltaX & deltaY = 1
 
-                double waterLevel = _elevationsArray[i] - _waterHead[i];
+                double waterLevel = (_elevationsArray[i] * _unitsMultiplier) - _waterHead[i];
                 double maxSlope = 0;
                 double maxDeltaZ = 0;
                 int maxIndex = i;
@@ -133,7 +133,7 @@ namespace SandWorm.Analytics
                 {
                     if (indices[o] >= 0 && indices[o] < maxCount) // Make sure index is not out of bounds
                     {
-                        double _deltaZ = waterLevel - _elevationsArray[indices[o]] + _waterHead[indices[o]]; // Working on inverted elevation values 
+                        double _deltaZ = waterLevel - (_elevationsArray[indices[o]] * _unitsMultiplier) + _waterHead[indices[o]]; // Working on inverted elevation values 
                         double _slope = _deltaZ * deltas[o];
                         if (_slope < maxSlope) // Again, inverted elevation values
                         {
@@ -160,7 +160,7 @@ namespace SandWorm.Analytics
                 return;
 
             // Clamp water flow to max value defined by flow velocity
-            double waterFlow = waterAmounts[currentIndex] < flowVelocity ? waterAmounts[currentIndex] : flowVelocity;
+            double waterFlow = waterAmounts[currentIndex] < flowVelocity * SandWormComponent.unitsMultiplier ? waterAmounts[currentIndex] : flowVelocity * SandWormComponent.unitsMultiplier;
 
             waterHead[currentIndex] -= waterFlow;
 

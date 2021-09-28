@@ -10,7 +10,7 @@ namespace SandWorm.Analytics
     public static class ContoursFromPoints
     {
         public static void GetGeometryForAnalysis(ref List<Line> contourLines, Point3d[] points, int threshold, 
-            int trimmedWidth, int trimmedHeight, int ContourRoughness, double unitsMultiplier)
+            int trimmedWidth, int trimmedHeight, int ContourRoughness)
         {
 
             int xd = trimmedWidth;
@@ -35,10 +35,10 @@ namespace SandWorm.Analytics
                     // upper right corner-> i
                     // upper left corner -> i - multiplier
 
-                    intersectionPoints.AddRange(FindIntersections(points[j - ContourRoughness], points[j], threshold, unitsMultiplier));
-                    intersectionPoints.AddRange(FindIntersections(points[j], points[i], threshold, unitsMultiplier));
-                    intersectionPoints.AddRange(FindIntersections(points[i], points[i - ContourRoughness], threshold, unitsMultiplier));
-                    intersectionPoints.AddRange(FindIntersections(points[i - ContourRoughness], points[j - ContourRoughness], threshold, unitsMultiplier));
+                    intersectionPoints.AddRange(FindIntersections(points[j - ContourRoughness], points[j], threshold));
+                    intersectionPoints.AddRange(FindIntersections(points[j], points[i], threshold));
+                    intersectionPoints.AddRange(FindIntersections(points[i], points[i - ContourRoughness], threshold));
+                    intersectionPoints.AddRange(FindIntersections(points[i - ContourRoughness], points[j - ContourRoughness], threshold));
 
                     if (intersectionPoints.Count > 0)
                     {
@@ -83,12 +83,12 @@ namespace SandWorm.Analytics
         }
 
 
-        private static List<Point4d> FindIntersections(Point3d startVertex, Point3d endVertex, int threshold, double unitsMultiplier)
+        private static List<Point4d> FindIntersections(Point3d startVertex, Point3d endVertex, int threshold)
         {
             List<Point4d> intersections = new List<Point4d>();
             Point4d _p = new Point4d();
-            Point3d _startVertex = new Point3d(startVertex.X, startVertex.Y, startVertex.Z / unitsMultiplier);
-            Point3d _endVertex = new Point3d(endVertex.X, endVertex.Y, endVertex.Z / unitsMultiplier);
+            Point3d _startVertex = new Point3d(startVertex.X, startVertex.Y, startVertex.Z / SandWormComponent.unitsMultiplier);
+            Point3d _endVertex = new Point3d(endVertex.X, endVertex.Y, endVertex.Z / SandWormComponent.unitsMultiplier);
             double deltaZ = Math.Abs(_endVertex.Z - _startVertex.Z);
 
             // Discard points if they have (0,0) coordinates (coming from the WFOV)
@@ -119,7 +119,7 @@ namespace SandWorm.Analytics
                 {
                     _p.X = InterpolateCoordinates(_startVertex.X, _endVertex.X, ratio);
                     _p.Y = InterpolateCoordinates(_startVertex.Y, _endVertex.Y, ratio);
-                    _p.Z *= unitsMultiplier;
+                    _p.Z *= SandWormComponent.unitsMultiplier;
 
                     intersections.Add(_p);
                 }

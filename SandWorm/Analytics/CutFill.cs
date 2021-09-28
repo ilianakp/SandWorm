@@ -26,7 +26,7 @@ namespace SandWorm.Analytics
 
         }
         public Color[] GetColorCloudForAnalysis(Point3d[] pointCoordinates, double?[] baseMeshElevationPoints, double gradientRange,
-            Structs.ColorPalettes colorPalette, List<Color> customColors, ref List<string> stats, double unitsMultiplier)
+            Structs.ColorPalettes colorPalette, List<Color> customColors, ref List<string> stats)
         {
             double _cut = 0.0;
             double _fill = 0.0;
@@ -53,7 +53,7 @@ namespace SandWorm.Analytics
                     vertexColors[i] = GetColorForCutFill((int)(_difference + gradientRange), gradientRange); // Add gradientRange to accommodate for negative values from cut operations
                     
                     if (i < pointCoordinates.Length - 1) // Assume dX == dY
-                        _area = System.Math.Pow(pointCoordinates[i].X - pointCoordinates[i + 1].X, 2) / unitsMultiplier / unitsMultiplier;
+                        _area = System.Math.Pow(pointCoordinates[i].X - pointCoordinates[i + 1].X, 2) / SandWormComponent.unitsMultiplier / SandWormComponent.unitsMultiplier;
                     
                     if (_area > _maxArea) // Make sure that area is correct when a pixel jumps from one side of the table to the other
                         _area = _previousArea;
@@ -61,9 +61,9 @@ namespace SandWorm.Analytics
                         _previousArea = _area;
                     
                     if (_difference > 0)
-                        _fill += _difference * _area / unitsMultiplier;
+                        _fill += _difference * _area / SandWormComponent.unitsMultiplier;
                     else
-                        _cut += _difference * _area / unitsMultiplier;
+                        _cut += _difference * _area / SandWormComponent.unitsMultiplier;
                 }
             }
             

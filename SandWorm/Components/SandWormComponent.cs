@@ -175,7 +175,7 @@ namespace SandWorm
                     case KinectTypes.KinectAzureNear:
                     case KinectTypes.KinectAzureWide:
                         Core.TrimXYLookupTable(KinectAzureController.idealXYCoordinates, trimmedXYLookupTable,
-                            _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth, unitsMultiplier);
+                            _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
 
                         Core.SetupCorrectiveLookupTables(KinectAzureController.idealXYCoordinates, KinectAzureController.verticalTiltCorrectionMatrix,
                             KinectAzureController.undistortMatrix, trimmedBooleanMatrix,
@@ -184,7 +184,7 @@ namespace SandWorm
 
                     case KinectTypes.KinectForWindows:
                         Core.TrimXYLookupTable(KinectForWindows.idealXYCoordinates, trimmedXYLookupTable,
-                            _left, _right, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth, unitsMultiplier);
+                            _left, _right, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
                         break;
                 }
             }
@@ -192,13 +192,11 @@ namespace SandWorm
             GeneralHelpers.LogTiming(ref stats, timer, "Initial setup"); // Debug Info
 #endif
             AverageAndBlurPixels(depthFrameDataInt, ref averagedDepthFrameData, runningSum, renderBuffer,
-                                 _sensorElevation.Value, _averagedFrames.Value, _blurRadius.Value, trimmedWidth,
-                                 trimmedHeight);
+                                 _sensorElevation.Value, _averagedFrames.Value, _blurRadius.Value, trimmedWidth, trimmedHeight);
 
             GeneratePointCloud(averagedDepthFrameData, trimmedXYLookupTable,
                                KinectAzureController.verticalTiltCorrectionMatrix, (KinectTypes)_sensorType.Value,
-                               allPoints, renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value,
-                               unitsMultiplier, _averagedFrames.Value);
+                               allPoints, renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value, _averagedFrames.Value);
 
             #region RGB from camera
             if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.Camera)
@@ -222,8 +220,7 @@ namespace SandWorm
             GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
                                trimmedXYLookupTable, trimmedRGBArray, _colorGradientRange.Value,
                                (Structs.ColorPalettes)_colorPalette.Value, colorPalettes, baseMeshElevationPoints,
-                               allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight,
-                               unitsMultiplier);
+                               allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight);
 #if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis");
 #endif
@@ -233,8 +230,7 @@ namespace SandWorm
             {
                 ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints,
                                                           (int)_contourIntervalRange.Value, trimmedWidth,
-                                                          trimmedHeight, (int)_contourRoughness.Value,
-                                                          unitsMultiplier);
+                                                          trimmedHeight, (int)_contourRoughness.Value);
                 if (Params.Output[2].Recipients.Count > 0)
                 {
                     Grasshopper.Kernel.Types.GH_Line[] ghLines = GeneralHelpers.ConvertLineToGHLine(_outputContours);
@@ -251,8 +247,7 @@ namespace SandWorm
             {
                 labels = new List<Rhino.Display.Text3d>();
                 GeneralHelpers.CreateLabels(allPoints, ref labels, (AnalysisTypes)_analysisType.Value,
-                                            baseMeshElevationPoints, trimmedWidth, trimmedHeight,
-                                            (int)_labelSpacing.Value, unitsMultiplier);
+                                            baseMeshElevationPoints, trimmedWidth, trimmedHeight, (int)_labelSpacing.Value);
             }
 #if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Labels");
