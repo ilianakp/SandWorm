@@ -24,7 +24,7 @@ namespace SandWorm
         #region Class Variables
 
         // Units & dimensions
-        private double unitsMultiplier = 1;
+        public static double unitsMultiplier = 1;
 
         private int activeHeight = 0;
         private int activeWidth = 0;

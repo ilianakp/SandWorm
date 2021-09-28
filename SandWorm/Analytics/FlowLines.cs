@@ -18,7 +18,7 @@ namespace SandWorm
             Endvertex = startVertex;
             Polyline = new Polyline();
             Inactive = 0;
-            Point3d _pt = new Point3d(points[Endvertex].X, points[Endvertex].Y, points[Endvertex].Z + zDistance); // Raise the polyline slightly above terrain for better visibility
+            Point3d _pt = new Point3d(points[Endvertex].X, points[Endvertex].Y, points[Endvertex].Z + (zDistance * SandWormComponent.unitsMultiplier)); // Raise the polyline slightly above terrain for better visibility
             Polyline.Add(_pt);
         }
 
@@ -28,7 +28,7 @@ namespace SandWorm
             findNextPoint(ref points, xStride);
             if (Endvertex != _previousEndvertex)
             {
-                Point3d _pt = new Point3d(points[Endvertex].X, points[Endvertex].Y, points[Endvertex].Z + zDistance);
+                Point3d _pt = new Point3d(points[Endvertex].X, points[Endvertex].Y, points[Endvertex].Z + zDistance * SandWormComponent.unitsMultiplier);
                 Polyline.Add(_pt);
                 Inactive = 0;
             }
@@ -43,7 +43,7 @@ namespace SandWorm
 
         private void findNextPoint(ref Point3d[] pointArray, int xStride)
         {
-            double maxDistance = 50; // Necessary for checks around the mesh borders
+            double maxDistance = 50 * SandWormComponent.unitsMultiplier; // Necessary for checks around the mesh borders
 
             int maxSlopeIndex = Endvertex;
             double maxSlope = 0.0;
