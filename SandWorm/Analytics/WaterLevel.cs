@@ -18,7 +18,7 @@ namespace SandWorm.Analytics
             waterCorners.Add(corners[0]); // Close polyline
 
             for (int i = 0; i < waterCorners.Count; i++)
-                waterCorners[i] = new Point3d(waterCorners[i].X, waterCorners[i].Y, waterLevel);
+                waterCorners[i] = new Point3d(waterCorners[i].X, waterCorners[i].Y, waterLevel * SandWormComponent.unitsMultiplier);
 
             Polyline waterBoundary = new Polyline(waterCorners);
             Mesh waterPlane = Mesh.CreateFromClosedPolyline(waterBoundary);

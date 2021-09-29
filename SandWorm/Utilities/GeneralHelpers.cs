@@ -107,19 +107,19 @@ namespace SandWorm
 
         public static void CreateLabels(Rhino.Geometry.Point3d[] pointArray, ref List<Rhino.Display.Text3d> labels, 
                                         Structs.AnalysisTypes analysisType, double?[] baseMeshElevationPoints,
-                                        int xStride, int yStride, int spacing, double unitsMultiplier)
+                                        int xStride, int yStride, int spacing)
         {
             Rhino.Display.Text3d _text;
-            double _distanceToTerrain = 5 * unitsMultiplier;
+            double _distanceToTerrain = 5 * SandWormComponent.unitsMultiplier;
 
             int maxSize = 10;
             double _size = spacing / 5;
             if (_size > maxSize)
                 _size = maxSize;
 
-            _size *= unitsMultiplier;
+            _size *= SandWormComponent.unitsMultiplier;
 
-            int roundingFactor = CalculateRoundingFactor(unitsMultiplier);
+            int roundingFactor = CalculateRoundingFactor(SandWormComponent.unitsMultiplier);
 
             for (int y = 0; y < yStride; y += spacing)       // Iterate over y dimension
                 for (int x = spacing; x < xStride; x += spacing)       // Iterate over x dimension
