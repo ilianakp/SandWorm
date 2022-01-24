@@ -25,6 +25,10 @@ namespace SandWorm
         public static MenuSlider _contourIntervalRange;
         public static MenuSlider _contourRoughness;
         public static MenuSlider _waterLevel;
+        public static MenuSlider _raindropSpacing;
+        public static MenuSlider _flowLinesLength;
+        public static MenuCheckBox _simulateFloodEvent;
+        public static MenuCheckBox _makeItRain;
         public static MenuSlider _labelSpacing;
         public static MenuSlider _labelBrightness;
 
@@ -138,8 +142,10 @@ namespace SandWorm
             _colorGradientRange = new MenuSlider(colorGradientHeader, 24, 15, 100, 40, 0);
 
             MenuStaticText labelSpacingHeader = new MenuStaticText("Label spacing", "Define spacing between labels. \nInput is defined as distance between individual rows/columns.");
-            _labelSpacing = new MenuSlider(labelSpacingHeader, 241, 0, 100, 20, 0);
-            _labelSpacing.Step = 5;
+            _labelSpacing = new MenuSlider(labelSpacingHeader, 241, 0, 100, 20, 0)
+            {
+                Step = 5
+            };
 
             MenuStaticText labelBrightnessHeader = new MenuStaticText("Label brightness", "Defines the colour of labels and contours, going from white to black.");
             _labelBrightness = new MenuSlider(labelBrightnessHeader, 242, 0, 20, 20, 0);
@@ -148,11 +154,7 @@ namespace SandWorm
             _contourIntervalRange = new MenuSlider(contourIntervalHeader, 25, 0, 30, 0, 0);
 
             MenuStaticText contourRoughnessHeader = new MenuStaticText("Contour roughness", "Specify how rough contour sampling should be.");
-            _contourRoughness = new MenuSlider(contourRoughnessHeader, 27, 1, 20, 2, 0);
-
-            MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
-            _waterLevel = new MenuSlider(waterLevelHeader, 26, 0, 300, 0, 0);
-
+            _contourRoughness = new MenuSlider(contourRoughnessHeader, 26, 1, 20, 2, 0);
 
             analysisMenu.AddControl(analysisPanel);
             attr.AddMenu(analysisMenu);
@@ -171,11 +173,51 @@ namespace SandWorm
             analysisPanel.AddControl(_labelBrightness);
             analysisPanel.AddControl(contourIntervalHeader);
             analysisPanel.AddControl(_contourIntervalRange);
-            analysisPanel.AddControl(contourRoughnessHeader);
-            analysisPanel.AddControl(_contourRoughness);
-            analysisPanel.AddControl(waterLevelHeader);
-            analysisPanel.AddControl(_waterLevel);
+            //analysisPanel.AddControl(contourRoughnessHeader);
+            //analysisPanel.AddControl(_contourRoughness);
 
+            _previousAnalysisMode = _colorPalette.Value;
+                _previousColorGradientRange = _colorGradientRange.Value;
+            #endregion
+
+            #region Water flow
+            MenuPanel waterPanel = new MenuPanel(30, "panel_water")
+            {
+                Name = "Water Flow",
+                Header = "Simulate water flow on the surface."
+            };
+            GH_ExtendableMenu waterMenu = new GH_ExtendableMenu(31, "menu_rainwater")
+            {
+                Name = "Water Flow",
+                Header = "Simulate water flow on the surface."
+            };
+
+            _simulateFloodEvent = new MenuCheckBox(10002, "Simulate flood event", "Simulate flood event");
+            _makeItRain = new MenuCheckBox(10003, "Make it rain", "Make it rain");
+
+            MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
+            _waterLevel = new MenuSlider(waterLevelHeader, 32, 0, 100, 0, 0);
+
+            MenuStaticText flowLinesLengthHeader = new MenuStaticText("Flowlines length", "Define the maximum length of each flowline. \nInput is defined as distance between individual rows/columns.");
+            _flowLinesLength = new MenuSlider(flowLinesLengthHeader, 34, 0, 100, 0, 0);
+
+            MenuStaticText raindropSpacingHeader = new MenuStaticText("Raindrop spacing", "Define distance between the rain drops. \nInput is defined as distance between individual rows/columns.");
+            _raindropSpacing = new MenuSlider(raindropSpacingHeader, 33, 50, 1000, 500, 0)
+            {
+                Step = 10
+            };
+
+            waterMenu.AddControl(waterPanel);
+            attr.AddMenu(waterMenu);
+
+            waterPanel.AddControl(_simulateFloodEvent);
+            waterPanel.AddControl(_makeItRain);
+            waterPanel.AddControl(waterLevelHeader);
+            waterPanel.AddControl(_waterLevel);
+            waterPanel.AddControl(flowLinesLengthHeader);
+            waterPanel.AddControl(_flowLinesLength);
+            waterPanel.AddControl(raindropSpacingHeader);
+            waterPanel.AddControl(_raindropSpacing);
             #endregion
 
             #region Post processing
@@ -196,7 +238,7 @@ namespace SandWorm
             _averagedFrames.ValueChanged += _slider__ValueChanged;
 
             MenuStaticText blurRadiusHeader = new MenuStaticText("Blur Radius", "Define the extent of gaussian blurring.");
-            _blurRadius = new MenuSlider(blurRadiusHeader, 43, 0, 15, 4, 0);
+            _blurRadius = new MenuSlider(blurRadiusHeader, 43, 0, 15, 5, 0);
 
             postProcessingMenu.AddControl(postProcessingPanel);
             attr.AddMenu(postProcessingMenu);

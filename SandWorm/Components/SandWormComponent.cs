@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace SandWorm
         #region Class Variables
 
         // Units & dimensions
-        private double unitsMultiplier = 1;
+        public static double unitsMultiplier = 1;
 
         private int activeHeight = 0;
         private int activeWidth = 0;
@@ -37,10 +38,11 @@ namespace SandWorm
         private BGRA[] rgbArray;
         private Point3d[] allPoints;
         private Color[] _vertexColors;
-        private Mesh _quadMesh;
-        private PointCloud _cloud;
+        private Mesh quadMesh;
+        private PointCloud pointCloud;
         private List<Color> colorPalettes;
         private List<Rhino.Display.Text3d> labels;
+        private Mesh waterMesh;
 
         private readonly LinkedList<int[]> renderBuffer = new LinkedList<int[]>();
         private int[] runningSum;
@@ -51,9 +53,17 @@ namespace SandWorm
         // Cut & Fill analysis
         private double?[] baseMeshElevationPoints;
         private Mesh baseMesh;
+        private Rhino.Display.DisplayMaterial meshMaterial;
+        private Color meshColor = Color.FromArgb(128, 128, 128);
+
+        // Water flow analysis
+        private Color blueWaterSurface = Color.FromArgb(75, 190, 255);
+        private Color blueFlowLines = Color.FromArgb(75, 170, 255);
+        private Rhino.Display.DisplayMaterial material;
+        private ConcurrentDictionary<int, FlowLine> flowLines;
+        Color[] waterColors = null;
 
         // Outputs
-        private List<Mesh> _outputMesh;
         private List<GeometryBase> _outputWaterSurface;
         private List<Line> _outputContours;
 
@@ -110,7 +120,7 @@ namespace SandWorm
 
                 if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
                     KinectForWindows.RemoveRef();
-                else 
+                else
                     KinectAzureController.RemoveRef();
 
                 ResetDataArrays();
@@ -126,6 +136,8 @@ namespace SandWorm
             GeneralHelpers.SwapLeftRight((KinectTypes)_sensorType.Value, _leftColumns.Value, _rightColumns.Value, ref _left, ref _right);
             GeneralHelpers.SetupLogging(ref timer, ref stats);
 
+            
+
             // Trim 
             GetTrimmedDimensions((KinectTypes)_sensorType.Value, ref trimmedWidth, ref trimmedHeight, runningSum,
                                   _bottomRows.Value, _topRows.Value, _left, _right);
@@ -135,9 +147,15 @@ namespace SandWorm
             int[] depthFrameDataInt = new int[trimmedWidth * trimmedHeight];
             double[] averagedDepthFrameData = new double[trimmedWidth * trimmedHeight];
             allPoints = new Point3d[trimmedWidth * trimmedHeight];
-            _outputMesh = new List<Mesh>();
             _outputWaterSurface = new List<GeometryBase>();
             _outputContours = new List<Line>();
+
+            if(material == null)
+            {
+                material = new Rhino.Display.DisplayMaterial(blueWaterSurface, blueWaterSurface, blueWaterSurface, blueWaterSurface, 0.7, 0.5);
+                meshMaterial = new Rhino.Display.DisplayMaterial(meshColor, meshColor, meshColor, meshColor, 0.7, 0.5);
+            }
+                
 
             if (runningSum == null)
                 runningSum = Enumerable.Range(1, depthFrameDataInt.Length).Select(i => new int()).ToArray();
@@ -157,7 +175,7 @@ namespace SandWorm
                     case KinectTypes.KinectAzureNear:
                     case KinectTypes.KinectAzureWide:
                         Core.TrimXYLookupTable(KinectAzureController.idealXYCoordinates, trimmedXYLookupTable,
-                            _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth, unitsMultiplier);
+                            _leftColumns.Value, _rightColumns.Value, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
 
                         Core.SetupCorrectiveLookupTables(KinectAzureController.idealXYCoordinates, KinectAzureController.verticalTiltCorrectionMatrix,
                             KinectAzureController.undistortMatrix, trimmedBooleanMatrix,
@@ -166,35 +184,35 @@ namespace SandWorm
 
                     case KinectTypes.KinectForWindows:
                         Core.TrimXYLookupTable(KinectForWindows.idealXYCoordinates, trimmedXYLookupTable,
-                            _left, _right, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth, unitsMultiplier);
+                            _left, _right, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
                         break;
                 }
             }
-
+#if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Initial setup"); // Debug Info
-
+#endif
             AverageAndBlurPixels(depthFrameDataInt, ref averagedDepthFrameData, runningSum, renderBuffer,
-                                 _sensorElevation.Value, _averagedFrames.Value, _blurRadius.Value, trimmedWidth,
-                                 trimmedHeight);
+                                 _sensorElevation.Value, _averagedFrames.Value, _blurRadius.Value, trimmedWidth, trimmedHeight);
 
             GeneratePointCloud(averagedDepthFrameData, trimmedXYLookupTable,
                                KinectAzureController.verticalTiltCorrectionMatrix, (KinectTypes)_sensorType.Value,
-                               allPoints, renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value,
-                               unitsMultiplier, _averagedFrames.Value);
+                               allPoints, renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value, _averagedFrames.Value);
 
-            // Produce 1st type of analysis that acts on the pixel array and assigns vertex colors
+            #region RGB from camera
             if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.Camera)
             {
                 trimmedRGBArray = new Color[trimmedHeight * trimmedWidth];
                 TrimColorArray(rgbArray, ref trimmedRGBArray, (KinectTypes)_sensorType.Value,
                     _left, _right, _bottomRows.Value, _topRows.Value, activeHeight, activeWidth);
             }
+            #endregion
 
+            #region Cut Fill
             // Calculate elevation points from mesh provided for Cut & Fill analysis. Only do this on reset.
             DA.GetData(2, ref baseMesh);
             if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.CutFill && baseMeshElevationPoints == null)
                 baseMeshElevationPoints = CutFill.MeshToPointArray(baseMesh, allPoints);
-
+            #endregion
 
             colorPalettes = new List<Color>();
             DA.GetDataList(1, colorPalettes);
@@ -202,97 +220,148 @@ namespace SandWorm
             GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
                                trimmedXYLookupTable, trimmedRGBArray, _colorGradientRange.Value,
                                (Structs.ColorPalettes)_colorPalette.Value, colorPalettes, baseMeshElevationPoints,
-                               allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight,
-                               unitsMultiplier);
+                               allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight);
+#if DEBUG
+            GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis");
+#endif
 
+            #region Contour lines
+            if (_contourIntervalRange.Value > 0)
+            {
+                ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints,
+                                                          (int)_contourIntervalRange.Value, trimmedWidth,
+                                                          trimmedHeight, (int)_contourRoughness.Value);
+                if (Params.Output[2].Recipients.Count > 0)
+                {
+                    Grasshopper.Kernel.Types.GH_Line[] ghLines = GeneralHelpers.ConvertLineToGHLine(_outputContours);
+                    DA.SetDataList(2, ghLines);
+                }
+            }
+#if DEBUG
+            GeneralHelpers.LogTiming(ref stats, timer, "Contour lines");
+#endif
+            #endregion
+
+            #region Labels
             if (_labelSpacing.Value > 0)
             {
                 labels = new List<Rhino.Display.Text3d>();
                 GeneralHelpers.CreateLabels(allPoints, ref labels, (AnalysisTypes)_analysisType.Value,
-                                            baseMeshElevationPoints, trimmedWidth, trimmedHeight,
-                                            (int)_labelSpacing.Value, unitsMultiplier);
+                                            baseMeshElevationPoints, trimmedWidth, trimmedHeight, (int)_labelSpacing.Value);
             }
+#if DEBUG
+            GeneralHelpers.LogTiming(ref stats, timer, "Labels");
+#endif
+            #endregion
 
-            GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis"); // Debug Info
+            #region Flow lines
+            if (_flowLinesLength.Value > 0)
+            {
+                if (flowLines == null)
+                    flowLines = new ConcurrentDictionary<int, FlowLine>();
+
+                FlowLine.DistributeRandomRaindrops(ref allPoints, ref flowLines, (int)_raindropSpacing.Value);
+                FlowLine.GrowAndRemoveFlowlines(allPoints, flowLines, trimmedWidth, _flowLinesLength.Value);
+            } else
+                    flowLines = null;
+#if DEBUG
+            GeneralHelpers.LogTiming(ref stats, timer, "Flow lines");
+#endif
+            #endregion
+
 
             if ((OutputTypes)_outputType.Value == OutputTypes.Mesh)
             {
-                _cloud = null;
-                // Generate the mesh
-                _quadMesh = CreateQuadMesh(_quadMesh, allPoints, _vertexColors, trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
-                _outputMesh.Add(_quadMesh);
+                pointCloud = null;
+                quadMesh = CreateQuadMesh(ref quadMesh, allPoints, ref _vertexColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
+                DA.SetDataList(0, new List<Mesh> { quadMesh });
 
+//#if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Meshing"); // Debug Info
-
-                // Produce 2nd type of analysis that acts on the mesh and creates new geometry
-                if (_contourIntervalRange.Value > 0)
+//#endif
+                if (_simulateFloodEvent.Active)
                 {
-                    ContoursFromPoints.GetGeometryForAnalysis(ref _outputContours, allPoints,
-                                                              (int)_contourIntervalRange.Value, trimmedWidth,
-                                                              trimmedHeight, (int)_contourRoughness.Value,
-                                                              unitsMultiplier);
-                    if (Params.Output[2].Recipients.Count > 0)
-                    {
-                        Grasshopper.Kernel.Types.GH_Line[] ghLines = GeneralHelpers.ConvertLineToGHLine(_outputContours);
-                        DA.SetDataList(2, ghLines);
-                    }
-                }
+                    MeshFlow.CalculateWaterHeadArray(allPoints, averagedDepthFrameData, trimmedWidth, trimmedHeight, _makeItRain.Active);
+                    _makeItRain.Active = false;
+                    GeneralHelpers.LogTiming(ref stats, timer, "Mesh Flow");
+                    waterMesh = CreateQuadMesh(ref waterMesh, MeshFlow.waterElevationPoints, ref waterColors, ref trimmedBooleanMatrix, (KinectTypes)_sensorType.Value, trimmedWidth, trimmedHeight);
 
-                GeneralHelpers.LogTiming(ref stats, timer, "Mesh analysis"); // Debug Info
-                DA.SetDataList(0, _outputMesh);
+                }
             }
             else if ((OutputTypes)_outputType.Value == OutputTypes.PointCloud)
             {
-                _cloud = new PointCloud();
+                pointCloud = new PointCloud();
 
                 if (_vertexColors.Length > 0)
-                    _cloud.AddRange(allPoints, _vertexColors);
+                    pointCloud.AddRange(allPoints, _vertexColors);
                 else
-                    _cloud.AddRange(allPoints);
-
+                    pointCloud.AddRange(allPoints);
+#if DEBUG
                 GeneralHelpers.LogTiming(ref stats, timer, "Point cloud display"); // Debug Info
+#endif
             }
 
             if (_waterLevel.Value > 0)
             {
-                WaterLevel.GetGeometryForAnalysis(ref _outputWaterSurface, _waterLevel.Value, _quadMesh);
-                DA.SetDataList(1, _outputWaterSurface);
-                GeneralHelpers.HideParameterGeometry(Params.Output[1]);
+                WaterLevel.GetGeometryForAnalysis(ref _outputWaterSurface, _waterLevel.Value, quadMesh);
+                if (Params.Output[1].Recipients.Count > 0)
+                    DA.SetDataList(1, _outputWaterSurface);
             }
-
 
             DA.SetDataList(3, stats);
             ScheduleSolve();
         }
+        public override void DrawViewportMeshes(IGH_PreviewArgs args)
+        {
+            if ((OutputTypes)_outputType.Value == OutputTypes.Mesh && quadMesh != null)
+            {
+                if ((AnalysisTypes)_analysisType.Value != AnalysisTypes.None)
+                    args.Display.DrawMeshFalseColors(quadMesh);
+                else
+                    args.Display.DrawMeshShaded(quadMesh, meshMaterial);
+            }
+                
+
+            if (_waterLevel.Value > 0 && _outputWaterSurface.Count > 0 && Params.Output[1].Recipients.Count == 0)
+                args.Display.DrawMeshShaded((Mesh)_outputWaterSurface[0], material);
+            
+            if (_simulateFloodEvent.Active && waterMesh != null)
+                args.Display.DrawMeshShaded(waterMesh, material);
+        }
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {
-            if (_cloud != null)
-                args.Display.DrawPointCloud(_cloud, 3);
+            if (pointCloud != null)
+                args.Display.DrawPointCloud(pointCloud, 3);
 
             var grayscaled = (int)(_labelBrightness.Value * 12.75); // 0-20 into 0-255
             var labelAndContourColor = Color.FromArgb(grayscaled, grayscaled, grayscaled);
 
             if (_outputContours != null && _outputContours.Count != 0 && Params.Output[2].Recipients.Count == 0)
                 args.Display.DrawLines(_outputContours, labelAndContourColor, 1);
-            
-            if (_labelSpacing.Value > 0 && ((AnalysisTypes) _analysisType.Value == AnalysisTypes.CutFill || (AnalysisTypes)_analysisType.Value == AnalysisTypes.Elevation))
+
+            if (_labelSpacing.Value > 0 && ((AnalysisTypes)_analysisType.Value == AnalysisTypes.CutFill || (AnalysisTypes)_analysisType.Value == AnalysisTypes.Elevation))
             {
-                foreach (var text in labels)
-                    args.Display.Draw3dText(text, labelAndContourColor);
+                if (labels != null)
+                    foreach (var text in labels)
+                        args.Display.Draw3dText(text, labelAndContourColor);
+            }
+
+            if (_flowLinesLength.Value > 0)
+            {
+                foreach (var kvp in flowLines)
+                    args.Display.DrawPolyline(kvp.Value.Polyline, blueFlowLines);
             }
         }
-
-        public override BoundingBox ClippingBox 
+        public override BoundingBox ClippingBox
         {
             get
             {
-                if (_quadMesh != null)
-                    return _quadMesh.GetBoundingBox(false);
+                if (quadMesh != null)
+                    return quadMesh.GetBoundingBox(false);
                 else
                     return new BoundingBox();
             }
         }
-
         protected override Bitmap Icon => Properties.Resources.Icons_Main;
         public override Guid ComponentGuid => new Guid("{53fefb98-1cec-4134-b707-0c366072af2c}");
         public override void AddedToDocument(GH_Document document)
@@ -330,15 +399,24 @@ namespace SandWorm
         {
             ExpireSolution(false);
         }
-
         private void ResetDataArrays()
         {
-            _quadMesh = null;
+            quadMesh = null;
             trimmedXYLookupTable = null;
             runningSum = null;
             renderBuffer.Clear();
             baseMeshElevationPoints = null;
+            flowLines = null;
+            waterMesh = null;
+            MeshFlow.waterHead = null;
+
+            if (MeshFlow.accelerator != null)
+            {
+                MeshFlow.accelerator.Dispose();
+                MeshFlow.context.Dispose();
+            }
             
+
             _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;
             _reset = false;

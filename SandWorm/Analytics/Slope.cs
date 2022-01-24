@@ -40,9 +40,9 @@ namespace SandWorm
             deltaY = (xyLookupTable[width].Y - xyLookupTable[0].Y);
             deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-            slope += Math.Abs(pixelArray[1] - pixelArray[0]) / deltaX; // E Pixel
-            slope += Math.Abs(pixelArray[width] - pixelArray[0]) / deltaY; // S Pixel
-            slope += Math.Abs(pixelArray[width + 1] - pixelArray[0]) / deltaXY; // SE Pixel
+            slope += Math.Abs(pixelArray[1] - pixelArray[0]) * SandWormComponent.unitsMultiplier / deltaX; // E Pixel
+            slope += Math.Abs(pixelArray[width] - pixelArray[0]) * SandWormComponent.unitsMultiplier / deltaY; // S Pixel
+            slope += Math.Abs(pixelArray[width + 1] - pixelArray[0]) * SandWormComponent.unitsMultiplier / deltaXY; // SE Pixel
 
             vertexColors[0] = GetColorForSlope((ushort)(slope * 33.33)); // Divide by 3 multiply by 100 => 33.33
 
@@ -52,9 +52,9 @@ namespace SandWorm
             deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
             slope = 0.0;
-            slope += Math.Abs(pixelArray[width - 2] - pixelArray[width - 1]) / deltaX; // W Pixel
-            slope += Math.Abs(pixelArray[2 * width - 1] - pixelArray[width - 1]) / deltaY; // S Pixel
-            slope += Math.Abs(pixelArray[2 * width - 2] - pixelArray[width - 1]) / deltaXY; // SW Pixel
+            slope += Math.Abs(pixelArray[width - 2] - pixelArray[width - 1]) * SandWormComponent.unitsMultiplier / deltaX; // W Pixel
+            slope += Math.Abs(pixelArray[2 * width - 1] - pixelArray[width - 1]) * SandWormComponent.unitsMultiplier / deltaY; // S Pixel
+            slope += Math.Abs(pixelArray[2 * width - 2] - pixelArray[width - 1]) * SandWormComponent.unitsMultiplier / deltaXY; // SW Pixel
 
             vertexColors[width - 1] = GetColorForSlope((ushort)(slope * 33.33)); // Divide by 3 multiply by 100 => 33.33
 
@@ -64,9 +64,9 @@ namespace SandWorm
             deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
             slope = 0.0;
-            slope += Math.Abs(pixelArray[(height - 1) * width + 1] - pixelArray[(height - 1) * width]) / deltaX; // E Pixel
-            slope += Math.Abs(pixelArray[(height - 2) * width] - pixelArray[(height - 1) * width]) / deltaY; // N Pixel
-            slope += Math.Abs(pixelArray[(height - 2) * width + 1] - pixelArray[(height - 1) * width]) / deltaXY; //NE Pixel
+            slope += Math.Abs(pixelArray[(height - 1) * width + 1] - pixelArray[(height - 1) * width]) * SandWormComponent.unitsMultiplier / deltaX; // E Pixel
+            slope += Math.Abs(pixelArray[(height - 2) * width] - pixelArray[(height - 1) * width]) * SandWormComponent.unitsMultiplier / deltaY; // N Pixel
+            slope += Math.Abs(pixelArray[(height - 2) * width + 1] - pixelArray[(height - 1) * width]) * SandWormComponent.unitsMultiplier / deltaXY; //NE Pixel
 
             vertexColors[(height - 1) * width] = GetColorForSlope((ushort)(slope * 33.33)); // Divide by 3 multiply by 100 => 33.33
 
@@ -76,9 +76,9 @@ namespace SandWorm
             deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
             slope = 0.0;
-            slope += Math.Abs(pixelArray[height * width - 2] - pixelArray[height * width - 1]) / deltaX; // W Pixel
-            slope += Math.Abs(pixelArray[(height - 1) * width - 1] - pixelArray[height * width - 1]) / deltaY; // N Pixel
-            slope += Math.Abs(pixelArray[(height - 1) * width - 2] - pixelArray[height * width - 1]) / deltaXY; //NW Pixel
+            slope += Math.Abs(pixelArray[height * width - 2] - pixelArray[height * width - 1]) * SandWormComponent.unitsMultiplier / deltaX; // W Pixel
+            slope += Math.Abs(pixelArray[(height - 1) * width - 1] - pixelArray[height * width - 1]) * SandWormComponent.unitsMultiplier / deltaY; // N Pixel
+            slope += Math.Abs(pixelArray[(height - 1) * width - 2] - pixelArray[height * width - 1]) * SandWormComponent.unitsMultiplier / deltaXY; //NW Pixel
 
             vertexColors[height * width - 1] = GetColorForSlope((ushort)(slope * 33.33)); // Divide by 3 multiply by 100 => 33.33
 
@@ -90,11 +90,11 @@ namespace SandWorm
                 deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
                 slope = 0.0;
-                slope += Math.Abs(pixelArray[i - 1] - pixelArray[i]) / deltaX; // W Pixel
-                slope += Math.Abs(pixelArray[i + 1] - pixelArray[i]) / deltaX; // E Pixel
-                slope += Math.Abs(pixelArray[i + width - 1] - pixelArray[i]) / deltaXY; // SW Pixel
-                slope += Math.Abs(pixelArray[i + width] - pixelArray[i]) / deltaY; // S Pixel
-                slope += Math.Abs(pixelArray[i + width + 1] - pixelArray[i]) / deltaXY; // SE Pixel
+                slope += Math.Abs(pixelArray[i - 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaX; // W Pixel
+                slope += Math.Abs(pixelArray[i + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaX; // E Pixel
+                slope += Math.Abs(pixelArray[i + width - 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // SW Pixel
+                slope += Math.Abs(pixelArray[i + width] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaY; // S Pixel
+                slope += Math.Abs(pixelArray[i + width + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // SE Pixel
 
                 vertexColors[i] = GetColorForSlope((ushort)(slope * 20.0)); // Divide by 5 multiply by 100 => 20.0
             }
@@ -107,11 +107,11 @@ namespace SandWorm
                 deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
                 slope = 0.0;
-                slope += Math.Abs(pixelArray[i - 1] - pixelArray[i]) / deltaX; // W Pixel
-                slope += Math.Abs(pixelArray[i + 1] - pixelArray[i]) / deltaX; // E Pixel
-                slope += Math.Abs(pixelArray[i - width - 1] - pixelArray[i]) / deltaXY; // NW Pixel
-                slope += Math.Abs(pixelArray[i - width] - pixelArray[i]) / deltaY; // N Pixel
-                slope += Math.Abs(pixelArray[i - width + 1] - pixelArray[i]) / deltaXY; // NE Pixel
+                slope += Math.Abs(pixelArray[i - 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaX; // W Pixel
+                slope += Math.Abs(pixelArray[i + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaX; // E Pixel
+                slope += Math.Abs(pixelArray[i - width - 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // NW Pixel
+                slope += Math.Abs(pixelArray[i - width] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaY; // N Pixel
+                slope += Math.Abs(pixelArray[i - width + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // NE Pixel
 
                 vertexColors[i] = GetColorForSlope((ushort)(slope * 20.0)); // Divide by 5 multiply by 100 => 20.0
             }
@@ -124,11 +124,11 @@ namespace SandWorm
                 deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
                 slope = 0.0;
-                slope += Math.Abs(pixelArray[i - width] - pixelArray[i]) / deltaY; // N Pixel
-                slope += Math.Abs(pixelArray[i + width] - pixelArray[i]) / deltaY; // S Pixel
-                slope += Math.Abs(pixelArray[i - width + 1] - pixelArray[i]) / deltaXY; // NE Pixel
-                slope += Math.Abs(pixelArray[i + 1] - pixelArray[i]) / deltaX; // E Pixel
-                slope += Math.Abs(pixelArray[i + width + 1] - pixelArray[i]) / deltaXY; // SE Pixel
+                slope += Math.Abs(pixelArray[i - width] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaY; // N Pixel
+                slope += Math.Abs(pixelArray[i + width] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaY; // S Pixel
+                slope += Math.Abs(pixelArray[i - width + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // NE Pixel
+                slope += Math.Abs(pixelArray[i + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaX; // E Pixel
+                slope += Math.Abs(pixelArray[i + width + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // SE Pixel
 
                 vertexColors[i] = GetColorForSlope((ushort)(slope * 20.0)); // Divide by 5 multiply by 100 => 20.0
             }
@@ -141,11 +141,11 @@ namespace SandWorm
                 deltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
                 slope = 0.0;
-                slope += Math.Abs(pixelArray[i - width] - pixelArray[i]) / deltaY; // N Pixel
-                slope += Math.Abs(pixelArray[i + width] - pixelArray[i]) / deltaY; // S Pixel
-                slope += Math.Abs(pixelArray[i - width - 1] - pixelArray[i]) / deltaXY; // NW Pixel
-                slope += Math.Abs(pixelArray[i - 1] - pixelArray[i]) / deltaX; // W Pixel
-                slope += Math.Abs(pixelArray[i + width - 1] - pixelArray[i]) / deltaXY; // SW Pixel
+                slope += Math.Abs(pixelArray[i - width] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaY; // N Pixel
+                slope += Math.Abs(pixelArray[i + width] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaY; // S Pixel
+                slope += Math.Abs(pixelArray[i - width - 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // NW Pixel
+                slope += Math.Abs(pixelArray[i - 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaX; // W Pixel
+                slope += Math.Abs(pixelArray[i + width - 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // SW Pixel
 
                 vertexColors[i] = GetColorForSlope((ushort)(slope * 20.0)); // Divide by 5 multiply by 100 => 20.0
             }
@@ -155,9 +155,9 @@ namespace SandWorm
             {
                 for (int columns = 1; columns < width - 1; columns++)             // Iterate over x dimension
                 {
-                    int h = (rows - 1) * width + columns;
                     int i = rows * width + columns;
-                    int j = (rows + 1) * width + columns;
+                    int h = i - width;
+                    int j = i + width;
 
                     double parallelSlope = 0.0; // Declare a local variable in the parallel loop for performance reasons
 
@@ -165,14 +165,14 @@ namespace SandWorm
                     double parallelDeltaY = (xyLookupTable[h].Y - xyLookupTable[i].Y);
                     double parallelDeltaXY = Math.Sqrt(Math.Pow(deltaX, 2) + Math.Pow(deltaY, 2));
 
-                    parallelSlope += Math.Abs((pixelArray[h - 1] - pixelArray[i])) / parallelDeltaXY; // NW pixel
-                    parallelSlope += Math.Abs((pixelArray[h] - pixelArray[i])) / parallelDeltaY; //N pixel
-                    parallelSlope += Math.Abs((pixelArray[h + 1] - pixelArray[i])) / parallelDeltaXY; //NE pixel
-                    parallelSlope += Math.Abs((pixelArray[i - 1] - pixelArray[i])) / parallelDeltaX; //W pixel
-                    parallelSlope += Math.Abs((pixelArray[i + 1] - pixelArray[i])) / parallelDeltaX; //E pixel
-                    parallelSlope += Math.Abs((pixelArray[j - 1] - pixelArray[i])) / parallelDeltaXY; //SW pixel
-                    parallelSlope += Math.Abs((pixelArray[j] - pixelArray[i])) / parallelDeltaY; //S pixel
-                    parallelSlope += Math.Abs((pixelArray[j + 1] - pixelArray[i])) / parallelDeltaXY; //SE pixel
+                    parallelSlope += Math.Abs((pixelArray[h - 1] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaXY; //NW pixel
+                    parallelSlope += Math.Abs((pixelArray[h] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaY; //N pixel
+                    parallelSlope += Math.Abs((pixelArray[h + 1] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaXY; //NE pixel
+                    parallelSlope += Math.Abs((pixelArray[i - 1] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaX; //W pixel
+                    parallelSlope += Math.Abs((pixelArray[i + 1] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaX; //E pixel
+                    parallelSlope += Math.Abs((pixelArray[j - 1] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaXY; //SW pixel
+                    parallelSlope += Math.Abs((pixelArray[j] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaY; //S pixel
+                    parallelSlope += Math.Abs((pixelArray[j + 1] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaXY; //SE pixel
 
                     vertexColors[i] = GetColorForSlope((ushort)(parallelSlope * 12.5)); // Divide by 8 multiply by 100 => 12.5
                 }

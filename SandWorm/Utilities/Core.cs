@@ -14,7 +14,7 @@ namespace SandWorm
 {
     public static class Core
     {
-        public static Mesh CreateQuadMesh(Mesh mesh, Point3d[] vertices, Color[] colors, Vector3?[] booleanMatrix, 
+        public static Mesh CreateQuadMesh(ref Mesh mesh, Point3d[] vertices, ref Color[] colors, ref Vector3?[] booleanMatrix, 
             Structs.KinectTypes kinectType, int xStride, int yStride)
         {        
             int xd = xStride;       // The x-dimension of the data
@@ -62,8 +62,7 @@ namespace SandWorm
                 {
                     using (var meshAccess = mesh.GetUnsafeLock(true))
                     {
-                        int arrayLength;
-                        Point3d* points = meshAccess.VertexPoint3dArray(out arrayLength);
+                        Point3d* points = meshAccess.VertexPoint3dArray(out int arrayLength);
                         for (int i = 0; i < arrayLength; i++)
                         {
                             points->Z = vertices[i].Z;
@@ -74,7 +73,7 @@ namespace SandWorm
                 }
             }
 
-            if (colors.Length > 0) // Colors only provided if the mesh style permits
+            if (colors != null && colors.Length > 0) // Colors only provided if the mesh style permits
                 mesh.VertexColors.SetColors(colors);
             else
                 mesh.VertexColors.Clear();
@@ -135,14 +134,14 @@ namespace SandWorm
         }
 
         public static void TrimXYLookupTable(Vector2[] sourceXY, Vector2[] destinationXY,
-            double leftColumns, double rightColumns, double topRows, double bottomRows, int height, int width, double unitsMultiplier) 
+            double leftColumns, double rightColumns, double topRows, double bottomRows, int height, int width) 
         {
             ref Vector2 rv0 = ref sourceXY[0];
             ref Vector2 rd0 = ref destinationXY[0];
 
             int _yStride = height - (int)bottomRows;
             int _xStride = width - (int)leftColumns;
-            float _units = (float)unitsMultiplier;
+            float _units = (float)SandWormComponent.unitsMultiplier;
 
             for (int rows = (int)topRows, j = 0; rows < _yStride; rows++)
             {
@@ -241,7 +240,7 @@ namespace SandWorm
         }
 
         public static void GeneratePointCloud(double[] averagedDepthFrameData, Vector2[] trimmedXYLookupTable, double[] verticalTiltCorrectionLookupTable, Structs.KinectTypes kinectType,
-            Point3d[] allPoints, LinkedList<int[]> renderBuffer, int trimmedWidth, int trimmedHeight, double sensorElevation, double unitsMultiplier, double averageFrames)
+            Point3d[] allPoints, LinkedList<int[]> renderBuffer, int trimmedWidth, int trimmedHeight, double sensorElevation, double averageFrames)
         {
             Point3d tempPoint = new Point3d();
 
@@ -249,8 +248,6 @@ namespace SandWorm
             {
                 case Structs.KinectTypes.KinectAzureNear:
                 case Structs.KinectTypes.KinectAzureWide:
-
-                    double correctedElevation = 0.0;
                     for (int rows = 0, i = 0; rows < trimmedHeight; rows++)
                         for (int columns = 0; columns < trimmedWidth; columns++, i++)
                         {
@@ -258,8 +255,8 @@ namespace SandWorm
                             tempPoint.Y = trimmedXYLookupTable[i].Y;
 
                             // Correct for Kinect Azure's tilt of the depth camera
-                            correctedElevation = averagedDepthFrameData[i] - verticalTiltCorrectionLookupTable[i];
-                            tempPoint.Z = (correctedElevation - sensorElevation) * -unitsMultiplier;
+                            double correctedElevation = averagedDepthFrameData[i] - verticalTiltCorrectionLookupTable[i];
+                            tempPoint.Z = (correctedElevation - sensorElevation) * -SandWormComponent.unitsMultiplier;
                             averagedDepthFrameData[i] = correctedElevation;
 
                             allPoints[i] = tempPoint;
@@ -272,7 +269,7 @@ namespace SandWorm
                         {
                             tempPoint.X = trimmedXYLookupTable[i].X;
                             tempPoint.Y = trimmedXYLookupTable[i].Y * -1;
-                            tempPoint.Z = (averagedDepthFrameData[i] - sensorElevation) * -unitsMultiplier;
+                            tempPoint.Z = (averagedDepthFrameData[i] - sensorElevation) * -SandWormComponent.unitsMultiplier;
                             allPoints[i] = tempPoint;
                         }
                     break;
@@ -289,7 +286,7 @@ namespace SandWorm
         public static void GenerateMeshColors(ref Color[] vertexColors, Structs.AnalysisTypes analysisType, double[] averagedDepthFrameData, 
             Vector2[]xyLookuptable, Color[] pixelColors, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors,
             double?[] baseMeshElevationPoints, Point3d[] allPoints, ref List<string> stats,
-            double sensorElevation, int trimmedWidth, int trimmedHeight, double unitsMultiplier)
+            double sensorElevation, int trimmedWidth, int trimmedHeight)
         {
             switch (analysisType)
             {
@@ -316,7 +313,7 @@ namespace SandWorm
                     break;
 
                 case Structs.AnalysisTypes.CutFill:
-                    vertexColors = new CutFill().GetColorCloudForAnalysis(allPoints, baseMeshElevationPoints, gradientRange, colorPalette, customColors, ref stats, unitsMultiplier);
+                    vertexColors = new CutFill().GetColorCloudForAnalysis(allPoints, baseMeshElevationPoints, gradientRange, colorPalette, customColors, ref stats);
                     break;
             }
         }
@@ -382,7 +379,7 @@ namespace SandWorm
             {
                 case Structs.KinectTypes.KinectAzureNear:
                 case Structs.KinectTypes.KinectAzureWide:
-                    return KinectAzureController.Calibrate(kinectType);
+                    return KinectAzureController.Calibrate();
 
                 case Structs.KinectTypes.KinectForWindows:
                     return KinectForWindows.Calibrate();

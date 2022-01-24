@@ -58,7 +58,7 @@ namespace SandWorm
             }
         }
 
-        public static double Calibrate(Structs.KinectTypes fieldOfViewMode)
+        public static double Calibrate()
         {
             int minX = 3 * (depthWidth / 2) - (3 * 10); // Multiply by 3 for each of the X,Y,Z coordinates
             int maxX = 3 * (depthWidth / 2) + (3 * 10); // Multiply by 3 for each of the X,Y,Z coordinates
@@ -196,7 +196,7 @@ namespace SandWorm
                     }
                     Rhino.RhinoApp.WriteLine("Calculate XY Coordinates");
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                 }
             }

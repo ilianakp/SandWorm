@@ -87,7 +87,8 @@ public class MenuCheckBox : GH_Attr_Widget
 	public override bool Read(GH_IReader reader)
 	{
 		GH_IReader gH_IReader = reader.FindChunk("Checkbox", Index);
-		_active = gH_IReader.GetBoolean("Active");
+		if (gH_IReader != null)
+			_active = gH_IReader.GetBoolean("Active");
 		return true;
 	}
 
