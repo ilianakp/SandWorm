@@ -26,6 +26,7 @@ namespace SandWorm
         public static MenuSlider _contourRoughness;
         public static MenuSlider _waterLevel;
         public static MenuSlider _labelSpacing;
+        public static MenuSlider _labelBrightness;
 
         public static MenuSlider _averagedFrames;
         public static MenuSlider _blurRadius;
@@ -140,6 +141,9 @@ namespace SandWorm
             _labelSpacing = new MenuSlider(labelSpacingHeader, 241, 0, 100, 20, 0);
             _labelSpacing.Step = 5;
 
+            MenuStaticText labelBrightnessHeader = new MenuStaticText("Label brightness", "Defines the colour of labels and contours, going from white to black.");
+            _labelBrightness = new MenuSlider(labelBrightnessHeader, 242, 0, 20, 20, 0);
+
             MenuStaticText contourIntervalHeader = new MenuStaticText("Contour interval", "Define spacing between contours. \nInput should be in millimeters.");
             _contourIntervalRange = new MenuSlider(contourIntervalHeader, 25, 0, 30, 0, 0);
 
@@ -163,6 +167,8 @@ namespace SandWorm
             analysisPanel.AddControl(_colorGradientRange);
             analysisPanel.AddControl(labelSpacingHeader);
             analysisPanel.AddControl(_labelSpacing);
+            analysisPanel.AddControl(labelBrightnessHeader);
+            analysisPanel.AddControl(_labelBrightness);
             analysisPanel.AddControl(contourIntervalHeader);
             analysisPanel.AddControl(_contourIntervalRange);
             analysisPanel.AddControl(contourRoughnessHeader);

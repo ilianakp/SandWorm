@@ -269,13 +269,16 @@ namespace SandWorm
             if (_cloud != null)
                 args.Display.DrawPointCloud(_cloud, 3);
 
+            var grayscaled = (int)(_labelBrightness.Value * 12.75); // 0-20 into 0-255
+            var labelAndContourColor = Color.FromArgb(grayscaled, grayscaled, grayscaled);
+
             if (_outputContours != null && _outputContours.Count != 0 && Params.Output[2].Recipients.Count == 0)
-                args.Display.DrawLines(_outputContours, Color.White, 1);
+                args.Display.DrawLines(_outputContours, labelAndContourColor, 1);
             
             if (_labelSpacing.Value > 0 && ((AnalysisTypes) _analysisType.Value == AnalysisTypes.CutFill || (AnalysisTypes)_analysisType.Value == AnalysisTypes.Elevation))
             {
                 foreach (var text in labels)
-                    args.Display.Draw3dText(text, Color.White);
+                    args.Display.Draw3dText(text, labelAndContourColor);
             }
         }
 
