@@ -32,7 +32,7 @@ namespace SandWorm
 
                 case Structs.ColorPalettes.CutFill:
                     paletteSwatches.Add(Color.FromArgb(235, 100, 75));
-                    paletteSwatches.Add(Color.FromArgb(255, 255, 255));
+                    paletteSwatches.Add(Color.FromArgb(40, 40, 40));
                     paletteSwatches.Add(Color.FromArgb(164, 206, 101));
                     break;
 
