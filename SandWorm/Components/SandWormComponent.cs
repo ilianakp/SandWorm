@@ -71,7 +71,6 @@ namespace SandWorm
         public static List<string> stats;
         protected Stopwatch timer;
 
-        // Boolean controls
         public bool reset;
 
         #endregion
@@ -84,12 +83,11 @@ namespace SandWorm
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddBooleanParameter("Reset", "reset", "Hitting this button will reset everything to defaults.", GH_ParamAccess.item, reset);
             pManager.AddColourParameter("Color list", "color list", "Provide a list of custom colors to define a gradient for the elevation analysis.", GH_ParamAccess.list);
             pManager.AddGenericParameter("Mesh", "mesh", "Provide a base mesh for the Cut & Fill analysis mode.", GH_ParamAccess.item);
 
+            pManager[0].Optional = true;
             pManager[1].Optional = true;
-            pManager[2].Optional = true;
         }
 
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
@@ -112,10 +110,9 @@ namespace SandWorm
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            DA.GetData(0, ref reset);
             if (reset || _reset)
             {
-                if (_calibrate.Active)
+                if (_beginCalibration.Active)
                     _sensorElevation.Value = Calibrate((KinectTypes)_sensorType.Value);
 
                 if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
@@ -364,33 +361,7 @@ namespace SandWorm
         }
         protected override Bitmap Icon => Properties.Resources.Icons_Main;
         public override Guid ComponentGuid => new Guid("{53fefb98-1cec-4134-b707-0c366072af2c}");
-        public override void AddedToDocument(GH_Document document)
-        {
-            if (Params.Input[0].SourceCount == 0)
-            {
-                List<IGH_DocumentObject> componentList = new List<IGH_DocumentObject>();
-                PointF pivot;
-                pivot = Attributes.Pivot;
 
-                var reset = new Grasshopper.Kernel.Special.GH_ButtonObject();
-                reset.CreateAttributes();
-                reset.NickName = "reset";
-                reset.Attributes.Pivot = new PointF(pivot.X - 200, pivot.Y - 38);
-                reset.Attributes.ExpireLayout();
-                reset.Attributes.PerformLayout();
-                componentList.Add(reset);
-
-                Params.Input[0].AddSource(reset);
-
-
-                foreach (var component in componentList)
-                    document.AddObject(component, false);
-
-
-                document.UndoUtil.RecordAddObjectEvent("Add buttons", componentList);
-            }
-
-        }
         protected void ScheduleSolve()
         {
             OnPingDocument().ScheduleSolution(GeneralHelpers.ConvertFPStoMilliseconds(_refreshRate.Value), ScheduleDelegate);
@@ -416,8 +387,6 @@ namespace SandWorm
                 MeshFlow.context.Dispose();
             }
             
-
-            _calibrate.Active = false; // Untick the UI checkbox
             _resize = false;
             _reset = false;
         }

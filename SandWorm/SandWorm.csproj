@@ -182,6 +182,7 @@
     <Compile Include="CustomComponent\GH_SwitchAction.cs" />
     <Compile Include="CustomComponent\GH_SwitcherComponent.cs" />
     <Compile Include="CustomComponent\GH_SwitcherComponentAttributes.cs" />
+    <Compile Include="CustomComponent\MenuButton.cs" />
     <Compile Include="CustomComponent\MenuCheckBox.cs" />
     <Compile Include="CustomComponent\MenuDropDown.cs" />
     <Compile Include="CustomComponent\MenuPanel.cs" />
