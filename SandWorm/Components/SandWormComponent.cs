@@ -112,10 +112,12 @@ namespace SandWorm
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             DA.GetData(0, ref reset);
+            if (_calibrate.Active)
+                _sensorElevation.Value = Calibrate((KinectTypes)_sensorType.Value);
+                ResetDataArrays();
+
             if (reset || _reset)
             {
-                if (_calibrate.Active)
-                    _sensorElevation.Value = Calibrate((KinectTypes)_sensorType.Value);
 
                 if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
                     KinectForWindows.RemoveRef();
