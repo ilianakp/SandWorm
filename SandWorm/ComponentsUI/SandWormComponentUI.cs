@@ -12,7 +12,8 @@ namespace SandWorm
         public static MenuDropDown _sensorType;
         public static MenuDropDown _refreshRate;
         public static MenuSlider _sensorElevation;
-        public static MenuCheckBox _calibrate;
+        public static MenuButton _calibrate;
+        public static MenuButton _resetSettings;
         public static MenuSlider _leftColumns;
         public static MenuSlider _rightColumns;
         public static MenuSlider _topRows;
@@ -69,9 +70,10 @@ namespace SandWorm
             _refreshRate.AddItem("1 FPS", "1 FPS");
             _refreshRate.AddItem("0.2 FPS", "0.2 FPS");
 
+            _calibrate = new MenuButton(111121, "Calibrate Elevation"); // "Initiate the automatic calibration process to determine elevation."
+ 
             MenuStaticText sensorElevationHeader = new MenuStaticText("Sensor elevation", "Distance between the sensor and the table. \nInput should be in millimeters.\nTo automatically estimate this value, check the 'Calibrate' checkbox and reset.");
             _sensorElevation = new MenuSlider(sensorElevationHeader, 1, 0, 1500, 1000, 0);
-            _calibrate = new MenuCheckBox(10001, "Calibrate", "Calibrate");
 
             MenuStaticText leftColumnsHeader = new MenuStaticText("Left columns", "Number of pixels to trim from the left.");
             _leftColumns = new MenuSlider(leftColumnsHeader, 2, 0, 200, 50, 0);
@@ -96,9 +98,9 @@ namespace SandWorm
             optionsMenuPanel.AddControl(_sensorType);
             optionsMenuPanel.AddControl(refreshRateHeader);
             optionsMenuPanel.AddControl(_refreshRate);
+            optionsMenuPanel.AddControl(_calibrate);
             optionsMenuPanel.AddControl(sensorElevationHeader);
             optionsMenuPanel.AddControl(_sensorElevation);
-            optionsMenuPanel.AddControl(_calibrate);
             optionsMenuPanel.AddControl(leftColumnsHeader);
             optionsMenuPanel.AddControl(_leftColumns);
             optionsMenuPanel.AddControl(rightColumnsHeader);

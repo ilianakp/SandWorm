@@ -71,7 +71,6 @@ namespace SandWorm
         public static List<string> stats;
         protected Stopwatch timer;
 
-        // Boolean controls
         public bool reset;
 
         #endregion
@@ -84,7 +83,7 @@ namespace SandWorm
 
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddBooleanParameter("Reset", "reset", "Hitting this button will reset everything to defaults.", GH_ParamAccess.item, reset);
+            pManager.AddBooleanParameter("Reset", "reset", "Re-initialise the camera stream and its processing. Use if your output is strange or behaving unexpectedly. ", GH_ParamAccess.item, reset);
             pManager.AddColourParameter("Color list", "color list", "Provide a list of custom colors to define a gradient for the elevation analysis.", GH_ParamAccess.list);
             pManager.AddGenericParameter("Mesh", "mesh", "Provide a base mesh for the Cut & Fill analysis mode.", GH_ParamAccess.item);
 
@@ -113,10 +112,12 @@ namespace SandWorm
         protected override void SolveInstance(IGH_DataAccess DA)
         {
             DA.GetData(0, ref reset);
+            if (_calibrate.Active)
+                _sensorElevation.Value = Calibrate((KinectTypes)_sensorType.Value);
+                ResetDataArrays();
+
             if (reset || _reset)
             {
-                if (_calibrate.Active)
-                    _sensorElevation.Value = Calibrate((KinectTypes)_sensorType.Value);
 
                 if ((KinectTypes)_sensorType.Value == KinectTypes.KinectForWindows)
                     KinectForWindows.RemoveRef();
