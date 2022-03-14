@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Collections.Generic;
 using Rhino.Display;
+using System;
 
 namespace SandWorm.Analytics
 {
@@ -49,7 +50,7 @@ namespace SandWorm.Analytics
             {
                 var elevationRange = new Analysis.VisualisationRangeWithColor
                 {
-                    ValueSpan = (int)(gradientRange / swatchCount),
+                    ValueSpan = Math.Max((int)(gradientRange / swatchCount), 1), // Prevent 0 value
                     ColorStart = new ColorHSL(paletteSwatches[i]),
                     ColorEnd = new ColorHSL(paletteSwatches[i+1])
                 };
