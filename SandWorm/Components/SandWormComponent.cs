@@ -5,17 +5,17 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
+using System.Windows.Forms;
 
 using Rhino;
 using Rhino.Geometry;
-
 using Grasshopper.Kernel;
+using Microsoft.Azure.Kinect.Sensor;
 
 using SandWorm.Analytics;
 using static SandWorm.Core;
 using static SandWorm.Structs;
 using static SandWorm.SandWormComponentUI;
-using Microsoft.Azure.Kinect.Sensor;
 
 namespace SandWorm
 {
@@ -366,6 +366,8 @@ namespace SandWorm
         public override Guid ComponentGuid => new Guid("{53fefb98-1cec-4134-b707-0c366072af2c}");
         public override void AddedToDocument(GH_Document document)
         {
+            Grasshopper.Instances.DocumentEditor.KeyDown += new KeyEventHandler(SandwormShortcutHandler);
+
             if (Params.Input[0].SourceCount == 0)
             {
                 List<IGH_DocumentObject> componentList = new List<IGH_DocumentObject>();
@@ -399,6 +401,66 @@ namespace SandWorm
         {
             ExpireSolution(false);
         }
+
+        private void SandwormShortcutHandler(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.F10:
+                    _analysisType.Value = (int)Structs.AnalysisTypes.None;
+                    break;
+
+                case Keys.F11:
+                    _analysisType.Value = (int)Structs.AnalysisTypes.Camera;
+                    break;
+
+                case Keys.F12:
+                    _analysisType.Value = (int)Structs.AnalysisTypes.Elevation;
+                    break;
+
+                case Keys.F13:
+                    _analysisType.Value = (int)Structs.AnalysisTypes.Slope;
+                    break;
+
+                case Keys.F14:
+                    _analysisType.Value = (int)Structs.AnalysisTypes.Aspect;
+                    break;
+
+                case Keys.F15:
+                    _analysisType.Value = (int)Structs.AnalysisTypes.CutFill;
+                    break;
+
+                case Keys.F16: // Toggle contours on or off.
+                    if (_contourIntervalRange.Value == 0)
+                        _contourIntervalRange.Value = 25; // TODO: store last value so toggle isn't destructive?
+                    else
+                        _contourIntervalRange.Value = 0; 
+                    break;
+
+                case Keys.F17: // Toggle water plane on or off. 
+                    if (_waterLevel.Value == 0)
+                        _waterLevel.Value = 1; // TODO: store last value so toggle isn't destructive?
+                    else
+                        _waterLevel.Value = 0; 
+                    break;
+
+                case Keys.F18: // Toggle flood sim on or off
+                    _simulateFloodEvent.Active = !_simulateFloodEvent.Active;
+                    break;
+
+                case Keys.F19: // Toggle flood sim on or off
+                    _makeItRain.Active = !_makeItRain.Active;
+                    break;
+
+                case Keys.F20: // Reset
+                    reset = true;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
         private void ResetDataArrays()
         {
             quadMesh = null;
