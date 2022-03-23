@@ -59,8 +59,6 @@ namespace SandWorm.Analytics
                 else // let ILGPU decide
                     accelerator = context.GetPreferredDevice(false).CreateAccelerator(context);
 
-                Rhino.RhinoApp.WriteLine($"Calculations accelerated with {accelerator.Name}.");
-
                 // allocate memory buffers on the GPU
                 _d_elevationsArray = accelerator.Allocate1D(elevationsArray);
                 _d_waterHead = accelerator.Allocate1D(waterHead);
