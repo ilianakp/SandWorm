@@ -75,7 +75,7 @@ namespace SandWorm
                                         "Automatically estimates the Elevation distance using the depth camera."); 
  
             MenuStaticText sensorElevationHeader = new MenuStaticText("Sensor elevation", "Distance between the sensor and the table. \nInput should be in millimeters.\nTo automatically estimate this value, check the 'Calibrate' checkbox and reset.");
-            _sensorElevation = new MenuSlider(sensorElevationHeader, 1, 0, 2000, 1000, 0);
+            _sensorElevation = new MenuSlider(sensorElevationHeader, 1, 500, 2000, 1000, 0);
 
             MenuStaticText leftColumnsHeader = new MenuStaticText("Left columns", "Number of pixels to trim from the left.");
             _leftColumns = new MenuSlider(leftColumnsHeader, 2, 0, 200, 50, 0);
