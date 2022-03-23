@@ -113,8 +113,10 @@ namespace SandWorm
         {
             DA.GetData(0, ref reset);
             if (_calibrate.Active)
+            {
                 _sensorElevation.Value = Calibrate((KinectTypes)_sensorType.Value);
                 ResetDataArrays();
+            }
 
             if (reset || _reset)
             {
@@ -418,7 +420,7 @@ namespace SandWorm
             }
             
 
-            _calibrate.Active = false; // Untick the UI checkbox
+            _calibrate.Active = false; // Reset the button
             _resize = false;
             _reset = false;
         }
