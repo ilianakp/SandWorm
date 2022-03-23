@@ -13,6 +13,7 @@ namespace SandWorm
 		private int _buttonHeight = 20;
 		private Rectangle _buttonBounds;
 		private int _verticalPadding = 8;
+		private string _toolTipText;
 
 		public bool Active
 		{
@@ -38,9 +39,10 @@ namespace SandWorm
 			}
 		}
 
-		public MenuButton(int index, string id) : base(index, id)
+		public MenuButton(int index, string id, string toolTip) : base(index, id)
 		{
 			Name = id;
+			_toolTipText = toolTip;
 		}
 
 		public override SizeF ComputeMinSize()
@@ -81,7 +83,7 @@ namespace SandWorm
 		{
 			e.Icon = null;
 			e.Title = _name + " (Button)";
-			e.Text = "Automatically estimates the Elevation distance based on recent height data from the depth camera.";
+			e.Text = _toolTipText;
 		}
 
 		public override GH_Attr_Widget IsTtipPoint(PointF pt)

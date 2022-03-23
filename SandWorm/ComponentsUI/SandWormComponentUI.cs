@@ -69,7 +69,10 @@ namespace SandWorm
             _refreshRate.AddItem("1 FPS", "1 FPS");
             _refreshRate.AddItem("0.2 FPS", "0.2 FPS");
 
-            _calibrate = new MenuButton(111121, "Calibrate Elevation"); // Initiate the automatic calibration process to determine elevation.
+            // Initiate the automatic calibration process to determine elevation.
+            _calibrate = new MenuButton(111121,
+                                        "Calibrate Elevation",
+                                        "Automatically estimates the Elevation distance using the depth camera."); 
  
             MenuStaticText sensorElevationHeader = new MenuStaticText("Sensor elevation", "Distance between the sensor and the table. \nInput should be in millimeters.\nTo automatically estimate this value, check the 'Calibrate' checkbox and reset.");
             _sensorElevation = new MenuSlider(sensorElevationHeader, 1, 0, 2000, 1000, 0);
@@ -194,7 +197,7 @@ namespace SandWorm
             };
 
             _simulateFloodEvent = new MenuCheckBox(10002, "Simulate flood event", "Simulate flood event");
-            _makeItRain = new MenuButton(10003, "Make it rain");
+            _makeItRain = new MenuButton(10003, "Make it rain", "Equally distribute water over the model.");
 
             MenuStaticText waterLevelHeader = new MenuStaticText("Water level", "Define distance between the table and a simulated water surface. \nInput should be in millimeters.");
             _waterLevel = new MenuSlider(waterLevelHeader, 32, 0, 100, 0, 0);
