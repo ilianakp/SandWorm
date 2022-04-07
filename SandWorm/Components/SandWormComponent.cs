@@ -406,54 +406,57 @@ namespace SandWorm
         {
             switch (e.KeyCode)
             {
-                case Keys.F10:
+                case Keys.F13:
                     _analysisType.Value = (int)Structs.AnalysisTypes.None;
                     break;
 
-                case Keys.F11:
+                case Keys.F14:
                     _analysisType.Value = (int)Structs.AnalysisTypes.Camera;
                     break;
 
-                case Keys.F12:
+                case Keys.F15:
                     _analysisType.Value = (int)Structs.AnalysisTypes.Elevation;
                     break;
 
-                case Keys.F13:
+                case Keys.F16:
                     _analysisType.Value = (int)Structs.AnalysisTypes.Slope;
                     break;
 
-                case Keys.F14:
+                case Keys.F17:
                     _analysisType.Value = (int)Structs.AnalysisTypes.Aspect;
                     break;
 
-                case Keys.F15:
+                case Keys.F18:
                     _analysisType.Value = (int)Structs.AnalysisTypes.CutFill;
                     break;
 
-                case Keys.F16: // Toggle contours on or off.
+                case Keys.F19: // Toggle contours on or off.
                     if (_contourIntervalRange.Value == 0)
                         _contourIntervalRange.Value = 25; // TODO: store last value so toggle isn't destructive?
                     else
                         _contourIntervalRange.Value = 0; 
                     break;
 
-                case Keys.F17: // Toggle water plane on or off. 
+                case Keys.F20: // Toggle water plane on or off. 
                     if (_waterLevel.Value == 0)
                         _waterLevel.Value = 1; // TODO: store last value so toggle isn't destructive?
                     else
                         _waterLevel.Value = 0; 
                     break;
 
-                case Keys.F18: // Toggle flood sim on or off
+                case Keys.F21: // Toggle flood sim on or off
                     _simulateFloodEvent.Active = !_simulateFloodEvent.Active;
                     break;
 
-                case Keys.F19: // Toggle flood sim on or off
+                case Keys.F22: // Toggle flood sim on or off
                     _makeItRain.Active = !_makeItRain.Active;
                     break;
 
-                case Keys.F20: // Reset
+                case Keys.F23: // Reset
                     reset = true;
+                    break;
+
+                case Keys.F24: // Unused
                     break;
 
                 default:
