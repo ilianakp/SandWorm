@@ -39,4 +39,4 @@ aux_links:
     - "//github.com/mariuszhermansdorfer/SandWorm"
 
 # Footer content appears at the bottom of every page's main content
-footer_content: "TODO: Copyright & license details"
+footer_content: ""
