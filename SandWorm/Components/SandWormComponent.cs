@@ -63,6 +63,10 @@ namespace SandWorm
         private ConcurrentDictionary<int, FlowLine> flowLines;
         Color[] waterColors = null;
 
+        // Temporary storage of prior values for hotkey toggling
+        public double _lastContourInterval;
+        public double _lastWaterLevel;
+
         // Outputs
         private List<GeometryBase> _outputWaterSurface;
         private List<Line> _outputContours;
@@ -103,6 +107,8 @@ namespace SandWorm
         protected override void Setup(GH_ExtendableComponentAttributes attr) // Initialize the UI
         {
             MainComponentUI(attr);
+            _lastContourInterval = _contourIntervalRange.Value;
+            _lastWaterLevel = _waterLevel.Value;
         }
 
         protected override void OnComponentLoaded()
@@ -432,31 +438,41 @@ namespace SandWorm
 
                 case Keys.F19: // Toggle contours on or off.
                     if (_contourIntervalRange.Value == 0)
-                        _contourIntervalRange.Value = 25; // TODO: store last value so toggle isn't destructive?
+                    {
+                        _contourIntervalRange.Value = _lastContourInterval;
+                    }
                     else
-                        _contourIntervalRange.Value = 0; 
+                    {
+                        _lastContourInterval = _contourIntervalRange.Value;
+                        _contourIntervalRange.Value = 0;
+                    }
                     break;
 
                 case Keys.F20: // Toggle water plane on or off. 
                     if (_waterLevel.Value == 0)
-                        _waterLevel.Value = 1; // TODO: store last value so toggle isn't destructive?
+                    {
+                        _waterLevel.Value = _lastWaterLevel; 
+                    }
                     else
-                        _waterLevel.Value = 0; 
+                    {
+                        _lastWaterLevel = _waterLevel.Value;
+                        _waterLevel.Value = 0;
+                    }
                     break;
 
-                case Keys.F21: // Toggle flood sim on or off
+                case Keys.F21: // Toggle flood sim 
                     _simulateFloodEvent.Active = !_simulateFloodEvent.Active;
                     break;
 
-                case Keys.F22: // Toggle flood sim on or off
+                case Keys.F22: // Toggle flow sim
                     _makeItRain.Active = !_makeItRain.Active;
                     break;
 
-                case Keys.F23: // Reset
+                case Keys.F23: // Reset camera
                     reset = true;
                     break;
 
-                case Keys.F24: // Unused
+                case Keys.F24: // Reserved for future use
                     break;
 
                 default:
