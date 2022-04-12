@@ -64,6 +64,9 @@ namespace SandWorm
         Color[] waterColors = null;
 
         // Temporary storage of prior values for hotkey toggling
+        public Dictionary<int, DateTime> _lastPressForKey = new Dictionary<int, DateTime>() {
+            { (int)Keys.ShiftKey, DateTime.Now } 
+        };
         public double _lastContourInterval;
         public double _lastWaterLevel;
 
@@ -372,7 +375,8 @@ namespace SandWorm
         public override Guid ComponentGuid => new Guid("{53fefb98-1cec-4134-b707-0c366072af2c}");
         public override void AddedToDocument(GH_Document document)
         {
-            Grasshopper.Instances.DocumentEditor.KeyDown += new KeyEventHandler(SandwormShortcutHandler);
+            Rhino.RhinoApp.KeyboardEvent -= new Rhino.RhinoApp.KeyboardHookEvent(SandwormShortcutHandler);
+            Rhino.RhinoApp.KeyboardEvent += new Rhino.RhinoApp.KeyboardHookEvent(SandwormShortcutHandler);
 
             if (Params.Input[0].SourceCount == 0)
             {
@@ -408,35 +412,65 @@ namespace SandWorm
             ExpireSolution(false);
         }
 
-        private void SandwormShortcutHandler(object sender, KeyEventArgs e)
+        private void SandwormShortcutHandler(int keyIndex)
         {
-            switch (e.KeyCode)
+            if (keyIndex == (int)Keys.ShiftKey)
             {
-                case Keys.F13:
+                _lastPressForKey[(int)Keys.ShiftKey] = DateTime.Now; // Track last SHIFT press to enable chord shortcuts
+                return;  // Don't process SHIFT-activations on their own
+            }
+
+            // This handler has no access to events, so need to track time since last key event manually (to enable deduplication)
+            if (_lastPressForKey.ContainsKey(keyIndex)) 
+            {
+                TimeSpan timeSinceLastPress = DateTime.Now - _lastPressForKey[keyIndex];
+                if (timeSinceLastPress.TotalMilliseconds < 300) // Repeats must be 0.3s or more apart
+                {
+                    return; // Prevent retriggers within short time frames (e.g. keydown > keypress > keyrepeat > keyup)
+                }
+            }
+
+            TimeSpan timeSinceShiftModifier = DateTime.Now - _lastPressForKey[(int)Keys.ShiftKey];
+            if (timeSinceShiftModifier.TotalMilliseconds > 2000) // 2 seconds to activate F-key after SHIFT engaged
+            {
+                return; // Only activate F1-12 keys if SHIFT is used as a modifier chord
+            }
+
+            _lastPressForKey[keyIndex] = DateTime.Now; // Track activate for debouncing
+
+            switch (keyIndex)
+            {
+                case (int)Keys.F2: // Start here as shift+F1 is an accessibility shortcut
                     _analysisType.Value = (int)Structs.AnalysisTypes.None;
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to deactivate any analysis.");
                     break;
 
-                case Keys.F14:
+                case (int)Keys.F3:
                     _analysisType.Value = (int)Structs.AnalysisTypes.Camera;
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to analyse the camera feed.");
                     break;
 
-                case Keys.F15:
+                case (int)Keys.F4:
                     _analysisType.Value = (int)Structs.AnalysisTypes.Elevation;
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to analyse elevation.");
                     break;
 
-                case Keys.F16:
+                case (int)Keys.F5:
                     _analysisType.Value = (int)Structs.AnalysisTypes.Slope;
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to analyse slope.");
                     break;
 
-                case Keys.F17:
+                case (int)Keys.F6:
                     _analysisType.Value = (int)Structs.AnalysisTypes.Aspect;
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to analyse aspect.");
                     break;
 
-                case Keys.F18:
+                case (int)Keys.F7:
                     _analysisType.Value = (int)Structs.AnalysisTypes.CutFill;
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to analyse cut/fill.");
                     break;
 
-                case Keys.F19: // Toggle contours on or off.
+                case (int)Keys.F8: // Toggle contours on or off.
                     if (_contourIntervalRange.Value == 0)
                     {
                         _contourIntervalRange.Value = _lastContourInterval;
@@ -446,9 +480,10 @@ namespace SandWorm
                         _lastContourInterval = _contourIntervalRange.Value;
                         _contourIntervalRange.Value = 0;
                     }
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to toggle contours.");
                     break;
 
-                case Keys.F20: // Toggle water plane on or off. 
+                case (int)Keys.F9: // Toggle water plane on or off. 
                     if (_waterLevel.Value == 0)
                     {
                         _waterLevel.Value = _lastWaterLevel; 
@@ -458,21 +493,22 @@ namespace SandWorm
                         _lastWaterLevel = _waterLevel.Value;
                         _waterLevel.Value = 0;
                     }
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to toggle water plane.");
                     break;
 
-                case Keys.F21: // Toggle flood sim 
+                case (int)Keys.F10: // Toggle flood sim 
                     _simulateFloodEvent.Active = !_simulateFloodEvent.Active;
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to toggle flood simulation.");
                     break;
 
-                case Keys.F22: // Toggle flow sim
+                case (int)Keys.F11: // Toggle flow sim
                     _makeItRain.Active = !_makeItRain.Active;
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to toggle flow simulation.");
                     break;
 
-                case Keys.F23: // Reset camera
+                case (int)Keys.F12: // Reset camera
                     reset = true;
-                    break;
-
-                case Keys.F24: // Reserved for future use
+                    Rhino.RhinoApp.WriteLine("Activating Sandworm " + (Keys)keyIndex + " shortcut to reset camera.");
                     break;
 
                 default:
