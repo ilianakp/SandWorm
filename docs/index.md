@@ -10,11 +10,11 @@ Sandworm is a [Grasshopper](https://www.grasshopper3d.com) plug-in that helps br
 
 ## Demo
 
-<iframe width="736" height="450" src="https://www.youtube.com/watch?v=qf9FTslbYbY" frameborder="0" allowfullscreen></iframe>
+<iframe width="736" height="450" src="https://www.youtube.com/embed/qf9FTslbYbY" frameborder="0" allowfullscreen></iframe>
 
 ## Interface Tour
 
-<iframe width="736" height="450" src="https://www.youtube.com/watch?v=YYvz1QlTFQw" frameborder="0" allowfullscreen></iframe>
+<iframe width="736" height="450" src="https://www.youtube.com/embed/YYvz1QlTFQw" frameborder="0" allowfullscreen></iframe>
 
 ## Download and Installation
 
