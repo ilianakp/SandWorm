@@ -10,7 +10,11 @@ Sandworm is a [Grasshopper](https://www.grasshopper3d.com) plug-in that helps br
 
 ## Demo
 
-<iframe width="736" height="450" src="https://www.youtube.com/embed/xR9hKTLefR4" frameborder="0" allowfullscreen></iframe>
+<iframe width="736" height="450" src="https://www.youtube.com/watch?v=qf9FTslbYbY" frameborder="0" allowfullscreen></iframe>
+
+## Interface Tour
+
+<iframe width="736" height="450" src="https://www.youtube.com/watch?v=YYvz1QlTFQw" frameborder="0" allowfullscreen></iframe>
 
 ## Download and Installation
 
@@ -20,6 +24,6 @@ To use Sandworm you will need a copy of [Rhino 6](https://www.rhino3d.com), a [K
 
 ## Contributors and License
 
-Sandworm includes contributions from [Philip Belesky](http://philipbelesky.com), Kane Borg, Mariusz Hermansdorfer, and Sergio Pedri. It is open source and developed [on GitHub](https://github.com/mariuszhermansdorfer/SandWorm/).
+Sandworm includes contributions from [Philip Belesky](http://philipbelesky.com), [Mariusz Hermansdorfer](https://dk.linkedin.com/in/mrhe), Kane Borg, and Sergio Pedri. It is open source and developed [on GitHub](https://github.com/mariuszhermansdorfer/SandWorm/).
 
 Sandworm, and its documentation, are provided under the terms of the [MIT License](https://github.com/mariuszhermansdorfer/SandWorm/blob/master/LICENSE).
