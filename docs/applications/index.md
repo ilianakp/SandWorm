@@ -4,7 +4,7 @@ title: Applications
 permalink: /applications/
 nav_order: 3
 has_children: true
-published: true
+published: false
 ---
 
 # Applications
