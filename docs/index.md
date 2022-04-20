@@ -10,17 +10,17 @@ Sandworm is a [Grasshopper](https://www.grasshopper3d.com) plug-in that helps br
 
 ## Demo
 
-<iframe width="736" height="450" src="https://www.youtube.com/watch?v=qf9FTslbYbY" frameborder="0" allowfullscreen></iframe>
+<iframe width="736" height="450" src="https://www.youtube.com/embed/qf9FTslbYbY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Interface Tour
 
-<iframe width="736" height="450" src="https://www.youtube.com/watch?v=YYvz1QlTFQw" frameborder="0" allowfullscreen></iframe>
+<iframe width="736" height="450" src="https://www.youtube.com/embed/YYvz1QlTFQw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Download and Installation
 
-A `gha` file and Yak package will be provided when Sandworm is officially released. Until then, Sandworm can be tested by downloading our repository and building the plugin using Visual Studio on Windows.
+In Rhino, start the package manager and download the official SandWorm Yak package. Alternatively, you can clone our [repository](https://github.com/mariuszhermansdorfer/SandWorm) and build the plugin using Visual Studio on Windows.
 
-To use Sandworm you will need a copy of [Rhino 6](https://www.rhino3d.com), a [Kinect for Windows v2](https://support.xbox.com/en-AU/xbox-on-windows/accessories/kinect-for-windows-v2-info) and have installed the [Kinect for Windows Runtime 2.0](https://www.microsoft.com/en-au/download/details.aspx?id=44559).
+To use Sandworm you will need a copy of [Rhino 6, 7 or 8](https://www.rhino3d.com), a [Kinect for Windows v2](https://support.xbox.com/en-AU/xbox-on-windows/accessories/kinect-for-windows-v2-info) or [Kinect Azure](https://azure.microsoft.com/en-us/services/kinect-dk/#overview).
 
 ## Contributors and License
 
