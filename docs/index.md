@@ -18,7 +18,7 @@ Sandworm is a [Grasshopper](https://www.grasshopper3d.com) plug-in that helps br
 
 ## Download and Installation
 
-In Rhino, start the package manager and download the official SandWorm Yak package. Alternatively, you can clone our [repository](https://github.com/mariuszhermansdorfer/SandWorm) and build the plugin using Visual Studio on Windows.
+Download the plugin from [Food4Rhino](https://www.food4rhino.com/en/app/sandworm) or, in Rhino, start the package manager and install the official SandWorm Yak package. Alternatively, you can clone our [repository](https://github.com/mariuszhermansdorfer/SandWorm) and build the plugin using Visual Studio on Windows.
 
 To use Sandworm you will need a copy of [Rhino 6, 7 or 8](https://www.rhino3d.com), a [Kinect for Windows v2](https://support.xbox.com/en-AU/xbox-on-windows/accessories/kinect-for-windows-v2-info) or [Kinect Azure](https://azure.microsoft.com/en-us/services/kinect-dk/#overview).
 
