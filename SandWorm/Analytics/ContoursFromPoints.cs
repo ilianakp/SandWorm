@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Rhino.Geometry;
-
+using System.Diagnostics.Contracts;
 
 namespace SandWorm.Analytics
 {
     public static class ContoursFromPoints
     {
-        public static void GetGeometryForAnalysis(ref List<Line> contourLines, Point3d[] points, int threshold, 
+        public static void GetGeometryForAnalysis(ref List<Line> contourLines, Point3d[] points, int threshold,
             int trimmedWidth, int trimmedHeight, int ContourRoughness)
         {
 
@@ -82,8 +82,8 @@ namespace SandWorm.Analytics
             contourLines = new List<Line>(_contourLines);
         }
 
-
-        private static List<Point4d> FindIntersections(Point3d startVertex, Point3d endVertex, int threshold)
+        [Pure]
+        private static List<Point4d> FindIntersections(in Point3d startVertex, in Point3d endVertex, in int threshold)
         {
             List<Point4d> intersections = new List<Point4d>();
             Point4d _p = new Point4d();
@@ -96,7 +96,7 @@ namespace SandWorm.Analytics
                 return intersections;
 
             // Discard points if they don't cross an isocurve 
-            if ((int)_startVertex.Z == (int)_endVertex.Z || deltaZ == 0) 
+            if ((int)_startVertex.Z == (int)_endVertex.Z || deltaZ == 0)
                 return intersections;
 
             double ratio = 0.0;
@@ -127,11 +127,11 @@ namespace SandWorm.Analytics
             return intersections;
         }
 
-  
-        private static double InterpolateCoordinates(double start, double end, double ratio)
+        [Pure]
+        private static double InterpolateCoordinates(in double start, in double end, in double ratio)
         {
             return start + ratio * (end - start);
         }
-        
+
     }
 }
