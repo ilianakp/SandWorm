@@ -63,11 +63,12 @@ namespace SandWorm
                     using (var meshAccess = mesh.GetUnsafeLock(true))
                     {
                         Point3d* points = meshAccess.VertexPoint3dArray(out int arrayLength);
-                        for (int i = 0; i < arrayLength; i++)
+                        Parallel.For(0, arrayLength, i =>
+                        //for (int i = 0; i < arrayLength; i++)
+
                         {
-                            points->Z = vertices[i].Z;
-                            points++;
-                        }
+                            (points + i)->Z = vertices[i].Z;
+                        });
                         mesh.ReleaseUnsafeLock(meshAccess);
                     }
                 }
