@@ -64,8 +64,6 @@ namespace SandWorm
                     {
                         Point3d* points = meshAccess.VertexPoint3dArray(out int arrayLength);
                         Parallel.For(0, arrayLength, i =>
-                        //for (int i = 0; i < arrayLength; i++)
-
                         {
                             (points + i)->Z = vertices[i].Z;
                         });
