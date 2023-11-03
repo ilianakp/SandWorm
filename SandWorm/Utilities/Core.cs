@@ -282,38 +282,40 @@ namespace SandWorm
         }
 
 
-        public static void GenerateMeshColors(ref Color[] vertexColors, Structs.AnalysisTypes analysisType, double[] averagedDepthFrameData, 
+        public static List<double> GenerateMeshColors(ref Color[] vertexColors, Structs.AnalysisTypes analysisType, double[] averagedDepthFrameData, 
             Vector2[]xyLookuptable, Color[] pixelColors, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors,
             double?[] baseMeshElevationPoints, Point3d[] allPoints, ref List<string> stats,
             double sensorElevation, int trimmedWidth, int trimmedHeight)
         {
+            List<double> outList = new List<double>();
+
             switch (analysisType)
             {
                 case Structs.AnalysisTypes.None:
                     vertexColors = new None().GetColorCloudForAnalysis();
-                    break;
+                    return outList;
 
                 case Structs.AnalysisTypes.Camera:
                     vertexColors = pixelColors;
-                    break;
+                    return outList;
 
                 case Structs.AnalysisTypes.Elevation:
                     vertexColors = new Elevation().GetColorCloudForAnalysis(averagedDepthFrameData, sensorElevation, gradientRange, colorPalette, customColors);
-                    break;
+                    return outList;
 
                 case Structs.AnalysisTypes.Slope:
                     vertexColors = new Slope().GetColorCloudForAnalysis(averagedDepthFrameData,
-                        trimmedWidth, trimmedHeight, gradientRange, xyLookuptable);
-                    break;
+                        trimmedWidth, trimmedHeight, gradientRange, xyLookuptable, outList);
+                    return outList;
 
                 case Structs.AnalysisTypes.Aspect:
                     vertexColors = new Aspect().GetColorCloudForAnalysis(averagedDepthFrameData,
                         trimmedWidth, trimmedHeight, gradientRange);
-                    break;
+                    return outList;
 
                 case Structs.AnalysisTypes.CutFill:
                     vertexColors = new CutFill().GetColorCloudForAnalysis(allPoints, baseMeshElevationPoints, gradientRange, colorPalette, customColors, ref stats);
-                    break;
+                    return outList;
             }
         }
 

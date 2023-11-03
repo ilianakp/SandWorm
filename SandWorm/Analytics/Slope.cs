@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Numerics;
 using System.Threading.Tasks;
 using Rhino.Display;
+using System.Linq;
 
 namespace SandWorm
 {
@@ -23,7 +24,7 @@ namespace SandWorm
                 return lookupTable[slopeValue];
         }
 
-        public Color[] GetColorCloudForAnalysis(double[] pixelArray, int width, int height, double gradientRange, Vector2[] xyLookupTable)
+        public Color[] GetColorCloudForAnalysis(double[] pixelArray, int width, int height, double gradientRange, Vector2[] xyLookupTable, out List<double> slopesOut)
         {
             if (lookupTable == null)
                 ComputeLookupTableForAnalysis(0.0, gradientRange);
@@ -34,6 +35,7 @@ namespace SandWorm
             double slope = 0.0;
 
             var vertexColors = new Color[pixelArray.Length];
+            double[] slopes = new double[pixelArray.Length];
             
             // first pixel NW
             deltaX = (xyLookupTable[1].X - xyLookupTable[0].X);
@@ -44,7 +46,8 @@ namespace SandWorm
             slope += Math.Abs(pixelArray[width] - pixelArray[0]) * SandWormComponent.unitsMultiplier / deltaY; // S Pixel
             slope += Math.Abs(pixelArray[width + 1] - pixelArray[0]) * SandWormComponent.unitsMultiplier / deltaXY; // SE Pixel
 
-            vertexColors[0] = GetColorForSlope((ushort)(slope * 33.33)); // Divide by 3 multiply by 100 => 33.33
+            slopes[0] = slope * 33.33;
+            vertexColors[0] = GetColorForSlope((ushort)(slopes[0])); // Divide by 3 multiply by 100 => 33.33
 
             // last pixel NE
             deltaX = (xyLookupTable[width - 2].X - xyLookupTable[width - 1].X);
@@ -56,7 +59,9 @@ namespace SandWorm
             slope += Math.Abs(pixelArray[2 * width - 1] - pixelArray[width - 1]) * SandWormComponent.unitsMultiplier / deltaY; // S Pixel
             slope += Math.Abs(pixelArray[2 * width - 2] - pixelArray[width - 1]) * SandWormComponent.unitsMultiplier / deltaXY; // SW Pixel
 
-            vertexColors[width - 1] = GetColorForSlope((ushort)(slope * 33.33)); // Divide by 3 multiply by 100 => 33.33
+            slopes[width - 1] = slope * 33.33;
+            vertexColors[width - 1] = GetColorForSlope((ushort)(slopes[width - 1])); // Divide by 3 multiply by 100 => 33.33
+
 
             // first pixel SW
             deltaX = (xyLookupTable[(height - 1) * width + 1].X - xyLookupTable[(height - 1) * width].X);
@@ -68,7 +73,8 @@ namespace SandWorm
             slope += Math.Abs(pixelArray[(height - 2) * width] - pixelArray[(height - 1) * width]) * SandWormComponent.unitsMultiplier / deltaY; // N Pixel
             slope += Math.Abs(pixelArray[(height - 2) * width + 1] - pixelArray[(height - 1) * width]) * SandWormComponent.unitsMultiplier / deltaXY; //NE Pixel
 
-            vertexColors[(height - 1) * width] = GetColorForSlope((ushort)(slope * 33.33)); // Divide by 3 multiply by 100 => 33.33
+            slopes[(height - 1) * width] = slope * 33.33;
+            vertexColors[(height - 1) * width] = GetColorForSlope((ushort)(slopes[(height - 1) * width])); // Divide by 3 multiply by 100 => 33.33
 
             // last pixel SE
             deltaX = (xyLookupTable[height * width - 2].X - xyLookupTable[height * width - 1].X);
@@ -80,7 +86,8 @@ namespace SandWorm
             slope += Math.Abs(pixelArray[(height - 1) * width - 1] - pixelArray[height * width - 1]) * SandWormComponent.unitsMultiplier / deltaY; // N Pixel
             slope += Math.Abs(pixelArray[(height - 1) * width - 2] - pixelArray[height * width - 1]) * SandWormComponent.unitsMultiplier / deltaXY; //NW Pixel
 
-            vertexColors[height * width - 1] = GetColorForSlope((ushort)(slope * 33.33)); // Divide by 3 multiply by 100 => 33.33
+            slopes[height * width - 1] = slope * 33.33;
+            vertexColors[height * width - 1] = GetColorForSlope((ushort)(slopes[height * width - 1])); // Divide by 3 multiply by 100 => 33.33
 
             // first row
             for (int i = 1; i < width - 1; i++)
@@ -96,7 +103,8 @@ namespace SandWorm
                 slope += Math.Abs(pixelArray[i + width] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaY; // S Pixel
                 slope += Math.Abs(pixelArray[i + width + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // SE Pixel
 
-                vertexColors[i] = GetColorForSlope((ushort)(slope * 20.0)); // Divide by 5 multiply by 100 => 20.0
+                slopes[i] = slope * 20.0;
+                vertexColors[i] = GetColorForSlope((ushort)(slopes[i])); // Divide by 5 multiply by 100 => 20.0
             }
 
             // last row
@@ -113,7 +121,8 @@ namespace SandWorm
                 slope += Math.Abs(pixelArray[i - width] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaY; // N Pixel
                 slope += Math.Abs(pixelArray[i - width + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // NE Pixel
 
-                vertexColors[i] = GetColorForSlope((ushort)(slope * 20.0)); // Divide by 5 multiply by 100 => 20.0
+                slopes[i] = slope * 20.0;
+                vertexColors[i] = GetColorForSlope((ushort)(slopes[i])); // Divide by 5 multiply by 100 => 20.0
             }
 
             // first column
@@ -130,7 +139,8 @@ namespace SandWorm
                 slope += Math.Abs(pixelArray[i + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaX; // E Pixel
                 slope += Math.Abs(pixelArray[i + width + 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // SE Pixel
 
-                vertexColors[i] = GetColorForSlope((ushort)(slope * 20.0)); // Divide by 5 multiply by 100 => 20.0
+                slopes[i] = slope * 20.0;
+                vertexColors[i] = GetColorForSlope((ushort)(slopes[i])); // Divide by 5 multiply by 100 => 20.0
             }
 
             // last column
@@ -147,7 +157,8 @@ namespace SandWorm
                 slope += Math.Abs(pixelArray[i - 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaX; // W Pixel
                 slope += Math.Abs(pixelArray[i + width - 1] - pixelArray[i]) * SandWormComponent.unitsMultiplier / deltaXY; // SW Pixel
 
-                vertexColors[i] = GetColorForSlope((ushort)(slope * 20.0)); // Divide by 5 multiply by 100 => 20.0
+                slopes[i] = slope * 20.0;
+                vertexColors[i] = GetColorForSlope((ushort)(slopes[i])); // Divide by 5 multiply by 100 => 20.0
             }
 
             // rest of the array
@@ -174,10 +185,12 @@ namespace SandWorm
                     parallelSlope += Math.Abs((pixelArray[j] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaY; //S pixel
                     parallelSlope += Math.Abs((pixelArray[j + 1] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaXY; //SE pixel
 
-                    vertexColors[i] = GetColorForSlope((ushort)(parallelSlope * 12.5)); // Divide by 8 multiply by 100 => 12.5
+                    slopes[i] = parallelSlope * 12.5;
+                    vertexColors[i] = GetColorForSlope((ushort)(slopes[i])); // Divide by 8 multiply by 100 => 12.5
                 }
             });
 
+            slopesOut = slopes.ToList();
 
             return vertexColors;
         }

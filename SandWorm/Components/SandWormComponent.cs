@@ -104,6 +104,7 @@ namespace SandWorm
             pManager.AddGeometryParameter("Water surface", "water surface", "", GH_ParamAccess.list);
             pManager.AddCurveParameter("Contours", "contours", "", GH_ParamAccess.list);
             pManager.AddGenericParameter("Stats", "stats", "", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Slopes", "Slopes", "", GH_ParamAccess.list);
         }
 
         protected override void Setup(GH_ExtendableComponentAttributes attr) // Initialize the UI
@@ -229,10 +230,11 @@ namespace SandWorm
             colorPalettes = new List<Color>();
             DA.GetDataList(1, colorPalettes);
 
-            GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
-                               trimmedXYLookupTable, trimmedRGBArray, _colorGradientRange.Value,
-                               (Structs.ColorPalettes)_colorPalette.Value, colorPalettes, baseMeshElevationPoints,
-                               allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight);
+            List<double> valuesOut = GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
+                                                       trimmedXYLookupTable, trimmedRGBArray, _colorGradientRange.Value,
+                                                       (Structs.ColorPalettes)_colorPalette.Value, colorPalettes, baseMeshElevationPoints,
+                                                       allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight);
+            DA.SetDataList(4, valuesOut);
 #if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis");
 #endif
