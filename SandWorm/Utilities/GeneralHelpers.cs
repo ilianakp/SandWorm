@@ -107,7 +107,7 @@ namespace SandWorm
 
         public static void CreateLabels(Rhino.Geometry.Point3d[] pointArray, ref List<Rhino.Display.Text3d> labels, 
                                         Structs.AnalysisTypes analysisType, double?[] baseMeshElevationPoints,
-                                        int xStride, int yStride, int spacing)
+                                        int xStride, int yStride, int spacing, int skipFactor)
         {
             Rhino.Display.Text3d _text;
             double _distanceToTerrain = 5 * SandWormComponent.unitsMultiplier;
@@ -125,21 +125,21 @@ namespace SandWorm
                 for (int x = spacing; x < xStride; x += spacing)       // Iterate over x dimension
                 {
                     int i = y * xStride + x;
-                    Rhino.Geometry.Point3d _point = new Rhino.Geometry.Point3d(pointArray[i].X, pointArray[i].Y, pointArray[i].Z + _distanceToTerrain);
+                    Rhino.Geometry.Point3d _point = new Rhino.Geometry.Point3d(pointArray[i/skipFactor].X, pointArray[i / skipFactor].Y, pointArray[i / skipFactor].Z + _distanceToTerrain);
                     Rhino.Geometry.Plane _plane = new Rhino.Geometry.Plane(_point, new Rhino.Geometry.Vector3d(0, 0, 1));
                     double _value = 0;
                     
                     switch (analysisType)
                     {
                         case Structs.AnalysisTypes.Elevation:
-                            _value = Math.Round(pointArray[i].Z, roundingFactor);
+                            _value = Math.Round(pointArray[i / skipFactor].Z, roundingFactor);
                             break;
 
                         case Structs.AnalysisTypes.CutFill:
-                            if (baseMeshElevationPoints[i] == null)
+                            if (baseMeshElevationPoints[i / skipFactor] == null)
                                 continue;
                             
-                            _value = Math.Round(pointArray[i].Z - (double)baseMeshElevationPoints[i], roundingFactor);
+                            _value = Math.Round(pointArray[i / skipFactor].Z - (double)baseMeshElevationPoints[i], roundingFactor);
                             break;
                     }
 
