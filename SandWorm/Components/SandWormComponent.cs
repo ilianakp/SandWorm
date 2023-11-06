@@ -159,9 +159,7 @@ namespace SandWorm
             // Initialize
             int[] depthFrameDataInt = new int[trimmedWidth * trimmedHeight];
             double[] averagedDepthFrameData = new double[trimmedWidth * trimmedHeight];
-            // BIODIVERSITY
-            int skipFactor = 10;
-            allPoints = new Point3d[trimmedWidth * trimmedHeight/ skipFactor + 1];
+            allPoints = new Point3d[trimmedWidth * trimmedHeight];
             _outputWaterSurface = new List<GeometryBase>();
             _outputContours = new List<Line>();
 
@@ -211,7 +209,7 @@ namespace SandWorm
 
             GeneratePointCloud(averagedDepthFrameData, trimmedXYLookupTable,
                                KinectAzureController.verticalTiltCorrectionMatrix, (KinectTypes)_sensorType.Value,
-                               allPoints, renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value, _averagedFrames.Value, skipFactor);
+                               allPoints, renderBuffer, trimmedWidth, trimmedHeight, _sensorElevation.Value, _averagedFrames.Value);
 
             #region RGB from camera
             if ((AnalysisTypes)_analysisType.Value == AnalysisTypes.Camera)
@@ -263,7 +261,7 @@ namespace SandWorm
             {
                 labels = new List<Rhino.Display.Text3d>();
                 GeneralHelpers.CreateLabels(allPoints, ref labels, (AnalysisTypes)_analysisType.Value,
-                                            baseMeshElevationPoints, trimmedWidth, trimmedHeight, (int)_labelSpacing.Value, skipFactor);
+                                            baseMeshElevationPoints, trimmedWidth, trimmedHeight, (int)_labelSpacing.Value);
             }
 #if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Labels");
