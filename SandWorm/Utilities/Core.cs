@@ -239,7 +239,7 @@ namespace SandWorm
         }
 
         public static void GeneratePointCloud(double[] averagedDepthFrameData, Vector2[] trimmedXYLookupTable, double[] verticalTiltCorrectionLookupTable, Structs.KinectTypes kinectType,
-            Point3d[] allPoints, LinkedList<int[]> renderBuffer, int trimmedWidth, int trimmedHeight, double sensorElevation, double averageFrames)
+            Point3d[] allPoints, LinkedList<int[]> renderBuffer, int trimmedWidth, int trimmedHeight, double sensorElevation, double averageFrames, int skipFactor)
         {
             Point3d tempPoint = new Point3d();
 
@@ -263,13 +263,17 @@ namespace SandWorm
                     break;
 
                 case Structs.KinectTypes.KinectForWindows:
-                    for (int rows = 0, i = 0; rows < trimmedHeight; rows++)
-                        for (int columns = 0; columns < trimmedWidth; columns++, i++)
+
+                    for (int rows = 0, i = 0; rows < trimmedHeight; rows ++)
+                        for (int columns = 0; columns < trimmedWidth; columns++, i ++)
                         {
-                            tempPoint.X = trimmedXYLookupTable[i].X;
-                            tempPoint.Y = trimmedXYLookupTable[i].Y * -1;
-                            tempPoint.Z = (averagedDepthFrameData[i] - sensorElevation) * -SandWormComponent.unitsMultiplier;
-                            allPoints[i] = tempPoint;
+                            if (i % skipFactor == 0)
+                            {
+                                tempPoint.X = trimmedXYLookupTable[i].X;
+                                tempPoint.Y = trimmedXYLookupTable[i].Y * -1;
+                                tempPoint.Z = (averagedDepthFrameData[i] - sensorElevation) * -SandWormComponent.unitsMultiplier;
+                                allPoints[i/10] = tempPoint;
+                            }
                         }
                     break;
 
@@ -305,7 +309,7 @@ namespace SandWorm
 
                 case Structs.AnalysisTypes.Slope:
                     vertexColors = new Slope().GetColorCloudForAnalysis(averagedDepthFrameData,
-                        trimmedWidth, trimmedHeight, gradientRange, xyLookuptable, outList);
+                        trimmedWidth, trimmedHeight, gradientRange, xyLookuptable, out outList);
                     return outList;
 
                 case Structs.AnalysisTypes.Aspect:
@@ -317,6 +321,7 @@ namespace SandWorm
                     vertexColors = new CutFill().GetColorCloudForAnalysis(allPoints, baseMeshElevationPoints, gradientRange, colorPalette, customColors, ref stats);
                     return outList;
             }
+            return outList;
         }
 
         public static void CopyAsIntArray(ushort[] source, int[] destination, 
