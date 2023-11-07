@@ -16,6 +16,7 @@ using SandWorm.Analytics;
 using static SandWorm.Core;
 using static SandWorm.Structs;
 using static SandWorm.SandWormComponentUI;
+using System.Threading.Tasks;
 
 namespace SandWorm
 {
@@ -105,6 +106,7 @@ namespace SandWorm
             pManager.AddCurveParameter("Contours", "contours", "", GH_ParamAccess.list);
             pManager.AddGenericParameter("Stats", "stats", "", GH_ParamAccess.item);
             pManager.AddNumberParameter("Slopes", "Slopes", "", GH_ParamAccess.list);
+            pManager.AddPointParameter("Verts", "Verts", "", GH_ParamAccess.list);
         }
 
         protected override void Setup(GH_ExtendableComponentAttributes attr) // Initialize the UI
@@ -201,6 +203,8 @@ namespace SandWorm
                         break;
                 }
             }
+
+
 #if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Initial setup"); // Debug Info
 #endif
@@ -230,11 +234,15 @@ namespace SandWorm
             colorPalettes = new List<Color>();
             DA.GetDataList(1, colorPalettes);
 
+            List<Point3d> VertsOut = new List<Point3d>();
+
             List<double> valuesOut = GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
                                                        trimmedXYLookupTable, trimmedRGBArray, _colorGradientRange.Value,
                                                        (Structs.ColorPalettes)_colorPalette.Value, colorPalettes, baseMeshElevationPoints,
-                                                       allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight);
+                                                       allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight, out VertsOut);
             DA.SetDataList(4, valuesOut);
+            DA.SetDataList(5, VertsOut);
+
 #if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis");
 #endif
