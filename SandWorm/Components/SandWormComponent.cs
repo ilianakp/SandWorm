@@ -94,6 +94,7 @@ namespace SandWorm
             pManager.AddBooleanParameter("Reset", "reset", "Re-initialise the camera stream and its processing. Use if your output is strange or behaving unexpectedly. ", GH_ParamAccess.item, reset);
             pManager.AddColourParameter("Color list", "color list", "Provide a list of custom colors to define a gradient for the elevation analysis.", GH_ParamAccess.list);
             pManager.AddGenericParameter("Mesh", "mesh", "Provide a base mesh for the Cut & Fill analysis mode.", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Water", "Water", "", GH_ParamAccess.item);
 
             pManager[1].Optional = true;
             pManager[2].Optional = true;
@@ -105,8 +106,7 @@ namespace SandWorm
             pManager.AddGeometryParameter("Water surface", "water surface", "", GH_ParamAccess.list);
             pManager.AddCurveParameter("Contours", "contours", "", GH_ParamAccess.list);
             pManager.AddGenericParameter("Stats", "stats", "", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Slopes", "Slopes", "", GH_ParamAccess.list);
-            pManager.AddPointParameter("Verts", "Verts", "", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Areas", "Areas", "0:Water, 1:Flat, 2:Steep", GH_ParamAccess.list);
         }
 
         protected override void Setup(GH_ExtendableComponentAttributes attr) // Initialize the UI
@@ -233,15 +233,16 @@ namespace SandWorm
 
             colorPalettes = new List<Color>();
             DA.GetDataList(1, colorPalettes);
+            double water = 0.02;
+            DA.GetData(3, ref water);
 
-            List<Point3d> VertsOut = new List<Point3d>();
-
-            List<double> valuesOut = GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
+            double[] areas = GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
                                                        trimmedXYLookupTable, trimmedRGBArray, _colorGradientRange.Value,
                                                        (Structs.ColorPalettes)_colorPalette.Value, colorPalettes, baseMeshElevationPoints,
-                                                       allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight, out VertsOut);
-            DA.SetDataList(4, valuesOut);
-            DA.SetDataList(5, VertsOut);
+                                                       allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight, water);
+            double debug = 0;
+            DA.SetDataList(4, areas.ToList());
+
 
 #if DEBUG
             GeneralHelpers.LogTiming(ref stats, timer, "Point cloud analysis");

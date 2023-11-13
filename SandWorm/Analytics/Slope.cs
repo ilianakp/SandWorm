@@ -26,7 +26,8 @@ namespace SandWorm
                 return lookupTable[slopeValue];
         }
 
-        public Color[] GetColorCloudForAnalysis(double[] pixelArray, int width, int height, double gradientRange, Vector2[] xyLookupTable, Rhino.Geometry.Point3d[] pts, out List<double> slopesOut, out List<Rhino.Geometry.Point3d> vertsOut)
+        public Color[] GetColorCloudForAnalysis(double[] pixelArray, int width, int height, double gradientRange, Vector2[] xyLookupTable, 
+            Rhino.Geometry.Point3d[] pts, out double[] Areas, double waterH)
         {
             if (lookupTable == null)
                 ComputeLookupTableForAnalysis(0.0, gradientRange);
@@ -37,11 +38,11 @@ namespace SandWorm
             double slope = 0.0;
 
             var vertexColors = new Color[pixelArray.Length];
-            
-            //double[] slopes = new double[pixelArray.Length];
-            //Rhino.Geometry.Point3d[] verts = new Rhino.Geometry.Point3d[pixelArray.Length];
-            ConcurrentBag<double> slopes = new ConcurrentBag<double>();
-            ConcurrentBag<Rhino.Geometry.Point3d> verts = new ConcurrentBag<Rhino.Geometry.Point3d>();
+
+            // find the area
+            double cellArea = Math.Sqrt(pts[0].DistanceTo(pts[1]));
+            double[] areas = new double[3]; // and array to store areas 1. water, 2. flat, 3. steep
+
 
             #region first pixel NW
             deltaX = (xyLookupTable[1].X - xyLookupTable[0].X);
@@ -166,7 +167,6 @@ namespace SandWorm
             }
             #endregion
 
-            int skipFactor = 10;
             // rest of the array
             // Switch it to for debug
             //skip rows and columns with the same number
@@ -195,17 +195,28 @@ namespace SandWorm
                     parallelSlope += Math.Abs((pixelArray[j + 1] - pixelArray[i])) * SandWormComponent.unitsMultiplier / parallelDeltaXY; //SE pixel
 
                     double finalSlope = parallelSlope * 12.5;
-                    if (rows % skipFactor == 0 && columns % skipFactor == 0)
-                    { 
-                        slopes.Add(finalSlope);
-                        verts.Add(pts[i]);
+
+                    if (pts[i].Z <= waterH)
+                    {
+                        vertexColors[i] = System.Drawing.Color.DeepSkyBlue;
+                        areas[0] += cellArea;
                     }
-                    vertexColors[i] = GetColorForSlope((ushort)(finalSlope)); // Divide by 8 multiply by 100 => 12.5
+                    else if (finalSlope <= 25)
+                    {
+                        vertexColors[i] = System.Drawing.Color.Yellow;
+                        areas[1] += cellArea;
+                    }
+                    else 
+                    { 
+                        vertexColors[i] = System.Drawing.Color.LimeGreen;
+                        areas[2] += cellArea;
+                    }
+
+                    //vertexColors[i] = GetColorForSlope((ushort)(finalSlope)); // Divide by 8 multiply by 100 => 12.5
                 }
             });
 
-            slopesOut = slopes.ToList();
-            vertsOut = verts.ToList();
+            Areas = areas;
 
             return vertexColors;
         }

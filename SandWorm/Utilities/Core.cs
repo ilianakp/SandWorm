@@ -282,48 +282,44 @@ namespace SandWorm
         }
 
 
-        public static List<double> GenerateMeshColors(ref Color[] vertexColors, Structs.AnalysisTypes analysisType, double[] averagedDepthFrameData, 
+        public static double[] GenerateMeshColors(ref Color[] vertexColors, Structs.AnalysisTypes analysisType, double[] averagedDepthFrameData, 
             Vector2[]xyLookuptable, Color[] pixelColors, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors,
             double?[] baseMeshElevationPoints, Point3d[] allPoints, ref List<string> stats,
-            double sensorElevation, int trimmedWidth, int trimmedHeight, out List<Point3d> vertsOut)
+            double sensorElevation, int trimmedWidth, int trimmedHeight, double waterH)
         {
-            List<double> outList = new List<double>();
-
+            double[] areas = new double[3];
             switch (analysisType)
             {
                 case Structs.AnalysisTypes.None:
                     vertexColors = new None().GetColorCloudForAnalysis();
-                    vertsOut = new List<Point3d>();
-                    return outList;
+                    return areas;
 
                 case Structs.AnalysisTypes.Camera:
                     vertexColors = pixelColors;
-                    vertsOut = new List<Point3d>();
-                    return outList;
+                    return areas;
 
                 case Structs.AnalysisTypes.Elevation:
                     vertexColors = new Elevation().GetColorCloudForAnalysis(averagedDepthFrameData, sensorElevation, gradientRange, colorPalette, customColors);
-                    vertsOut = new List<Point3d>();
-                    return outList;
+                    return areas;
 
                 case Structs.AnalysisTypes.Slope:
+
                     vertexColors = new Slope().GetColorCloudForAnalysis(averagedDepthFrameData,
-                        trimmedWidth, trimmedHeight, gradientRange, xyLookuptable, allPoints, out outList, out vertsOut);
-                    return outList;
+                        trimmedWidth, trimmedHeight, gradientRange, xyLookuptable, allPoints, out areas, waterH);
+                    return areas;
 
                 case Structs.AnalysisTypes.Aspect:
                     vertexColors = new Aspect().GetColorCloudForAnalysis(averagedDepthFrameData,
                         trimmedWidth, trimmedHeight, gradientRange);
-                    vertsOut = new List<Point3d>();
-                    return outList;
+                    return areas;
 
                 case Structs.AnalysisTypes.CutFill:
                     vertexColors = new CutFill().GetColorCloudForAnalysis(allPoints, baseMeshElevationPoints, gradientRange, colorPalette, customColors, ref stats);
-                    vertsOut = new List<Point3d>();
-                    return outList;
+                    return areas;
+
             }
-            vertsOut = new List<Point3d>();
-            return outList;
+
+            return areas;
         }
 
         public static void CopyAsIntArray(ushort[] source, int[] destination, 
