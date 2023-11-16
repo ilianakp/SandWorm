@@ -285,7 +285,7 @@ namespace SandWorm
         public static double[] GenerateMeshColors(ref Color[] vertexColors, Structs.AnalysisTypes analysisType, double[] averagedDepthFrameData, 
             Vector2[]xyLookuptable, Color[] pixelColors, double gradientRange, Structs.ColorPalettes colorPalette, List<Color> customColors,
             double?[] baseMeshElevationPoints, Point3d[] allPoints, ref List<string> stats,
-            double sensorElevation, int trimmedWidth, int trimmedHeight, double waterH)
+            double sensorElevation, int trimmedWidth, int trimmedHeight, double waterH, double slopeThres)
         {
             double[] areas = new double[3];
             switch (analysisType)
@@ -305,7 +305,7 @@ namespace SandWorm
                 case Structs.AnalysisTypes.Slope:
 
                     vertexColors = new Slope().GetColorCloudForAnalysis(averagedDepthFrameData,
-                        trimmedWidth, trimmedHeight, gradientRange, xyLookuptable, allPoints, out areas, waterH);
+                        trimmedWidth, trimmedHeight, gradientRange, xyLookuptable, allPoints, out areas, waterH, slopeThres);
                     return areas;
 
                 case Structs.AnalysisTypes.Aspect:

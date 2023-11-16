@@ -95,6 +95,7 @@ namespace SandWorm
             pManager.AddColourParameter("Color list", "color list", "Provide a list of custom colors to define a gradient for the elevation analysis.", GH_ParamAccess.list);
             pManager.AddGenericParameter("Mesh", "mesh", "Provide a base mesh for the Cut & Fill analysis mode.", GH_ParamAccess.item);
             pManager.AddNumberParameter("Water", "Water", "", GH_ParamAccess.item);
+            pManager.AddNumberParameter("slopeThres", "slopeThres", "", GH_ParamAccess.item);
 
             pManager[1].Optional = true;
             pManager[2].Optional = true;
@@ -234,12 +235,13 @@ namespace SandWorm
             colorPalettes = new List<Color>();
             DA.GetDataList(1, colorPalettes);
             double water = 0.02;
+            double slopeThres = 25;
             DA.GetData(3, ref water);
 
             double[] areas = GenerateMeshColors(ref _vertexColors, (AnalysisTypes)_analysisType.Value, averagedDepthFrameData,
                                                        trimmedXYLookupTable, trimmedRGBArray, _colorGradientRange.Value,
                                                        (Structs.ColorPalettes)_colorPalette.Value, colorPalettes, baseMeshElevationPoints,
-                                                       allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight, water);
+                                                       allPoints, ref stats, _sensorElevation.Value, trimmedWidth, trimmedHeight, water, slopeThres);
             double debug = 0;
             DA.SetDataList(4, areas.ToList());
 

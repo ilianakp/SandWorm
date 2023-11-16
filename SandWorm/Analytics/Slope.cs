@@ -27,7 +27,7 @@ namespace SandWorm
         }
 
         public Color[] GetColorCloudForAnalysis(double[] pixelArray, int width, int height, double gradientRange, Vector2[] xyLookupTable, 
-            Rhino.Geometry.Point3d[] pts, out double[] Areas, double waterH)
+            Rhino.Geometry.Point3d[] pts, out double[] Areas, double waterH, double slopeThres)
         {
             if (lookupTable == null)
                 ComputeLookupTableForAnalysis(0.0, gradientRange);
@@ -201,7 +201,7 @@ namespace SandWorm
                         vertexColors[i] = System.Drawing.Color.DeepSkyBlue;
                         areas[0] += cellArea;
                     }
-                    else if (finalSlope <= 25)
+                    else if (finalSlope <= slopeThres)
                     {
                         vertexColors[i] = System.Drawing.Color.Yellow;
                         areas[1] += cellArea;
